@@ -1,0 +1,22 @@
+services:
+  fe-smarttasty:
+    image: quanghau123/fe-smarttasty:latest
+    container_name: ${FE_CONTAINER_NAME}
+    ports:
+      - "${FE_PORT}:3000"
+    restart: always
+    environment:
+      - NODE_ENV=${NODE_ENV}
+    volumes:
+      - ./env.local:/app/.env.local
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}
+      - DOCKER_HUB_PASSWORD=${DOCKER_HUB_ACCESS_TOKEN}
+    command: --interval ${WATCHTOWER_INTERVAL} # Checks for updates
