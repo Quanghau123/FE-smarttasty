@@ -1,0 +1,78 @@
+.container {
+  padding: 24px;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.header {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1f2937;
+}
+
+.searchBox {
+  margin-bottom: 16px;
+
+  .MuiTextField-root {
+    width: 300px;
+  }
+}
+
+.tableContainer {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table {
+  min-width: 100%;
+
+  thead {
+    background-color: #f3f4f6;
+
+    th {
+      font-weight: 600;
+      color: #374151;
+    }
+  }
+
+  tbody {
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #e5e7eb;
+    }
+
+    td {
+      color: #4b5563;
+    }
+  }
+}
+
+.avatarCell {
+  display: flex;
+  align-items: center;
+
+  .MuiAvatar-root {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    background-color: #3b82f6;
+  }
+
+  .name {
+    margin-left: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: #111827;
+  }
+}
+
+.deleteBtn {
+  color: #ef4444;
+}
+.IconButton {
+    color: red;
+}

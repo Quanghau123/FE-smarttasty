@@ -1,0 +1,46 @@
+{
+  "home": {
+    "homepage_btn_title": "Trang Chủ",
+    "logout_btn_title": "Thoát"
+  },
+  "header": {
+    "category_btn_title": "Danh Mục",
+    "account_btn_title": "Tài Khoản",
+    "logout_btn_title": "Thoát"
+  },
+  "footer": {
+    "contactus_btn_title": "Liên Hệ",
+    "aboutus_btn_title": "Về Chúng Tôi",
+    "followme_btn_title": "Theo Dõi",
+    "openinghours_btn_title": "Giờ Mở Cửa",
+    "daily_btn_title": "Hàng Ngày"
+  },
+  "account": {
+    "accountinformation_btn_title": "Thông Tin Tài Khoản",
+    "changepassword_btn_title": "Đổi Mật Khẩu",
+    "username_btn_title": "Tên Người Dùng",
+    "phone_btn_title": "Số Điện Thoại",
+    "address_btn_title": "Địa Chỉ",
+    "logout_btn_title": "Thoát"
+  },
+  "login": {
+    "login_btn_title": "Đăng Nhập",
+    "email_placeholder": "Email",
+    "password_placeholder": "Mật Khẩu",
+    "remember_me_checkbox": "Lưu Đăng Nhập",
+    "forgot_password_btn_title": "Quên Mật Khẩu?",
+    "new_to_smartasty_text": "Bạn mới biết đến Smartasty?",
+    "register_btn_title": "Đăng Ký"
+  },
+   "register": {
+    "username_placeholder": "Tài khoản",
+    "password_placeholder": "Mật khẩu",
+    "phone_placeholder": "Số điện thoại",
+    "email_placeholder": "Email",
+    "address_placeholder": "Địa chỉ",
+    "register_btn_title": "Đăng ký",
+    "already_have_account_text": "Bạn đã có tài khoản?",
+    "login_btn_title": "Đăng nhập",
+    "register_business_btn_title": "Đăng ký cho doanh nghiệp"
+  }
+}

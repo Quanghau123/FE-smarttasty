@@ -1,0 +1,25 @@
+.accountContainer {
+  display: flex;
+  flex-direction: column;      // Xếp dọc tiêu đề + form
+  justify-content: center;     // Căn giữa theo chiều dọc
+  align-items: center;         // Căn giữa theo chiều ngang
+  min-height: 66.5vh;           // Chiếm toàn bộ chiều cao trình duyệt
+
+  background-color: #f9f9f9;   // Tuỳ chọn: màu nền nhẹ
+  padding: 2rem;
+
+  // Box form
+  form {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  h3 {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+}

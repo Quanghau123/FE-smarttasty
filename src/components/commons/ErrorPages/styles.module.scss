@@ -1,0 +1,50 @@
+.wrapper {
+  display: flex;
+  flex-direction: column; // Cho phép xuống hàng
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background-color: #fff;
+  color: #333;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+
+.code {
+  font-weight: 600;
+  font-size: 24px;
+  margin-right: 16px;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #ccc;
+  margin-right: 16px;
+}
+
+.text {
+  font-size: 16px;
+  color: #666;
+}
+
+.button {
+  margin-top: 24px; // Khoảng cách xuống hàng
+  padding: 10px 20px;
+  background-color: #1677ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0958d9;
+  }
+}

@@ -1,0 +1,93 @@
+.productPage {
+  padding: 24px;
+
+  .card {
+    // background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h6 {
+      font-weight: 600;
+    }
+  }
+
+  .addBtn {
+    border-radius: 8px;
+    text-transform: none;
+  }
+
+  .filter {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    .searchInput,
+    .categorySelect {
+      min-width: 200px;
+    }
+  }
+
+  .table {
+    margin-top: 16px;
+
+    th,
+    td {
+      vertical-align: middle;
+    }
+  }
+
+  .oldPrice {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 14px;
+  }
+
+  .discountedPrice {
+    color: #e53935;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .discountLabel {
+    color: #e53935;
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+  .statusActive {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+
+  .statusInactive {
+    color: #b71c1c;
+    font-weight: 600;
+  }
+
+  .dishImage {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+
+  .voucherBox {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+
+    .voucherInput {
+      width: 80px;
+    }
+  }
+}

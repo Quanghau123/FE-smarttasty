@@ -1,0 +1,39 @@
+.container {
+  padding: 24px;
+}
+
+.header {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.searchBox {
+  margin-right: 80%;
+  padding-bottom: 20px;
+  padding-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tableContainer {
+  max-height: 600px;
+  border-radius: 8px;
+}
+
+.avatarCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.deleteBtn {
+  color: red;
+  &:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+}

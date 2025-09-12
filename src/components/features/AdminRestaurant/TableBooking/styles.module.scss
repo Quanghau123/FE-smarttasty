@@ -1,0 +1,41 @@
+.container {
+  padding: 32px;
+  text-align: center;
+}
+
+.grid {
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.tableItem {
+  background-color: #4caf50;
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #388e3c;
+  }
+}
+
+.booked {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+
+  &:hover {
+    background-color: #9e9e9e;
+  }
+}
+
+.alert {
+  margin-top: 24px;
+}
+
+.dialogContent {
+  min-width: 300px;
+}

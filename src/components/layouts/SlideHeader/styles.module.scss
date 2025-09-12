@@ -1,0 +1,49 @@
+.container {
+  position: relative;
+  height: 100%;
+  width: 100%; /* đảm bảo container rộng đúng viewport */
+  overflow: hidden;
+}
+
+.imageWrapper {
+  display: flex;
+  height: 100%;
+  transition: transform 1s ease-in-out;
+  width: calc(100vw * 4); /* tổng chiều rộng = 4 ảnh x 100vw */
+}
+
+.imageWrapper img {
+  width: 100vw; /* mỗi ảnh chiếm full chiều ngang viewport */
+  flex-shrink: 0; /* không cho ảnh bị co lại trong flex */
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  //background: rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.dotWrapper {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.active {
+  background-color: orange;
+}

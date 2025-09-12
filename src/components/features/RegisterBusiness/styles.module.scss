@@ -1,0 +1,29 @@
+.registerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+//   background: url("https://raw.githubusercontent.com/lamlinhh/Travel_Web/refs/heads/vu/assets/Images/bg.webp")
+//     no-repeat center/cover;
+}
+
+.registerCard {
+  width: 400px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: white;
+}
+.formbusiness {
+  position: fixed;
+  top:10px;
+  right: 10px;
+  padding: 10px 20px;
+  z-index: 1000;
+  background-color: #e6f7ff; // Màu nền xanh nhạt
+  border: 1px solid #91d5ff; // Viền xanh dương nhạt
+  border-radius: 4px;
+
+  font-weight: 500;
+}
+
