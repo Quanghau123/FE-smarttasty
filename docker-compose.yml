@@ -1,6 +1,6 @@
 services:
   fe-smarttasty:
-    image: quanghau123/fe-smarttasty:latest
+    # image: quanghau123/fe-smarttasty:latest
     container_name: ${FE_CONTAINER_NAME}
     ports:
       - "${FE_PORT}:3000"
