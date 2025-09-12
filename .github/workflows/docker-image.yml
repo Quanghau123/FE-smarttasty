@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ] # hoặc master, tùy repo 
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -28,4 +28,7 @@ jobs:
           file: ./Dockerfile   # Dockerfile FE
           push: true
           tags: quanghau123/fe-smarttasty:latest
-
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=https://api.smart-tasty.io.vn
+            NEXT_PUBLIC_WEBSOCKET_URL=https://socket.smart-tasty.io.vn
+            NEXT_PUBLIC_ENV=production
