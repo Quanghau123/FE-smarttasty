@@ -15,7 +15,7 @@ services:
 
   watchtower:
     image: containrrr/watchtower
-    container_name: watchtower
+    container_name: watchtower-fe
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
