@@ -10,8 +10,6 @@ services:
     restart: always
     environment:
       - NODE_ENV=${NODE_ENV}
-    volumes:
-      - ./env:/app/.env
 
   watchtower:
     image: containrrr/watchtower
