@@ -1,5 +1,8 @@
 services:
   fe-smarttasty:
+    build:
+      context: .
+      dockerfile: Dockerfile
     # image: quanghau123/fe-smarttasty:latest
     container_name: ${FE_CONTAINER_NAME}
     ports:
