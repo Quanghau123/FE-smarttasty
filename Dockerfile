@@ -7,10 +7,6 @@ COPY . .
 COPY .env.local .  
 RUN npm run build
 
-# Tam bo qua error
-# thêm flag bỏ lint + type check
-RUN npm run build -- --no-lint --no-type-check
-
 # Stage 2: production
 FROM node:18-alpine
 WORKDIR /app
