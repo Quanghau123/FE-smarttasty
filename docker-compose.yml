@@ -1,15 +1,18 @@
 services:
   fe-smarttasty:
-    image: quanghau123/fe-smarttasty:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://api.smart-tasty.io.vn
+        NEXT_PUBLIC_WEBSOCKET_URL: https://socket.smart-tasty.io.vn
+        NEXT_PUBLIC_ENV: production
     container_name: ${FE_CONTAINER_NAME}
     ports:
       - "${FE_PORT}:3000"
     restart: always
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
-      - NEXT_PUBLIC_WEBSOCKET_URL=${NEXT_PUBLIC_WEBSOCKET_URL}
-      - NEXT_PUBLIC_ENV=${NEXT_PUBLIC_ENV}
+      - NODE_ENV=${NODE_ENV} # runtime
 
   watchtower:
     image: containrrr/watchtower
