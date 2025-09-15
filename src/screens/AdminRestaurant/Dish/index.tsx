@@ -1,10 +1,10 @@
-import Dish from "@/components/features/AdminRestaurant/Dish";
+// import Dish from "@/components/features/AdminRestaurant/Dish";
 
-const index = () => {
-  return (
-    <>
-      <Dish />
-    </>
-  );
-};
-export default index;
+// const index = () => {
+//   return (
+//     <>
+//       <Dish />
+//     </>
+//   );
+// };
+// export default index;

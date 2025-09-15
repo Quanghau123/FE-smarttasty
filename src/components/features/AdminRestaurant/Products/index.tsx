@@ -4,32 +4,34 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Switch,
-  Typography,
   Card,
   CardContent,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  MenuItem,
+  Pagination,
+  Paper,
+  Switch,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
-  Pagination,
+  TextField,
+  Typography,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchDishes,
@@ -40,18 +42,8 @@ import {
 import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
 import { Dish } from "@/types/dish";
 import axiosInstance from "@/lib/axios/axiosInstance";
-import styles from "./styles.module.scss";
 import { toast } from "react-toastify";
-
-const getUserFromLocalStorage = () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = localStorage.getItem("token");
-    return { user, token };
-  } catch {
-    return { user: {}, token: null };
-  }
-};
+import styles from "./styles.module.scss";
 
 type FormState = {
   name: string;
@@ -67,17 +59,23 @@ const defaultForm: FormState = {
   isActive: true,
 };
 
+const getUserFromLocalStorage = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = localStorage.getItem("token");
+    return { user, token };
+  } catch {
+    return { user: {}, token: null };
+  }
+};
+
 const ProductPage = () => {
   const dispatch = useAppDispatch();
-
-  // dishes từ redux
   const { items: dishes, loading } = useAppSelector((state) => state.dishes);
-
-  // restaurant từ redux
   const { current: restaurant } = useAppSelector((state) => state.restaurant);
 
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
-  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [formData, setFormData] = useState<FormState>(defaultForm);
   const [file, setFile] = useState<File | null>(null);
@@ -85,10 +83,11 @@ const ProductPage = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState(1);
-
   const itemsPerPage = 6;
 
-  // setup token vào axios
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedDishId, setSelectedDishId] = useState<number | null>(null);
+
   useEffect(() => {
     const { token } = getUserFromLocalStorage();
     if (token) {
@@ -97,15 +96,12 @@ const ProductPage = () => {
     }
   }, [dispatch]);
 
-  // khi có restaurant -> fetch dishes
   useEffect(() => {
-    if (restaurant) {
-      if (restaurant.id) {
-        setRestaurantId(restaurant.id);
-        dispatch(fetchDishes(restaurant.id));
-      } else {
-        toast.warning("Tài khoản chưa có nhà hàng!");
-      }
+    if (restaurant?.id) {
+      setRestaurantId(restaurant.id);
+      dispatch(fetchDishes(restaurant.id));
+    } else if (restaurant) {
+      toast.warning("Tài khoản chưa có nhà hàng!");
     }
   }, [restaurant, dispatch]);
 
@@ -124,34 +120,23 @@ const ProductPage = () => {
       setFormData(defaultForm);
       setFile(null);
     }
-    setOpen(true);
+    setOpenModal(true);
   };
 
   const handleCloseModal = () => {
-    setOpen(false);
+    setOpenModal(false);
     setEditingDish(null);
     setFormData(defaultForm);
     setFile(null);
   };
 
   const handleSubmit = async () => {
-    if (!restaurantId) {
-      toast.error("Thiếu nhà hàng!");
-      return;
-    }
-    if (!formData.name.trim()) {
-      toast.warning("Vui lòng nhập tên món");
-      return;
-    }
+    if (!restaurantId) return toast.error("Thiếu nhà hàng!");
+    if (!formData.name.trim()) return toast.warning("Vui lòng nhập tên món");
     const priceNum = Number(formData.price);
-    if (!Number.isFinite(priceNum) || priceNum <= 0) {
-      toast.warning("Giá không hợp lệ");
-      return;
-    }
-    if (!editingDish && !file) {
-      toast.warning("Vui lòng tải ảnh món ăn");
-      return;
-    }
+    if (!Number.isFinite(priceNum) || priceNum <= 0)
+      return toast.warning("Giá không hợp lệ");
+    if (!editingDish && !file) return toast.warning("Vui lòng tải ảnh món ăn");
 
     const form = new FormData();
     form.append("name", formData.name.trim());
@@ -164,26 +149,38 @@ const ProductPage = () => {
     try {
       if (editingDish) {
         await dispatch(updateDish({ id: editingDish.id, data: form })).unwrap();
-        toast.success("Cập nhật món ăn thành công");
+        toast.success("Cập nhật món ăn thành công ✅");
       } else {
         await dispatch(addDish(form)).unwrap();
-        toast.success("Thêm món ăn thành công");
+        toast.success("Thêm món ăn thành công ✅");
       }
       handleCloseModal();
       dispatch(fetchDishes(restaurantId));
     } catch {
-      toast.error("Thao tác thất bại");
+      toast.error("Thao tác thất bại. Vui lòng thử lại!");
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bạn chắc chắn muốn xoá món ăn này?")) return;
+  const handleClickDelete = (id: number) => {
+    setSelectedDishId(id);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDishId) return;
     try {
-      await dispatch(deleteDish(id)).unwrap();
-      toast.success("Đã xoá món ăn");
+      await dispatch(deleteDish(selectedDishId)).unwrap();
+      toast.success("Xóa món ăn thành công ✅");
       if (restaurantId) dispatch(fetchDishes(restaurantId));
-    } catch {
-      toast.error("Xoá món ăn thất bại");
+    } catch (error: unknown) {
+      let message = "Xóa món ăn thất bại. Vui lòng thử lại!";
+      if (error && typeof error === "object" && "message" in error) {
+        message = (error as { message: string }).message;
+      }
+      toast.error(message);
+    } finally {
+      setOpenDeleteDialog(false);
+      setSelectedDishId(null);
     }
   };
 
@@ -219,7 +216,6 @@ const ProductPage = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenModal()}
-              className={styles.addBtn}
             >
               Thêm món
             </Button>
@@ -259,7 +255,7 @@ const ProductPage = () => {
             <CircularProgress />
           ) : (
             <>
-              <TableContainer component={Paper} className={styles.table}>
+              <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -290,10 +286,11 @@ const ProductPage = () => {
                         </TableCell>
                         <TableCell>
                           {dish.imageUrl ? (
-                            <img
+                            <Image
                               src={dish.imageUrl}
                               alt={dish.name}
-                              className={styles.dishImage}
+                              width={80}
+                              height={80}
                             />
                           ) : (
                             <Typography>Không có ảnh</Typography>
@@ -305,7 +302,7 @@ const ProductPage = () => {
                           </IconButton>
                           <IconButton
                             color="error"
-                            onClick={() => handleDelete(dish.id)}
+                            onClick={() => handleClickDelete(dish.id)}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -315,6 +312,7 @@ const ProductPage = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
               <Box display="flex" justifyContent="center" mt={2}>
                 <Pagination
                   count={totalPages}
@@ -329,7 +327,12 @@ const ProductPage = () => {
       </Card>
 
       {/* Modal thêm/sửa món */}
-      <Dialog open={open} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {editingDish ? "Cập nhật món ăn" : "Thêm món ăn"}
         </DialogTitle>
@@ -396,15 +399,16 @@ const ProductPage = () => {
                 />
               </Button>
               {(file || editingDish?.imageUrl) && (
-                <img
-                  src={file ? URL.createObjectURL(file) : editingDish?.imageUrl}
+                <Image
+                  src={
+                    file
+                      ? URL.createObjectURL(file)
+                      : editingDish?.imageUrl || "/default.png"
+                  }
                   alt="preview"
-                  style={{
-                    width: 80,
-                    height: 80,
-                    objectFit: "cover",
-                    borderRadius: 8,
-                  }}
+                  width={80}
+                  height={80}
+                  style={{ objectFit: "cover", borderRadius: 8 }}
                 />
               )}
             </Box>
@@ -414,6 +418,29 @@ const ProductPage = () => {
           <Button onClick={handleCloseModal}>Hủy</Button>
           <Button variant="contained" onClick={handleSubmit}>
             {editingDish ? "Cập nhật" : "Thêm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog xác nhận xóa */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+      >
+        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xoá món ăn này không?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDelete}
+          >
+            Xoá
           </Button>
         </DialogActions>
       </Dialog>

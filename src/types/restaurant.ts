@@ -10,10 +10,8 @@ export interface RestaurantForm {
   closeTime: string;
   latitude: number;
   longitude: number;
-  file: File;
+  file: File | null;
   imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 // Entity restaurant trong hệ thống
@@ -28,8 +26,12 @@ export interface Restaurant {
   latitude: number;
   longitude: number;
   imageUrl: string;
+  imagePublicId?: string;
   ownerId: number;
   distanceKm?: number; // để hiển thị khoảng cách
+  rating: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // State trong Redux store

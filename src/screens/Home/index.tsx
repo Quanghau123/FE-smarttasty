@@ -6,9 +6,8 @@ const index = () => {
   return (
     <>
       <SlideHeader />
-      <Menu/>
+      <Menu />
       <Body />
-      
     </>
   );
 };

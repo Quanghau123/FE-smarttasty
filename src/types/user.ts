@@ -9,6 +9,17 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+// DTO cho API tạo user
+export interface CreateUserDto {
+  role: string;
+  userName: string;
+  userPassword: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+
 export interface Restaurant {
   id: number;
   name: string;

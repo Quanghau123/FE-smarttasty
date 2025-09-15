@@ -69,7 +69,7 @@ const TableBooking = () => {
 
       <Grid container spacing={2} className={styles.grid}>
         {tables.map((table) => (
-          <Grid item xs={4} sm={3} key={table.id}>
+          <Grid item xs={4} sm={3} key={table.id} component={"div" as React.ElementType}>
             <Box
               className={`${styles.tableItem} ${
                 table.status === "booked" ? styles.booked : ""

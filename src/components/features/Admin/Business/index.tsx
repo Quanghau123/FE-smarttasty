@@ -22,13 +22,14 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
 import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
 import { toast } from "react-toastify";
-import axiosInstance from "@/lib/axios/axiosInstance";
 import { User } from "@/types/user";
 
 interface ExtendedUser extends User {
@@ -37,71 +38,58 @@ interface ExtendedUser extends User {
 
 const UserPage = () => {
   const dispatch = useAppDispatch();
+  const { users, loading } = useAppSelector((state) => state.user);
   const { restaurants } = useAppSelector((state) => state.restaurant);
 
-  const [users, setUsers] = useState<ExtendedUser[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const pageSize = 6;
 
-  // 🔹 Fetch users và gán nhà hàng
-  // 🔹 Fetch users và gán nhà hàng (chỉ business)
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstance.get("/api/User");
-      const allUsers: User[] = res.data?.data || [];
-
-      // lọc role === 'business' và map nhà hàng
-      const enrichedUsers: ExtendedUser[] = allUsers
-        .filter((user) => user.role === "business")
-        .map((user) => {
-          const userRestaurants = restaurants
-            .filter((r) => r.ownerId === user.userId)
-            .map((r) => r.name)
-            .join(", ");
-          return { ...user, restaurants: userRestaurants || "Chưa có" };
-        });
-
-      setUsers(enrichedUsers);
-    } catch (err) {
-      toast.error("Lấy danh sách người dùng thất bại!");
-    }
-  };
+  // 🔹 Fetch users và nhà hàng khi component mount
+  useEffect(() => {
+    dispatch(fetchRestaurants());
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   // 🔹 Xoá user
   const handleDelete = async () => {
     if (!selectedUserId) return;
     try {
-      await axiosInstance.delete(`/api/User/${selectedUserId}`);
+      await dispatch(deleteUser(selectedUserId)).unwrap();
       toast.success("Xoá thành công!");
-      fetchUsers();
       setOpenDialog(false);
-    } catch (err) {
+    } catch  {
       toast.error("Xoá thất bại!");
     }
   };
 
-  useEffect(() => {
-    dispatch(fetchRestaurants()); // fetch tất cả nhà hàng trước
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [restaurants]); // reload users khi có dữ liệu nhà hàng
+  // 🔹 Kết hợp users với nhà hàng
+  const enrichedUsers: ExtendedUser[] = users
+    .filter((user) => user.role === "business")
+    .map((user) => {
+      const userRestaurants = restaurants
+        .filter((r) => r.ownerId === user.userId)
+        .map((r) => r.name)
+        .join(", ");
+      return { ...user, restaurants: userRestaurants || "Chưa có" };
+    });
 
   // 🔹 Filter + Pagination
-  const filteredData = users.filter(
+  const filteredData = enrichedUsers.filter(
     (u) =>
       u.userName.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
+
   const pageCount = Math.ceil(filteredData.length / pageSize);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  if (loading) return <CircularProgress />;
 
   return (
     <Box>

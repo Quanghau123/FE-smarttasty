@@ -29,7 +29,7 @@ const ForgotPasswordPage = () => {
         email,
       });
 
-      if (res.data.errCode === 0) {
+      if (res.data.errCode === 0 || res.data.errCode === "success") {
         toast.success(
           "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn."
         );
@@ -38,7 +38,7 @@ const ForgotPasswordPage = () => {
           res.data.errMessage || "Email không tồn tại trong hệ thống."
         );
       }
-    } catch (err) {
+    } catch {
       toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);

@@ -21,52 +21,55 @@ import {
   TextField,
   Typography,
   Pagination,
+  CircularProgress,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import moment from "moment";
 import { toast } from "react-toastify";
-import axiosInstance from "@/lib/axios/axiosInstance";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
 import { User } from "@/types/user";
-import styles from "./styles.module.scss";
 
 const UserPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const dispatch = useAppDispatch();
+  const { users, loading, error } = useAppSelector((state) => state.user);
+
   const [search, setSearch] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
-  
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstance.get("/api/User");
-      const allUsers: User[] = res.data.data || [];
-      const filteredUsers = allUsers.filter((user) => user.role === "user");
-      setUsers(filteredUsers);
-    } catch (error) {
-      toast.error("Không thể lấy danh sách người dùng!");
-    }
-  };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   const handleDelete = async () => {
     if (!selectedUserId) return;
     try {
-      await axiosInstance.delete(`/api/User/${selectedUserId}`);
+      await dispatch(deleteUser(selectedUserId)).unwrap();
       toast.success("Xoá thành công!");
-      fetchUsers();
       setOpenDialog(false);
-    } catch (error) {
-      toast.error("Xoá thất bại!");
+    } catch (err: unknown) {
+      // Kiểm tra err là Error
+      if (err instanceof Error) {
+        toast.error(err.message || "Xoá thất bại!");
+      } else {
+        toast.error("Xoá thất bại!");
+      }
     }
   };
 
-  const filteredData = users.filter(
+  // Lọc user thường
+  const normalUsers = useMemo(
+    () => users.filter((u) => u.role === "user"),
+    [users]
+  );
+
+  // Filter + search
+  const filteredData = normalUsers.filter(
     (user) =>
       user.userName.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
@@ -82,18 +85,53 @@ const UserPage = () => {
     setCurrentPage(value);
   };
 
-  return (
-    <Box className={styles.container}>
-      <Typography className={styles.header}>Thông Tin User</Typography>
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "70vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-      <Box className={styles.searchBox}>
+  if (error) {
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <Typography color="error" variant="h6">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 600,
+          mb: 3,
+          color: (theme) => theme.palette.text.primary,
+        }}
+      >
+        Thông Tin User
+      </Typography>
+
+      <Box sx={{ mb: 3, maxWidth: 400 }}>
         <TextField
+          fullWidth
           label="Tìm kiếm người dùng"
           variant="outlined"
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setCurrentPage(1); // reset về trang đầu khi tìm
+            setCurrentPage(1);
           }}
           InputProps={{
             startAdornment: (
@@ -105,8 +143,8 @@ const UserPage = () => {
         />
       </Box>
 
-      <TableContainer component={Paper} className={styles.tableContainer}>
-        <Table className={styles.table}>
+      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell align="center">Xoá</TableCell>
@@ -118,7 +156,7 @@ const UserPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedData.map((user) => (
+            {paginatedData.map((user: User) => (
               <TableRow key={user.userId}>
                 <TableCell align="center">
                   <IconButton
@@ -126,17 +164,15 @@ const UserPage = () => {
                       setSelectedUserId(user.userId);
                       setOpenDialog(true);
                     }}
-                    className={styles.deleteBtn}
+                    sx={{ color: (theme) => theme.palette.error.main }}
                   >
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
                 <TableCell align="left">
-                  <Box className={styles.avatarCell}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Avatar>{user.userName.charAt(0).toUpperCase()}</Avatar>
-                    <Typography className={styles.name}>
-                      {user.userName}
-                    </Typography>
+                    <Typography>{user.userName}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell align="center">{user.email}</TableCell>

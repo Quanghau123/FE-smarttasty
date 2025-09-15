@@ -1,16 +1,15 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { Dish } from "@/types/dish";
 
 const CLOUDINARY_PREFIX = "https://res.cloudinary.com/djcur1ymq/image/upload/";
 
-const normalizeDish = (dish: Dish): Dish => {
-  return {
-    ...dish,
-    imageUrl:
-      dish.imageUrl || (dish.image ? `${CLOUDINARY_PREFIX}${dish.image}` : ""),
-  };
-};
+const normalizeDish = (dish: Dish): Dish => ({
+  ...dish,
+  imageUrl:
+    dish.imageUrl || (dish.image ? `${CLOUDINARY_PREFIX}${dish.image}` : ""),
+});
 
 interface DishState {
   items: Dish[];
@@ -24,6 +23,15 @@ const initialState: DishState = {
   error: null,
 };
 
+// Helper lấy message từ error
+const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): string => {
+  if (axios.isAxiosError(err)) {
+    const responseData = err.response?.data as { message?: string; errMessage?: string } | undefined;
+    return responseData?.message ?? responseData?.errMessage ?? fallback;
+  }
+  return fallback;
+};
+
 // ================== ASYNC ACTIONS ==================
 
 export const fetchDishes = createAsyncThunk<
@@ -32,14 +40,10 @@ export const fetchDishes = createAsyncThunk<
   { rejectValue: string }
 >("dishes/fetch", async (restaurantId, { rejectWithValue }) => {
   try {
-    const res = await axiosInstance.get(
-      `/api/Dishes/restaurant/${restaurantId}`
-    );
+    const res = await axiosInstance.get(`/api/Dishes/restaurant/${restaurantId}`);
     return (res.data?.data || []).map(normalizeDish);
-  } catch (err: any) {
-    return rejectWithValue(
-      err?.response?.data?.message || "Lỗi khi tải danh sách món ăn"
-    );
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách món ăn"));
   }
 });
 
@@ -52,11 +56,9 @@ export const addDish = createAsyncThunk<
     const res = await axiosInstance.post(`/api/Dishes`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return normalizeDish(res.data.data || res.data);
-  } catch (err: any) {
-    return rejectWithValue(
-      err?.response?.data?.message || "Lỗi khi thêm món ăn"
-    );
+    return normalizeDish(res.data?.data || res.data);
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Lỗi khi thêm món ăn"));
   }
 });
 
@@ -70,10 +72,8 @@ export const updateDish = createAsyncThunk<
       headers: { "Content-Type": "multipart/form-data" },
     });
     return normalizeDish(res.data?.data || res.data);
-  } catch (err: any) {
-    return rejectWithValue(
-      err?.response?.data?.message || "Lỗi khi cập nhật món ăn"
-    );
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Lỗi khi cập nhật món ăn"));
   }
 });
 
@@ -85,10 +85,8 @@ export const deleteDish = createAsyncThunk<
   try {
     await axiosInstance.delete(`/api/Dishes/${id}`);
     return id;
-  } catch (err: any) {
-    return rejectWithValue(
-      err?.response?.data?.message || "Lỗi khi xóa món ăn"
-    );
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Lỗi khi xóa món ăn"));
   }
 });
 
@@ -111,23 +109,29 @@ const dishSlice = createSlice({
       })
       .addCase(fetchDishes.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Lỗi tải món ăn";
+        state.error = action.payload ?? "Lỗi tải món ăn";
       })
-
       // ADD
       .addCase(addDish.fulfilled, (state, action) => {
         state.items.push(action.payload);
       })
-
+      .addCase(addDish.rejected, (state, action) => {
+        state.error = action.payload ?? "Lỗi thêm món ăn";
+      })
       // UPDATE
       .addCase(updateDish.fulfilled, (state, action) => {
         const idx = state.items.findIndex((d) => d.id === action.payload.id);
         if (idx !== -1) state.items[idx] = action.payload;
       })
-
+      .addCase(updateDish.rejected, (state, action) => {
+        state.error = action.payload ?? "Lỗi cập nhật món ăn";
+      })
       // DELETE
       .addCase(deleteDish.fulfilled, (state, action) => {
         state.items = state.items.filter((d) => d.id !== action.payload);
+      })
+      .addCase(deleteDish.rejected, (state, action) => {
+        state.error = action.payload ?? "Lỗi xóa món ăn";
       });
   },
 });

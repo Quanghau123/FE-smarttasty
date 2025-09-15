@@ -1,6 +1,6 @@
 import React from "react";
 import clsx from "clsx";
-import BpHeading3 from "@/components/commons/headings/bpHeading3";
+import BpHeading3 from "@/components/commons/headings/BpHeading3";
 
 type BpCardProps = {
   heading?: string;

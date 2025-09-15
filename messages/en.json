@@ -4,9 +4,11 @@
     "logout_btn_title": "Logout"
   },
   "header": {
-    "category_btn_title": "Category",
     "account_btn_title": "Account",
-    "logout_btn_title": "Logout"
+    "logout_btn_title": "Logout",
+    "welcome_text": "Hello",
+    "register_btn_title": "Register",
+    "login_btn_title": "Login"
   },
   "footer": {
     "contactus_btn_title": "Contact us",
@@ -23,7 +25,7 @@
     "address_btn_title": "Address",
     "logout_btn_title": "Logout"
   },
-  
+
   "login": {
     "login_btn_title": "Login",
     "email_placeholder": "Email",
@@ -33,15 +35,15 @@
     "new_to_smartasty_text": "New to Smartasty?",
     "register_btn_title": "Register"
   },
-   "register": {
-      "username_placeholder": "Username",
-      "password_placeholder": "Password",
-      "phone_placeholder": "Phone Number",
-      "email_placeholder": "Email",
-      "address_placeholder": "Address",
-      "register_btn_title": "Register",
-      "already_have_account_text": "Already have an account?",
-      "login_btn_title": "Login",
-      "register_business_btn_title": "Register for Business"
-    }
+  "register": {
+    "username_placeholder": "Username",
+    "password_placeholder": "Password",
+    "phone_placeholder": "Phone Number",
+    "email_placeholder": "Email",
+    "address_placeholder": "Address",
+    "register_btn_title": "Register",
+    "already_have_account_text": "Already have an account?",
+    "login_btn_title": "Login",
+    "register_business_btn_title": "Register for Business"
+  }
 }

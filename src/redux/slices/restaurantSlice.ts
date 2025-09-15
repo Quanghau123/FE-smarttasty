@@ -1,5 +1,6 @@
 // src/redux/slices/restaurantSlice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import {
   Restaurant,
@@ -7,7 +8,7 @@ import {
   RestaurantState,
 } from "@/types/restaurant";
 
-//INITIAL STATE 
+// INITIAL STATE
 const initialState: RestaurantState = {
   restaurants: [],
   current: null,
@@ -15,10 +16,18 @@ const initialState: RestaurantState = {
   loading: false,
   loadingNearby: false,
   error: null,
-   
 };
 
-//ASYNC THUNKS
+// Helper: Lấy message từ error
+const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): string => {
+  if (axios.isAxiosError(err)) {
+    const responseData = err.response?.data as { message?: string; errMessage?: string } | undefined;
+    return responseData?.message ?? responseData?.errMessage ?? fallback;
+  }
+  return fallback;
+};
+
+// ================== ASYNC THUNKS ==================
 
 // Fetch by owner
 export const fetchRestaurantByOwner = createAsyncThunk<
@@ -32,8 +41,8 @@ export const fetchRestaurantByOwner = createAsyncThunk<
     });
     const apiData = response.data?.data;
     return Array.isArray(apiData) && apiData.length > 0 ? apiData[0] : null;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || "Lỗi không xác định");
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err));
   }
 });
 
@@ -46,9 +55,9 @@ export const fetchRestaurantsByCategory = createAsyncThunk<
   try {
     const res = await axiosInstance.get(`/api/Restaurant/category/${category}`);
     return res.data?.data ?? [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     return rejectWithValue(
-      err.response?.data?.errMessage || "Không tìm được nhà hàng theo danh mục"
+      getErrorMessage(err, "Không tìm được nhà hàng theo danh mục")
     );
   }
 });
@@ -76,8 +85,8 @@ export const createRestaurant = createAsyncThunk<
     });
 
     return res.data?.data ?? null;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || "Lỗi không xác định");
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err));
   }
 });
 
@@ -90,8 +99,8 @@ export const fetchRestaurants = createAsyncThunk<
   try {
     const res = await axiosInstance.get("/api/Restaurant");
     return res.data?.data?.items ?? [];
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || "Lỗi không xác định");
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err));
   }
 });
 
@@ -106,9 +115,9 @@ export const fetchNearbyRestaurants = createAsyncThunk<
       `/api/Restaurant/nearby?lat=${lat}&lng=${lng}`
     );
     return res.data?.data ?? [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     return rejectWithValue(
-      err.response?.data?.errMessage || "Không lấy được nhà hàng gần bạn"
+      getErrorMessage(err, "Không lấy được nhà hàng gần bạn")
     );
   }
 });
@@ -122,10 +131,8 @@ export const fetchRestaurantById = createAsyncThunk<
   try {
     const response = await axiosInstance.get(`/api/Restaurant/${id}`);
     return response.data?.data ?? null;
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.message || "Không tìm thấy nhà hàng"
-    );
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Không tìm thấy nhà hàng"));
   }
 });
 
@@ -154,8 +161,8 @@ export const updateRestaurant = createAsyncThunk<
     });
 
     return response.data?.data ?? null;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.errMessage || "Cập nhật thất bại");
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Cập nhật thất bại"));
   }
 });
 
@@ -170,12 +177,12 @@ export const deleteRestaurant = createAsyncThunk<
       headers: { Authorization: `Bearer ${token}` },
     });
     return id;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || "Lỗi không xác định");
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err));
   }
 });
 
-/* -------------------- SLICE -------------------- */
+// ================== SLICE ==================
 const restaurantSlice = createSlice({
   name: "restaurant",
   initialState,

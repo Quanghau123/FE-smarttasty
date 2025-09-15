@@ -12,6 +12,7 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -19,10 +20,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "react-toastify";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { createRestaurant } from "@/redux/slices/restaurantSlice";
-
 
 const MapView = dynamic(() => import("@/components/layouts/MapView"), {
   ssr: false,
@@ -56,12 +56,17 @@ const RestaurantCreatePage = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (e: any) => {
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
     setForm((prev) => ({ ...prev, category: e.target.value }));
   };
 
-  const handleTimeChange = (name: string, value: any) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleTimeChange = (
+    name: "openTime" | "closeTime",
+    value: Dayjs | null
+  ) => {
+    if (value) {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleAddressChange = async (
@@ -87,7 +92,7 @@ const RestaurantCreatePage = () => {
       } else {
         toast.error("Không tìm thấy tọa độ từ địa chỉ.");
       }
-    } catch (err) {
+    } catch {
       toast.error("Lỗi khi lấy tọa độ từ địa chỉ.");
     }
   };
@@ -103,6 +108,8 @@ const RestaurantCreatePage = () => {
       openTime: form.openTime.format("HH:mm"),
       closeTime: form.closeTime.format("HH:mm"),
       file,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const token = localStorage.getItem("token") || "";
@@ -159,20 +166,14 @@ const RestaurantCreatePage = () => {
               name="address"
               value={form.address}
               onChange={handleAddressChange}
-              margin="normal" 
+              margin="normal"
               required
             />
-       
 
             {mounted && (
               <Box mt={2}>
-                <MapView
-                  initialLat={latitude}
-                  initialLng={longitude}
-                  isMarkerFixed={true}
-                  lat={latitude}
-                  lng={longitude}
-                />
+                <MapView lat={latitude} lng={longitude} />
+
                 <Typography variant="body2" mt={1}>
                   Vĩ độ: {latitude.toFixed(6)} | Kinh độ: {longitude.toFixed(6)}
                 </Typography>

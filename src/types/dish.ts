@@ -22,15 +22,15 @@
 //   dishPromotions?: DishPromotion[]; // quan hệ ngược
 // }
 
-
-
 export interface Dish {
   id: number;
   name: string;
   price: number;
+  image?: string;
   imageUrl: string; // dùng cái này thôi
   isActive: boolean;
   category: string;
+ // description?: string;
   restaurant: {
     id: number;
     name: string;

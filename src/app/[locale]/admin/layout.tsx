@@ -50,7 +50,7 @@ export default function AdminLayout({
       } else {
         setAuthorized(true);
       }
-    } catch (error) {
+    } catch {
       //   console.error("❌ Lỗi khi decode token:", error);
       router.replace("/ErrorPages/notfound");
     }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Box,
   Card,
@@ -11,30 +10,39 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/lib/axios/axiosInstance";
 import { toast } from "react-toastify";
 import styles from "./styles.module.scss";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import {
+  changePassword,
+  resetChangePasswordState,
+  clearUser,
+} from "@/redux/slices/userSlice";
+import { useState, useEffect } from "react";
 
-const ChangePasswordPage = () => {
-  const [loading, setLoading] = useState(false);
+type ChangePasswordFormProps = {
+  onSuccess?: () => void;
+};
+
+const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
+  onSuccess,
+}) => {
+  const dispatch = useAppDispatch();
   const router = useRouter();
+  const { changePasswordLoading, changePasswordError, changePasswordSuccess } =
+    useAppSelector((state) => state.user);
+
   const [formValues, setFormValues] = useState({
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({ ...formValues, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { currentPassword, newPassword, confirmNewPassword } = formValues;
-
+  const validate = (): boolean => {
+    const { newPassword, confirmNewPassword } = formValues;
     if (newPassword !== confirmNewPassword) {
       toast.error("Mật khẩu mới và xác nhận không khớp!");
-      return;
+      return false;
     }
 
     if (
@@ -43,33 +51,45 @@ const ChangePasswordPage = () => {
       toast.error(
         "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự."
       );
-      return;
+      return false;
     }
-
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post("/api/User/change-password", {
-        currentPassword,
-        newPassword,
-        confirmNewPassword,
-      });
-
-      const { errCode, errMessage } = response.data;
-
-      if (errCode === 0) {
-        toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
-        localStorage.removeItem("token");
-        router.push("/login");
-      } else {
-        toast.error(errMessage || "Đổi mật khẩu thất bại!");
-      }
-    } catch (error: any) {
-      toast.error("Đổi mật khẩu thất bại!");
-      console.error("Change password error:", error);
-    } finally {
-      setLoading(false);
-    }
+    return true;
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValues({ ...formValues, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    dispatch(changePassword(formValues));
+  };
+
+  useEffect(() => {
+    if (changePasswordSuccess) {
+      toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+
+      // Xóa token + Redux user
+      localStorage.removeItem("token");
+      dispatch(clearUser());
+
+      // Nếu có callback từ cha, gọi trước
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Push login page sau khi chắc chắn user đã được xóa
+        router.push("/login");
+      }
+
+      dispatch(resetChangePasswordState());
+    }
+
+    if (changePasswordError) {
+      toast.error(changePasswordError);
+      dispatch(resetChangePasswordState());
+    }
+  }, [changePasswordSuccess, changePasswordError, dispatch, router, onSuccess]);
 
   return (
     <Box className={styles.loginContainer}>
@@ -115,10 +135,14 @@ const ChangePasswordPage = () => {
               variant="contained"
               color="primary"
               fullWidth
-              disabled={loading}
+              disabled={changePasswordLoading}
               sx={{ marginTop: 2 }}
             >
-              {loading ? <CircularProgress size={24} /> : "Đổi mật khẩu"}
+              {changePasswordLoading ? (
+                <CircularProgress size={24} />
+              ) : (
+                "Đổi mật khẩu"
+              )}
             </Button>
           </Box>
         </CardContent>
@@ -127,4 +151,4 @@ const ChangePasswordPage = () => {
   );
 };
 
-export default ChangePasswordPage;
+export default ChangePasswordForm;

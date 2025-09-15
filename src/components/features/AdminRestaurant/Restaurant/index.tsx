@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   Box,
   Button,
@@ -60,7 +61,7 @@ const RestaurantPage = () => {
 
   useEffect(() => {
     if (restaurantInfo?.id) {
-      dispatch(fetchDishes(restaurantInfo.id.toString()));
+      dispatch(fetchDishes(restaurantInfo.id));
       setFormState({
         name: restaurantInfo.name || "",
         address: restaurantInfo.address || "",
@@ -145,27 +146,29 @@ const RestaurantPage = () => {
     <Box sx={{ p: 4 }}>
       <Paper elevation={3} sx={{ display: "flex", gap: 4, p: 3, mb: 4 }}>
         <Box>
-          <img
-            src={
-              formState.file
-                ? URL.createObjectURL(formState.file)
-                : restaurantInfo.imageUrl ||
-                  `https://res.cloudinary.com/djcur1ymq/image/upload/${restaurantInfo.imagePublicId}`
-            }
-            alt="Ảnh nhà hàng"
-            style={{
+          <Box
+            sx={{
+              position: "relative",
               width: 300,
               height: 200,
-              objectFit: "cover",
-              borderRadius: 8,
+              borderRadius: 2,
+              overflow: "hidden",
             }}
-          />
+          >
+            <Image
+              src={
+                formState.file
+                  ? URL.createObjectURL(formState.file)
+                  : restaurantInfo.imageUrl ||
+                    `https://res.cloudinary.com/djcur1ymq/image/upload/${restaurantInfo.imagePublicId}`
+              }
+              alt="Ảnh nhà hàng"
+              fill
+              style={{ objectFit: "cover" }}
+            />
+          </Box>
           {isEditing && (
-            <Button
-              variant="outlined"
-              component="label"
-              sx={{ mt: 2 }}
-            >
+            <Button variant="outlined" component="label" sx={{ mt: 2 }}>
               Chọn ảnh mới
               <input
                 type="file"
@@ -272,13 +275,22 @@ const RestaurantPage = () => {
         ) : (
           <Grid container spacing={2}>
             {dishes.map((dish) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={dish.id}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={dish.id} component={"div" as React.ElementType}>
                 <Paper elevation={2}>
-                  <img
-                    src={dish.imageUrl}
-                    alt={dish.name}
-                    style={{ width: "100%", height: 160, objectFit: "cover" }}
-                  />
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: "100%",
+                      height: 160,
+                    }}
+                  >
+                    <Image
+                      src={dish.imageUrl}
+                      alt={dish.name}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                  </Box>
                   <Box p={2}>
                     <Typography variant="h6">
                       {dish.name}
