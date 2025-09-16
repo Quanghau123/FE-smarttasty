@@ -82,7 +82,7 @@ const RegisterBusiness = () => {
       const resultAction = await dispatch(
         createUser({
           ...formValues,
-          Role: "business", // 👈 Đặt role cho doanh nghiệp
+          role: "business", // 👈 Đặt role cho doanh nghiệp
         })
       );
 
@@ -92,7 +92,7 @@ const RegisterBusiness = () => {
       } else {
         toast.error(resultAction.payload as string);
       }
-    } catch (error) {
+    } catch {
       toast.error("Có lỗi xảy ra, vui lòng thử lại!");
     }
   };

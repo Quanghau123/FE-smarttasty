@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-//import "react-datepicker/dist/react-datepicker.css";
+import Image from "next/image";
 import styles from "./styles.module.scss";
 
-//import anh1 from "@/assets/Image/SlideHeader/anh1.jpg";
-//import anh2 from "@/assets/Image/SlideHeader/anh2.jpg";
-//import anh3 from "@/assets/Image/SlideHeader/anh3.jpg";
 import anh4 from "@/assets/Image/SlideHeader/anh5.jpg";
 
 const images = [anh4, anh4, anh4, anh4];
@@ -28,7 +25,7 @@ const Index = () => {
       sliderRef.current.style.transform = `translateX(-${
         currentIndex * 100
       }vw)`;
-      sliderRef.current.style.transition = "transform 0.5s ease-in-out"; // Thêm hiệu ứng chuyển mượt
+      sliderRef.current.style.transition = "transform 0.5s ease-in-out";
     }
   }, [currentIndex]);
 
@@ -36,13 +33,16 @@ const Index = () => {
     <div className={styles.container}>
       <div className={styles.imageWrapper} ref={sliderRef}>
         {images.map((img, idx) => (
-          <img
-            key={idx}
-            src={img.src}
-            alt={`Slide ${idx + 1}`}
-            draggable={false} // tránh kéo ảnh gây khó chịu UX
-            className={styles.slideImage} // thêm class nếu cần style riêng cho img
-          />
+          <div key={idx} className={styles.slideImage}>
+            <Image
+              src={img}
+              alt={`Slide ${idx + 1}`}
+              fill
+              priority={idx === 0} // slide đầu load trước
+              draggable={false}
+              className="object-cover" // giống như background-size: cover
+            />
+          </div>
         ))}
       </div>
 

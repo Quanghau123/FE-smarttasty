@@ -56,7 +56,7 @@ const ResetPasswordPage = () => {
         newPassword: password,
       });
 
-      if (res.data.errCode === 0) {
+      if (res.data.errCode === 0 || res.data.errCode === "success") {
         toast.success("Đặt lại mật khẩu thành công!");
         router.push("/login");
       } else {
@@ -64,7 +64,7 @@ const ResetPasswordPage = () => {
           res.data.errMessage || "Token không hợp lệ hoặc đã hết hạn."
         );
       }
-    } catch (err) {
+    } catch {
       toast.error("Lỗi trong quá trình đặt lại mật khẩu.");
     } finally {
       setLoading(false);

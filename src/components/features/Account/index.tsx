@@ -1,91 +1,59 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
-  Typography,
+  Box,
   Button,
-  TextField,
-  Snackbar,
+  Typography,
   Tabs,
   Tab,
-  Box,
+  TextField,
+  CircularProgress,
 } from "@mui/material";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import ChangePasswordForm from "@/screens/ChangePassword";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { updateUser } from "@/redux/slices/userSlice";
+import ChangePasswordForm from "@/components/features/ChangePassword";
+import { toast } from "react-toastify";
 import styles from "./styles.module.scss";
-
-interface User {
-  userId: number;
-  userName: string;
-  email: string;
-  phone: string;
-  address?: string;
-  token?: string;
-}
+import { User } from "@/types/user";
 
 const AccountPage = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user.user);
+  const loading = useAppSelector((state) => state.user.loading);
+  const error = useAppSelector((state) => state.user.error);
+
   const [editableUser, setEditableUser] = useState<Partial<User>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "password">("info");
-  const [message, setMessage] = useState("");
-  const [messageOpen, setMessageOpen] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        const currentUser = parsed.user || parsed;
-        setUser(currentUser);
-        setEditableUser(currentUser);
-      } catch (error) {
-        console.error("Lỗi khi parse user:", error);
-      }
-    }
-  }, []);
+    if (user) setEditableUser(user);
+  }, [user]);
 
-  const handleLogout = () => {
-    document.cookie = "token=; path=/; max-age=0";
-    localStorage.removeItem("user");
-    router.push("/login");
-  };
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   const handleSave = async () => {
     if (!user) return;
 
+    // updateUser cần ít nhất userId
+    const payload = { ...editableUser, userId: user.userId };
+
     try {
-      const token = JSON.parse(localStorage.getItem("user") || "{}")?.token;
-
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User`,
-        { userId: user.userId, ...editableUser },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const updatedUser = { ...user, ...editableUser };
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ user: updatedUser, token })
-      );
-      setUser(updatedUser);
+      await dispatch(updateUser(payload)).unwrap();
+      toast.success("Cập nhật thành công!");
       setIsEditing(false);
-      setMessage("Cập nhật thành công!");
-    } catch (error: any) {
-      if (error?.response?.data?.message?.includes("email")) {
-        setMessage("Email đã được sử dụng.");
+    } catch (err: unknown) {
+      if (typeof err === "string" && err.includes("email")) {
+        toast.error("Email đã được sử dụng.");
       } else {
-        setMessage("Cập nhật thất bại.");
+        toast.error("Cập nhật thất bại.");
       }
-    } finally {
-      setMessageOpen(true);
     }
   };
 
@@ -93,6 +61,17 @@ const AccountPage = () => {
     (field: keyof User) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setEditableUser({ ...editableUser, [field]: e.target.value });
     };
+
+  // Callback khi đổi mật khẩu thành công
+  const handlePasswordChanged = () => {
+    // Xóa token
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+    // Điều hướng login sau 1.5s để toast hiển thị
+    setTimeout(() => router.push("/login"), 1500);
+  };
 
   if (!user) {
     return (
@@ -117,7 +96,6 @@ const AccountPage = () => {
         >
           <Tab label="Thông tin tài khoản" value="info" />
           <Tab label="Đổi mật khẩu" value="password" />
-          {/* <Tab label="Đăng xuất" onClick={handleLogout} /> */}
         </Tabs>
       </div>
 
@@ -129,12 +107,7 @@ const AccountPage = () => {
             </Typography>
 
             {isEditing ? (
-              <Box
-                component="form"
-                display="flex"
-                flexDirection="column"
-                gap={2}
-              >
+              <Box display="flex" flexDirection="column" gap={2}>
                 <TextField
                   label="Tên người dùng"
                   value={editableUser.userName || ""}
@@ -159,14 +132,14 @@ const AccountPage = () => {
                   value={editableUser.address || ""}
                   onChange={handleChange("address")}
                 />
-
                 <Box display="flex" gap={2}>
                   <Button
                     variant="contained"
                     color="primary"
                     onClick={handleSave}
+                    disabled={loading}
                   >
-                    Lưu
+                    {loading ? <CircularProgress size={24} /> : "Lưu"}
                   </Button>
                   <Button
                     variant="outlined"
@@ -212,24 +185,10 @@ const AccountPage = () => {
             <Typography variant="h6" gutterBottom>
               Đổi mật khẩu
             </Typography>
-            <ChangePasswordForm
-              onSuccess={() => {
-                setMessage("Đổi mật khẩu thành công");
-                setMessageOpen(true);
-                setActiveTab("info");
-              }}
-            />
+            <ChangePasswordForm onSuccess={handlePasswordChanged} />
           </>
         )}
       </div>
-
-      <Snackbar
-        open={messageOpen}
-        autoHideDuration={4000}
-        onClose={() => setMessageOpen(false)}
-        message={message}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      />
     </div>
   );
 };

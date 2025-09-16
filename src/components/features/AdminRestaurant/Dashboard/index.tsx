@@ -1,75 +1,58 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Box, Typography, Grid, Paper, CircularProgress } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchPromotions } from "@/redux/slices/promotionSlice";
+import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-const getUserFromLocalStorage = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "{}");
-  } catch {
-    return {};
-  }
+const getTokenFromLocalStorage = () => {
+  return localStorage.getItem("token") || "";
 };
 
 const DashboardChart = () => {
   const dispatch = useAppDispatch();
+
+  const { current: restaurant, loading: loadingRestaurant } = useAppSelector(
+    (state) => state.restaurant
+  );
   const { items: dishes, loading: loadingDishes } = useAppSelector(
     (state) => state.dishes
   );
   const { promotions, loading: loadingPromotions } = useAppSelector(
     (state) => state.promotion
   );
-  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
+  const token = getTokenFromLocalStorage();
+
+  // Lấy nhà hàng của owner
   useEffect(() => {
-    const fetchRestaurant = async () => {
-      const { token, user } = getUserFromLocalStorage();
-      const userId = user?.userId;
-      if (!token || !userId) return;
-
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/Restaurant`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        const myRestaurant = data?.data?.find((r: any) => r.ownerId === userId);
-        if (!myRestaurant?.id) return alert("Tài khoản chưa có nhà hàng!");
-        setRestaurantId(myRestaurant.id);
-      } catch {
-        alert("Không thể lấy thông tin nhà hàng");
-      }
-    };
-
-    fetchRestaurant();
-  }, []);
-
-  useEffect(() => {
-    if (restaurantId) {
-      dispatch(fetchDishes(restaurantId));
-      dispatch(fetchPromotions(restaurantId));
+    if (token) {
+      dispatch(fetchRestaurantByOwner({ token }));
     }
-  }, [restaurantId, dispatch]);
+  }, [dispatch, token]);
+
+  // Lấy món ăn & khuyến mãi khi có nhà hàng
+  useEffect(() => {
+    if (restaurant?.id) {
+      dispatch(fetchDishes(restaurant.id));
+      dispatch(fetchPromotions(restaurant.id.toString()));
+    }
+  }, [dispatch, restaurant]);
 
   const countByCategory = useMemo(() => {
-    const counts = {
+    const counts: Record<string, number> = {
       ThucAn: 0,
       NuocUong: 0,
       ThucAnThem: 0,
     };
 
     dishes.forEach((dish) => {
-      if (counts[dish.category] !== undefined) {
-        counts[dish.category]++;
-      }
+      if (counts[dish.category] !== undefined) counts[dish.category]++;
     });
 
     return counts;
@@ -77,17 +60,13 @@ const DashboardChart = () => {
 
   const chartOptions = {
     chart: { id: "bar-chart" },
-    xaxis: {
-      categories: ["Thức ăn", "Nước uống", "Thức ăn thêm"],
-    },
+    xaxis: { categories: ["Thức ăn", "Nước uống", "Thức ăn thêm"] },
     colors: ["#4caf50", "#2196f3", "#ff9800"],
   };
 
   const promotionChartOptions = {
     chart: { id: "promotion-chart" },
-    xaxis: {
-      categories: ["Khuyến mãi hiện có"],
-    },
+    xaxis: { categories: ["Khuyến mãi hiện có"] },
     colors: ["#9c27b0"],
   };
 
@@ -109,6 +88,10 @@ const DashboardChart = () => {
     },
   ];
 
+  if (loadingRestaurant) return <CircularProgress />;
+
+  if (!restaurant) return <Typography>Chưa có nhà hàng để thống kê</Typography>;
+
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight={600} mb={3}>
@@ -116,7 +99,7 @@ const DashboardChart = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} component={"div" as React.ElementType}>
           <Paper elevation={3} sx={{ p: 2 }}>
             <Typography variant="h6" mb={2}>
               Số lượng món ăn theo danh mục
@@ -134,7 +117,7 @@ const DashboardChart = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} component={"div" as React.ElementType}>
           <Paper elevation={3} sx={{ p: 2 }}>
             <Typography variant="h6" mb={2}>
               Tổng số khuyến mãi

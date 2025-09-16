@@ -17,7 +17,6 @@ axiosInstance.interceptors.request.use(
       const userData = localStorage.getItem("user");
       if (userData) {
         try {
-          const parsed = JSON.parse(userData);
           const token = localStorage.getItem("token");
           //  const token = parsed.token;
           if (token) {

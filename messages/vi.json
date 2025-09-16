@@ -4,9 +4,11 @@
     "logout_btn_title": "Thoát"
   },
   "header": {
-    "category_btn_title": "Danh Mục",
     "account_btn_title": "Tài Khoản",
-    "logout_btn_title": "Thoát"
+    "logout_btn_title": "Đăng Xuất",
+    "welcome_text": "Xin Chào",
+    "register_btn_title": "Đăng Ký",
+    "login_btn_title": "Đăng Nhập"
   },
   "footer": {
     "contactus_btn_title": "Liên Hệ",
@@ -32,7 +34,7 @@
     "new_to_smartasty_text": "Bạn mới biết đến Smartasty?",
     "register_btn_title": "Đăng Ký"
   },
-   "register": {
+  "register": {
     "username_placeholder": "Tài khoản",
     "password_placeholder": "Mật khẩu",
     "phone_placeholder": "Số điện thoại",

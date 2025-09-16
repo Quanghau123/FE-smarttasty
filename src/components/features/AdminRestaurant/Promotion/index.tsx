@@ -35,8 +35,28 @@ import {
   updatePromotion,
   deletePromotion,
 } from "@/redux/slices/promotionSlice";
+import { Promotion } from "@/types/promotion";
 
-const getUserFromLocalStorage = () => {
+interface Restaurant {
+  id: string;
+  ownerId: number;
+  name?: string;
+}
+
+interface PromotionForm {
+  title: string;
+  description?: string;
+  discountPercent: number;
+  startDate: string;
+  endDate: string;
+}
+
+interface LocalUser {
+  token?: string;
+  user?: { userId: number };
+}
+
+const getUserFromLocalStorage = (): LocalUser => {
   try {
     return JSON.parse(localStorage.getItem("user") || "{}");
   } catch {
@@ -50,10 +70,11 @@ const PromotionPage = () => {
 
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [formData, setFormData] = useState({
+  const [editing, setEditing] = useState<Promotion | null>(null);
+  const [formData, setFormData] = useState<PromotionForm>({
     title: "",
     description: "",
+    discountPercent: 0,
     startDate: "",
     endDate: "",
   });
@@ -72,7 +93,9 @@ const PromotionPage = () => {
           }
         );
         const data = await res.json();
-        const myRestaurant = data?.data?.find((r: any) => r.ownerId === userId);
+        const myRestaurant: Restaurant | undefined = data?.data?.find(
+          (r: Restaurant) => r.ownerId === userId
+        );
         if (!myRestaurant?.id) return alert("Tài khoản chưa có nhà hàng!");
         setRestaurantId(myRestaurant.id);
         dispatch(fetchPromotions(myRestaurant.id));
@@ -84,18 +107,25 @@ const PromotionPage = () => {
     fetchRestaurant();
   }, [dispatch]);
 
-  const handleOpenModal = (promo: any = null) => {
+  const handleOpenModal = (promo: Promotion | null = null) => {
     if (promo) {
       setEditing(promo);
       setFormData({
         title: promo.title,
-        description: promo.description,
-        startDate: promo.startDate?.split("T")[0],
-        endDate: promo.endDate?.split("T")[0],
+        description: promo.description ?? "",
+        discountPercent: promo.discountPercent,
+        startDate: promo.startDate?.split("T")[0] || "",
+        endDate: promo.endDate?.split("T")[0] || "",
       });
     } else {
       setEditing(null);
-      setFormData({ title: "", description: "", startDate: "", endDate: "" });
+      setFormData({
+        title: "",
+        description: "",
+        discountPercent: 0,
+        startDate: "",
+        endDate: "",
+      });
     }
     setOpen(true);
   };
@@ -115,8 +145,12 @@ const PromotionPage = () => {
         alert("Tạo thành công");
       }
       setOpen(false);
-    } catch {
-      alert("Thao tác thất bại");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Thao tác thất bại");
+      }
     }
   };
 
@@ -125,8 +159,12 @@ const PromotionPage = () => {
     try {
       await dispatch(deletePromotion(id)).unwrap();
       alert("Đã xóa thành công");
-    } catch {
-      alert("Không thể xóa");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Không thể xóa");
+      }
     }
   };
 
@@ -159,18 +197,24 @@ const PromotionPage = () => {
                   <TableRow>
                     <TableCell>Tiêu đề</TableCell>
                     <TableCell>Mô tả</TableCell>
+                    <TableCell>Giảm giá (%)</TableCell>
                     <TableCell>Ngày áp dụng</TableCell>
+                    <TableCell>Trạng thái</TableCell>
                     <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {promotions.map((promo) => (
+                  {promotions.map((promo: Promotion) => (
                     <TableRow key={promo.id}>
                       <TableCell>{promo.title}</TableCell>
                       <TableCell>{promo.description}</TableCell>
+                      <TableCell>{promo.discountPercent}</TableCell>
                       <TableCell>
                         {promo.startDate?.split("T")[0]} -{" "}
                         {promo.endDate?.split("T")[0]}
+                      </TableCell>
+                      <TableCell>
+                        {promo.isActive ? "Đang hoạt động" : "Ngừng"}
                       </TableCell>
                       <TableCell>
                         <IconButton onClick={() => handleOpenModal(promo)}>
@@ -203,7 +247,7 @@ const PromotionPage = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} mt={1}>
-            <Grid item xs={12}>
+            <Grid item xs={12} component={"div" as React.ElementType}>
               <TextField
                 fullWidth
                 label="Tiêu đề"
@@ -213,7 +257,7 @@ const PromotionPage = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} component={"div" as React.ElementType}>
               <TextField
                 fullWidth
                 label="Mô tả"
@@ -223,7 +267,21 @@ const PromotionPage = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} component={"div" as React.ElementType}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Giảm giá (%)"
+                value={formData.discountPercent}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    discountPercent: Number(e.target.value),
+                  })
+                }
+              />
+            </Grid>
+            <Grid item xs={12} component={"div" as React.ElementType}>
               <TextField
                 fullWidth
                 type="date"
@@ -235,7 +293,7 @@ const PromotionPage = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} component={"div" as React.ElementType}>
               <TextField
                 fullWidth
                 type="date"

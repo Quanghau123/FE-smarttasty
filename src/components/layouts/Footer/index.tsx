@@ -1,91 +1,112 @@
 "use client";
 
 import Link from "next/link";
-import {
-  EnvironmentOutlined,
-  PhoneOutlined,
-  FacebookFilled,
-  MailOutlined,
-} from "@ant-design/icons";
+import { Box, Typography, Divider, IconButton } from "@mui/material";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import PhoneIcon from "@mui/icons-material/Phone";
+import MailIcon from "@mui/icons-material/Mail";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { SiTiktok } from "react-icons/si";
-import styles from "@/components/layouts/Footer/styles.module.scss";
-
-console.log("Styles loaded: ", styles);
 
 const Footer = () => {
   return (
-    <footer className={styles.container}>
-      <div className={styles.yard}>
+    <Box component="footer" sx={{ bgcolor: "#111", color: "#fff", p: 4 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "1fr 1fr",
+            md: "repeat(4, 1fr)",
+          },
+          gap: 4,
+        }}
+      >
         {/* Liên hệ */}
-        <div className={styles.areaLeft}>
-          <div className={styles.blockTitle}>
-            <span>Liên Hệ Với Chúng Tôi</span>
-            <hr />
-          </div>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Liên Hệ Với Chúng Tôi
+          </Typography>
+          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
 
-          <div className={styles.blockAddress}>
-            <Link href="/" className={styles.linkAddress}>
-              <EnvironmentOutlined style={{ marginRight: 10 }} />
-              <span>Địa Chỉ Các Chi Nhánh</span>
-            </Link>
-          </div>
-          <div className={styles.blockEmail}>
-            <Link href="mailto:admin@gmail.com" className={styles.linkEmail}>
-              <MailOutlined style={{ marginRight: 10 }} />
-              <span>admin@gmail.com</span>
-            </Link>
-          </div>
-          <div className={styles.blockPhone}>
-            <Link href="tel:0987654321" className={styles.linkPhone}>
-              <PhoneOutlined style={{ marginRight: 10 }} />
-              <span>0987654321</span>
-            </Link>
-          </div>
-        </div>
+          <Link
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              color: "#fff",
+              marginBottom: 8,
+            }}
+          >
+            <LocationOnIcon sx={{ mr: 1 }} />
+            <Typography>Địa Chỉ Các Chi Nhánh</Typography>
+          </Link>
+
+          <Link
+            href="mailto:admin@gmail.com"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              color: "#fff",
+              marginBottom: 8,
+            }}
+          >
+            <MailIcon sx={{ mr: 1 }} />
+            <Typography>admin@gmail.com</Typography>
+          </Link>
+
+          <Link
+            href="tel:0987654321"
+            style={{ display: "flex", alignItems: "center", color: "#fff" }}
+          >
+            <PhoneIcon sx={{ mr: 1 }} />
+            <Typography>0987654321</Typography>
+          </Link>
+        </Box>
 
         {/* Về chúng tôi */}
-        <div className={styles.areaBetween}>
-          <div className={styles.blockTitle}>
-            <span>Về Chúng Tôi</span>
-            <hr />
-          </div>
-          <div className={styles.blockContent}>
-            <span>Đội ngũ vận hành</span>
-          </div>
-        </div>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Về Chúng Tôi
+          </Typography>
+          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
+          <Typography>Đội ngũ vận hành</Typography>
+        </Box>
 
         {/* Mạng xã hội */}
-        <div className={styles.blockContact}>
-          <div className={styles.blockTitle}>
-            <span>Theo dõi qua</span>
-            <hr />
-          </div>
-          <div className={styles.blockFacebook}>
-            <Link href="/" className={styles.linkFacebook}>
-              <FacebookFilled style={{ fontSize: 30, color: "#1877F2" }} />
-            </Link>
-            <Link href="/" className={styles.linkTiktok}>
-              <SiTiktok style={{ fontSize: 30, color: "#fff" }} />
-            </Link>
-          </div>
-        </div>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Theo dõi qua
+          </Typography>
+          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <IconButton component={Link} href="/" sx={{ color: "#1877F2" }}>
+              <FacebookIcon fontSize="large" />
+            </IconButton>
+            <IconButton component={Link} href="/" sx={{ color: "#fff" }}>
+              <SiTiktok size={28} />
+            </IconButton>
+          </Box>
+        </Box>
 
         {/* Giờ mở cửa */}
-        <div className={styles.areaRight}>
-          <div className={styles.blockTitle}>
-            <span>Giờ Mở Cửa</span>
-            <hr />
-          </div>
-          <div className={styles.blockContent}>
-            <span>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Giờ Mở Cửa
+          </Typography>
+          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
+          <Box display="flex" alignItems="center" gap={1}>
+            <AccessTimeIcon />
+            <Typography>
               Hằng Ngày
               <br />
               07:00 AM - 23:00 PM
-            </span>
-          </div>
-        </div>
-      </div>
-    </footer>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

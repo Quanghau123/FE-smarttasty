@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Link as MuiLink,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { createUser } from "@/redux/slices/userSlice";
@@ -30,7 +30,7 @@ const Register = () => {
   const router = useRouter();
 
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector((state) => state.user);
+  const { loading } = useAppSelector((state) => state.user);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -80,7 +80,7 @@ const Register = () => {
     if (!validate()) return;
 
     const action = await dispatch(
-      createUser({ ...formValues, Role: "user" }) // 👈 Gán role là "user"
+      createUser({ ...formValues, role: "user" }) // 👈 Gán role là "user"
     );
 
     if (createUser.fulfilled.match(action)) {

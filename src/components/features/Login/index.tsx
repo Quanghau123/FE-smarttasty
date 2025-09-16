@@ -61,7 +61,7 @@ const LoginPage = () => {
           router.push("/");
       }
     }
-  }, [user]);
+  }, [user, router]);
 
   // Hiển thị lỗi nếu có
   useEffect(() => {

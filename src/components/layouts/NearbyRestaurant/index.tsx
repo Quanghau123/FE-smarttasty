@@ -15,10 +15,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  ButtonBase,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchNearbyRestaurants } from "@/redux/slices/restaurantSlice";
+import { Restaurant } from "@/types/restaurant";
 import StarIcon from "@mui/icons-material/Star";
 import styles from "./styles.module.scss";
 
@@ -27,7 +27,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Cài đặt icon mặc định
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "/marker-icon-blue.png",
   iconUrl: "/marker-icon-blue.png",
@@ -146,8 +146,15 @@ const NearbyRestaurantsPage = () => {
         <Box className={styles.mainContent}>
           {/* Danh sách nhà hàng */}
           <Box className={styles.list}>
-            {nearby.map((restaurant) => (
-              <Card key={restaurant.id} className={styles.card}>
+            {nearby.map((restaurant: Restaurant) => (
+              <Card
+                key={restaurant.id}
+                className={styles.card}
+                onClick={() =>
+                  router.push(`/RestaurantDetails/${restaurant.id}`)
+                }
+                sx={{ cursor: "pointer" }} // để hiện dấu tay khi hover
+              >
                 <Box
                   component="img"
                   src={restaurant.imageUrl}
@@ -168,26 +175,20 @@ const NearbyRestaurantsPage = () => {
                     gutterBottom
                     noWrap
                     title={restaurant.name}
-                    component={ButtonBase} // biến Typography thành clickable
-                    onClick={() =>
-                      router.push(`/RestaurantDetails/${restaurant.id}`)
-                    }
                   >
                     {restaurant.name}
                   </Typography>
+
                   <Box display="flex" alignItems="center" mb={1}>
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <StarIcon
                         key={idx}
                         fontSize="small"
-                        color={
-                          idx < (restaurant as any).rating
-                            ? "warning"
-                            : "disabled"
-                        }
+                        color={idx < restaurant.rating ? "warning" : "disabled"}
                       />
                     ))}
                   </Box>
+
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -197,19 +198,22 @@ const NearbyRestaurantsPage = () => {
                   >
                     {restaurant.address}
                   </Typography>
+
                   {restaurant.distanceKm && (
                     <Typography variant="body2" color="text.secondary" mb={1}>
                       Cách bạn {restaurant.distanceKm.toFixed(2)} km
                     </Typography>
                   )}
+
                   <Button
                     variant="contained"
                     color="primary"
                     fullWidth
                     size="small"
-                    onClick={() =>
-                      router.push(`/RestaurantDetails/${restaurant.id}`)
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation(); // tránh click button cũng chạy click Card
+                      router.push(`/RestaurantDetails/${restaurant.id}`);
+                    }}
                   >
                     Đặt chỗ ngay
                   </Button>

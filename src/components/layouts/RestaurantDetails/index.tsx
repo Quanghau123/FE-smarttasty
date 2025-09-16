@@ -2,18 +2,12 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import {
-  Box,
-  Button,
-  Grid,
-  Paper,
-  Typography,
-  Chip,
-  CircularProgress,
-} from "@mui/material";
+import { Box, CircularProgress, Typography, Chip } from "@mui/material";
+import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchRestaurantById } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
+import styles from "./styles.module.scss";
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
@@ -24,157 +18,112 @@ const RestaurantDetailPage = () => {
     loading: restaurantLoading,
     error: restaurantError,
   } = useAppSelector((state) => state.restaurant);
-  const {
-    items: dishes,
-    loading: dishesLoading,
-    error: dishesError,
-  } = useAppSelector((state) => state.dishes);
+  const { items: dishes, loading: dishesLoading } = useAppSelector(
+    (state) => state.dishes
+  );
 
   useEffect(() => {
     if (!id) return;
-
-    // Lấy chi tiết nhà hàng
     dispatch(fetchRestaurantById(Number(id)));
-    // Lấy danh sách món ăn
-    dispatch(fetchDishes(id)); // dùng fetchDishes từ dishSlice
+    dispatch(fetchDishes(Number(id)));
   }, [dispatch, id]);
 
   if (restaurantLoading || dishesLoading)
     return (
-      <Box display="flex" justifyContent="center" py={6}>
+      <Box className={styles.centered}>
         <CircularProgress />
       </Box>
     );
 
   if (restaurantError || !restaurant)
     return (
-      <Box display="flex" justifyContent="center" py={6}>
+      <Box className={styles.centered}>
         <Typography variant="h5">
           {restaurantError || "Không tìm thấy nhà hàng"}
         </Typography>
       </Box>
     );
 
+  const now = new Date();
+  const [openHour, openMinute] = restaurant.openTime.split(":").map(Number);
+  const [closeHour, closeMinute] = restaurant.closeTime.split(":").map(Number);
+  const openDate = new Date(now);
+  openDate.setHours(openHour, openMinute, 0, 0);
+  const closeDate = new Date(now);
+  closeDate.setHours(closeHour, closeMinute, 0, 0);
+  if (closeDate <= openDate) closeDate.setDate(closeDate.getDate() + 1);
+  const isOpen = now >= openDate && now <= closeDate;
+
   return (
-    <Box sx={{ p: 4 }}>
+    <Box className={styles.container}>
       {/* Thông tin nhà hàng */}
-      <Paper elevation={3} sx={{ display: "flex", gap: 4, p: 3, mb: 4 }}>
-        <Box>
-          <img
+      <Box className={styles.restaurantCard}>
+        <Box className={styles.restaurantImage}>
+          <Image
             src={restaurant.imageUrl}
             alt={restaurant.name}
-            style={{
-              width: 300,
-              height: 200,
-              objectFit: "cover",
-              borderRadius: 8,  
-            }}
+            width={300}
+            height={200}
           />
         </Box>
-
-        <Box flex={1}>
+        <Box className={styles.restaurantInfo}>
           <Typography variant="h4">{restaurant.name}</Typography>
-
-          {/* Mô tả nhà hàng */}
           {restaurant.description && (
             <Typography>
-              <strong>Mô tả:</strong>
-              {restaurant.description}
+              <strong>Mô tả:</strong> {restaurant.description}
             </Typography>
           )}
-
           <Typography>
             <strong>Địa chỉ:</strong> {restaurant.address}
           </Typography>
-          {/* Kiểm tra trạng thái mở cửa */}
           <Typography>
             <strong>Trạng thái:</strong>{" "}
-            {(() => {
-              const now = new Date();
-              const [openHour, openMinute] = restaurant.openTime
-                .split(":")
-                .map(Number);
-              const [closeHour, closeMinute] = restaurant.closeTime
-                .split(":")
-                .map(Number);
-
-              const openDate = new Date(now);
-              openDate.setHours(openHour, openMinute, 0, 0);
-
-              const closeDate = new Date(now);
-              closeDate.setHours(closeHour, closeMinute, 0, 0);
-
-              // Nếu giờ đóng nhỏ hơn giờ mở (ví dụ: 22:00 - 02:00), tăng ngày cho giờ đóng
-              if (closeDate <= openDate)
-                closeDate.setDate(closeDate.getDate() + 1);
-
-              return now >= openDate && now <= closeDate ? (
-                <span style={{ color: "green" }}>Đang mở cửa</span>
-              ) : (
-                <span style={{ color: "red" }}>Đóng cửa</span>
-              );
-            })()}
+            <span className={isOpen ? styles.open : styles.closed}>
+              {isOpen ? "Đang mở cửa" : "Đóng cửa"}
+            </span>
           </Typography>
-
           <Typography>
             <strong>Giờ hoạt động:</strong> {restaurant.openTime} -{" "}
             {restaurant.closeTime}
           </Typography>
-          {/* <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            onClick={() => alert("Chức năng đặt chỗ")}
-          >
-            Đặt chỗ ngay
-          </Button> */}
         </Box>
-      </Paper>
+      </Box>
 
       {/* Thực đơn */}
-      <Box>
-        <Typography variant="h5" gutterBottom>
-          Thực đơn
-        </Typography>
+      <Box className={styles.menuSection}>
+        <Typography variant="h5">Thực đơn</Typography>
         {dishes.length === 0 ? (
           <Typography>Chưa có món ăn nào.</Typography>
         ) : (
-          <Grid container spacing={2}>
+          <Box className={styles.dishGrid}>
             {dishes.map((dish) => (
-              <Grid
-                item
-                key={dish.id}
-                sx={{
-                  flex: "0 0 15%", // Mỗi món chiếm 20% chiều ngang
-                  maxWidth: "20%",
-                }}
-              >
-                <Paper elevation={2}>
-                  <img
+              <Box key={dish.id} className={styles.dishCard}>
+                <Box className={styles.dishImage}>
+                  <Image
                     src={dish.imageUrl}
                     alt={dish.name}
-                    style={{ width: "100%", height: 160, objectFit: "cover" }}
+                    width={300}
+                    height={160}
                   />
-                  <Box p={2}>
-                    <Typography variant="h6">
-                      {dish.name}
-                      {!dish.isActive && (
-                        <Chip
-                          label="Ngưng bán"
-                          color="error"
-                          size="small"
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                    <Typography fontWeight="bold" color="primary">
-                      {dish.price.toLocaleString()}đ
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
+                </Box>
+                <Box className={styles.dishInfo}>
+                  <Typography variant="h6">
+                    {dish.name}
+                    {!dish.isActive && (
+                      <Chip
+                        label="Ngưng bán"
+                        size="small"
+                        className={styles.chip}
+                      />
+                    )}
+                  </Typography>
+                  <Typography className={styles.price}>
+                    {dish.price.toLocaleString()}đ
+                  </Typography>
+                </Box>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         )}
       </Box>
     </Box>

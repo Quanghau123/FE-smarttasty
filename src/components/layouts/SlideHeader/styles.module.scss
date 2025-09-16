@@ -1,29 +1,31 @@
+/* styles.module.scss */
+
 .container {
-  position: relative;
-  height: 100%;
-  width: 100%; /* đảm bảo container rộng đúng viewport */
+  position: relative; /* cực kỳ quan trọng cho Image fill */
+  width: 100vw;
+  height: 60vh; /* chiều cao slide */
   overflow: hidden;
 }
 
 .imageWrapper {
   display: flex;
+  width: 100%;
   height: 100%;
-  transition: transform 1s ease-in-out;
-  width: calc(100vw * 4); /* tổng chiều rộng = 4 ảnh x 100vw */
 }
 
-.imageWrapper img {
-  width: 100vw; /* mỗi ảnh chiếm full chiều ngang viewport */
-  flex-shrink: 0; /* không cho ảnh bị co lại trong flex */
-  height: 100%;
-  object-fit: cover;
+.slideImage {
+  position: relative; /* bắt buộc để Image fill hiển thị */
+  min-width: 100%;
+  height: 60vh;
 }
 
 .overlay {
-  position: absolute;
-  inset: 0;
-  //background: rgba(0, 0, 0, 0.4);
-  z-index: 2;
+ // position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3); /* ví dụ overlay */
 }
 
 .dotWrapper {
@@ -33,17 +35,16 @@
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
-  z-index: 3;
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
-  background-color: rgba(0, 0, 0, 0.4);
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  transition: background-color 0.3s;
+  background: white;
+  opacity: 0.5;
 }
 
-.active {
-  background-color: orange;
+.dot.active {
+  opacity: 1;
 }

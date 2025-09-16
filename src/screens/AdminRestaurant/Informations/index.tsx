@@ -1,4 +1,4 @@
-import Informations from "@/components/features/AdminRestaurant/Informations";
+import Informations from "@/components/features/AdminRestaurant/Dashboard";
 
 const index = () => {
   return (

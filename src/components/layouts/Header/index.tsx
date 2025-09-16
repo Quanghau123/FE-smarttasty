@@ -23,6 +23,7 @@ import {
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import LanguageSelector from "@/components/layouts/LanguageSelector";
 import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
+import { useTranslations } from "next-intl"; // ✅ thêm vào
 import styles from "./styles.module.scss";
 
 const getCookie = (name: string): string | null => {
@@ -39,6 +40,7 @@ const Header = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const dispatch = useAppDispatch();
+  const t = useTranslations("header"); // ✅ gọi namespace header
 
   useEffect(() => {
     setHydrated(true);
@@ -95,8 +97,8 @@ const Header = () => {
           <Image
             src={getImageUrl("Logo/anhdaidienmoi.png")}
             alt="Logo"
-            width={64}
-            height={40}
+            width={70}
+            height={50}
             priority
           />
         </Link>
@@ -163,11 +165,11 @@ const Header = () => {
               >
                 <Box className={styles.popoverBox}>
                   <Typography fontWeight={600} mb={1}>
-                    Xin chào, {localUserName}
+                    {t("welcome_text")}, {localUserName}
                   </Typography>
                   <Link href="/account">
                     <Button fullWidth size="small" variant="text">
-                      Tài khoản
+                      {t("account_btn_title")}
                     </Button>
                   </Link>
                   <Button
@@ -177,7 +179,7 @@ const Header = () => {
                     color="error"
                     onClick={handleLogout}
                   >
-                    Đăng xuất
+                    {t("logout_btn_title")}
                   </Button>
                 </Box>
               </Popover>
@@ -186,12 +188,12 @@ const Header = () => {
             <>
               <Link href="/login">
                 <Button size="small" variant="text">
-                  Đăng nhập
+                  {t("login_btn_title")}
                 </Button>
               </Link>
               <Link href="/register">
                 <Button size="small" variant="text">
-                  Đăng ký
+                  {t("register_btn_title")}
                 </Button>
               </Link>
             </>

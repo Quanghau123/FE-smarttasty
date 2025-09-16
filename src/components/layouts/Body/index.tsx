@@ -25,87 +25,100 @@ const BodyPage = () => {
     (state) => state.restaurant
   );
 
+  // Load danh sách nhà hàng khi mở trang
   useEffect(() => {
     dispatch(fetchRestaurants());
   }, [dispatch]);
 
+  // Hàm render danh sách nhà hàng
   const renderRestaurants = () => (
     <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
       {restaurants.map((restaurant) => (
         <Grid
           item
-          xs={4} // Mobile: full width
-          sm={6} // Tablet: 2 cột
-          md={4} // Desktop nhỏ: 3 cột
-          lg={3} // Desktop lớn: 4 cột
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
           key={restaurant.id}
+          component={"div" as React.ElementType}
         >
           <Card
             className={styles.card}
             sx={{ height: "100%", display: "flex", flexDirection: "column" }}
           >
-            <Box
-              component="img"
-              src={restaurant.imageUrl}
-              alt={restaurant.name}
+            <ButtonBase
+              onClick={() => router.push(`/RestaurantDetails/${restaurant.id}`)}
               sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                textAlign: "left",
                 width: "100%",
-                height: { xs: 150, sm: 180, md: 200 },
-                objectFit: "cover",
-                borderTopLeftRadius: "4px",
-                borderTopRightRadius: "4px",
+                height: "100%",
               }}
-            />
-            <CardContent sx={{ flexGrow: 1 }}>
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                gutterBottom
-                noWrap
-                title={restaurant.name}
-                component={ButtonBase}
-                onClick={() =>
-                  router.push(`/RestaurantDetails/${restaurant.id}`)
-                }
-                sx={{ textAlign: "left", width: "100%" }}
-              >
-                {restaurant.name}
-              </Typography>
+            >
+              {/* Ảnh nhà hàng */}
+              <Box
+                component="img"
+                src={restaurant.imageUrl || "/default-restaurant.jpg"}
+                alt={restaurant.name}
+                sx={{
+                  width: "100%",
+                  height: { xs: 150, sm: 180, md: 200 },
+                  objectFit: "cover",
+                  borderTopLeftRadius: "4px",
+                  borderTopRightRadius: "4px",
+                }}
+              />
 
-              <Box display="flex" alignItems="center" mb={1}>
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <StarIcon
-                    key={idx}
-                    fontSize="small"
-                    color={
-                      idx < (restaurant as any).rating ? "warning" : "disabled"
-                    }
-                  />
-                ))}
-              </Box>
+              <CardContent sx={{ flexGrow: 1, width: "100%" }}>
+                {/* Tên nhà hàng */}
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  gutterBottom
+                  noWrap
+                  title={restaurant.name}
+                >
+                  {restaurant.name}
+                </Typography>
 
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                noWrap
-                title={restaurant.address}
-                mb={1}
-              >
-                {restaurant.address}
-              </Typography>
+                {/* Rating */}
+                <Box display="flex" alignItems="center" mb={1}>
+                  {Array.from({ length: 5 }).map((_, idx) => (
+                    <StarIcon
+                      key={idx}
+                      fontSize="small"
+                      color={
+                        idx < (restaurant.rating ?? 0) ? "warning" : "disabled"
+                      }
+                    />
+                  ))}
+                </Box>
 
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                size="small"
-                onClick={() =>
-                  router.push(`/RestaurantDetails/${restaurant.id}`)
-                }
-              >
-                Đặt chỗ ngay
-              </Button>
-            </CardContent>
+                {/* Địa chỉ */}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  noWrap
+                  title={restaurant.address}
+                  mb={1}
+                >
+                  {restaurant.address || "Đang cập nhật địa chỉ"}
+                </Typography>
+
+                {/* Button đặt chỗ */}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                  size="small"
+                >
+                  Đặt chỗ ngay
+                </Button>
+              </CardContent>
+            </ButtonBase>
           </Card>
         </Grid>
       ))}

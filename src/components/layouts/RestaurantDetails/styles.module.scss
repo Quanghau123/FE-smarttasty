@@ -1,0 +1,134 @@
+.container {
+  padding: 2rem;
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6rem 0;
+}
+
+.restaurantCard {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.restaurantImage {
+  width: 300px;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+
+  img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.restaurantInfo {
+  flex: 1;
+
+  h4 {
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0.25rem 0;
+  }
+
+  .open {
+    color: green;
+    font-weight: bold;
+  }
+
+  .closed {
+    color: red;
+    font-weight: bold;
+  }
+}
+
+.menuSection {
+  h5 {
+    margin-bottom: 1rem;
+  }
+}
+
+.dishGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dishCard {
+  flex: 0 0 15%;
+  max-width: 20%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  .dishImage {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .dishInfo {
+    padding: 0.5rem 1rem;
+
+    h6 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .chip {
+      margin-left: 0.25rem;
+    }
+
+    .price {
+      font-weight: bold;
+      color: #1976d2;
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dishCard {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+}
+
+@media (max-width: 900px) {
+  .restaurantCard {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dishCard {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 600px) {
+  .dishCard {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
