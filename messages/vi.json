@@ -32,17 +32,31 @@
     "remember_me_checkbox": "Lưu Đăng Nhập",
     "forgot_password_btn_title": "Quên Mật Khẩu?",
     "new_to_smartasty_text": "Bạn mới biết đến Smartasty?",
-    "register_btn_title": "Đăng Ký"
+    "register_btn_title": "Đăng Ký",
+    "welcome_text": "Xin chào",
+    "login_success": "Đăng nhập thành công!"
   },
   "register": {
+    "title": "Đăng ký tài khoản",
     "username_placeholder": "Tài khoản",
     "password_placeholder": "Mật khẩu",
-    "phone_placeholder": "Số điện thoại",
     "email_placeholder": "Email",
+    "phone_placeholder": "Số điện thoại",
     "address_placeholder": "Địa chỉ",
     "register_btn_title": "Đăng ký",
-    "already_have_account_text": "Bạn đã có tài khoản?",
+    "have_account_text": "Bạn đã có tài khoản?",
     "login_btn_title": "Đăng nhập",
     "register_business_btn_title": "Đăng ký cho doanh nghiệp"
+  },
+  "registerBusiness": {
+    "title": "Đăng ký Doanh Nghiệp",
+    "username_placeholder": "Tên tài khoản",
+    "password_placeholder": "Mật khẩu",
+    "email_placeholder": "Email",
+    "phone_placeholder": "Số điện thoại",
+    "address_placeholder": "Địa chỉ doanh nghiệp",
+    "register_btn_title": "Đăng ký doanh nghiệp",
+    "have_account_text": "Bạn đã có tài khoản?",
+    "login_btn_title": "Đăng nhập"
   }
 }

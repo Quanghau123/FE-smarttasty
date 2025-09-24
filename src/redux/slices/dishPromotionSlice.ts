@@ -15,7 +15,7 @@ export const createDishPromotion = createAsyncThunk<
   Omit<DishPromotion, "dish" | "promotion">
 >("dishPromotion/create", async (data) => {
   const { data: created } = await axiosInstance.post(
-    "/api/DishPromotion",
+    "/api/DishPromotions",
     data
   );
   return created;
@@ -26,7 +26,7 @@ export const fetchDishPromotionsByDishId = createAsyncThunk<
   DishPromotion[],
   number
 >("dishPromotion/fetchByDishId", async (dishId) => {
-  const { data } = await axiosInstance.get(`/api/DishPromotion/${dishId}`);
+  const { data } = await axiosInstance.get(`/api/DishPromotions/${dishId}`);
   return data;
 });
 
@@ -52,7 +52,7 @@ export const updateDishPromotion = createAsyncThunk<
 
 // Delete
 export const deleteDishPromotion = createAsyncThunk<
-  { dishId: number; promotionId: number },
+  { dishId: number; promotionId: number },     
   { dishId: number; promotionId: number }
 >("dishPromotion/delete", async (data) => {
   await axiosInstance.delete("/api/DishPromotion", { data });

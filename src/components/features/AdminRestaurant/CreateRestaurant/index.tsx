@@ -69,32 +69,42 @@ const RestaurantCreatePage = () => {
     }
   };
 
-  const handleAddressChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const [addressTimeout, setAddressTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const address = e.target.value;
     setForm((prev) => ({ ...prev, address }));
 
-    if (!address.trim()) return;
+    // Nếu đang có timeout trước đó thì hủy
+    if (addressTimeout) clearTimeout(addressTimeout);
 
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
-        )}`
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        setLatitude(lat);
-        setLongitude(lon);
-      } else {
-        toast.error("Không tìm thấy tọa độ từ địa chỉ.");
+    // Tạo timeout mới
+    const timeout = setTimeout(async () => {
+      if (!address.trim()) return;
+
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            address
+          )}`
+        );
+        const data = await res.json();
+        if (data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          setLatitude(lat);
+          setLongitude(lon);
+        } else {
+          toast.error("Không tìm thấy tọa độ từ địa chỉ.");
+        }
+      } catch {
+        toast.error("Lỗi khi lấy tọa độ từ địa chỉ.");
       }
-    } catch {
-      toast.error("Lỗi khi lấy tọa độ từ địa chỉ.");
-    }
+    }, 700); // chỉ gọi API sau 700ms không gõ
+
+    setAddressTimeout(timeout);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

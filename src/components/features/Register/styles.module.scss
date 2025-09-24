@@ -1,44 +1,96 @@
-.registerContainer {
+.loginContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-//   background: url("https://raw.githubusercontent.com/lamlinhh/Travel_Web/refs/heads/vu/assets/Images/bg.webp")
-//     no-repeat center/cover;
+  min-height: 100vh;
+  padding: 16px;
+
+  // Background gradient kiểu nhà hàng (ấm, gỗ, sang trọng)
+  background: linear-gradient(135deg, #fff8f0 0%, #f1e2d1 50%, #f9f3eb 100%);
+
+  // Nếu muốn thêm background hình mờ (vd: hình nhà hàng blur)
+  //background-image: url("/access/image/bg-restaurant.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(6px);
+  }
 }
 
-.registerCard {
-  width: 400px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background: white;
-}
-.formbusiness {
-  position: fixed;
-  top:10px;
-  right: 10px;
-  padding: 10px 20px;
-  z-index: 1000;
-  background-color: #e6f7ff; // Màu nền xanh nhạt
-  border: 1px solid #91d5ff; // Viền xanh dương nhạt
-  border-radius: 4px;
+.loginCard {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  padding: 32px 28px;
 
-  font-weight: 500;
-}
-  .registerBottom {
-    color: rgba(0, 0, 0, 0.26);
-    padding-left: 50px;
+  // Logo nhà hàng
+  .logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
 
-    a {
-      padding-left: 4px;
-      color: #ee4d2d !important;
-      text-decoration: none;
-      transition: color 0.2s;
-
-      // &:hover {
-      //   color: #d4381e !important; // màu khi hover
-      // }
+    img {
+      width: 100px;
+      height: auto;
+      object-fit: contain;
     }
   }
 
+  // Tiêu đề
+  .title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    font-family: "Georgia", serif; // font sang kiểu nhà hàng
+  }
+
+  // Input form
+  .MuiTextField-root {
+    margin-bottom: 20px;
+  }
+
+  // Nút login
+  .MuiButton-root {
+    background: linear-gradient(135deg, #d35400, #e67e22);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: linear-gradient(135deg, #c0392b, #d35400);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(211, 84, 0, 0.3);
+    }
+  }
+}
+
+.loginBottom {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 12px;
+  color: #666;
+
+  a {
+    color: #d35400;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

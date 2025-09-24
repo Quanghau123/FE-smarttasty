@@ -1,82 +1,80 @@
 .headerWrapper {
-  padding: 16px;
+  width: 100%;
   background-color: var(--mui-palette-background-paper);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+  border-bottom: 1px solid var(--mui-palette-divider);
+  z-index: 1000;
 
-.headerInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
+  .headerInner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 8px 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap; // ✅ KHÔNG xuống hàng
+  }
 }
 
 .searchSection {
+  flex: 1;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  flex: 1;
-  justify-content: center;
-}
+  gap: 8px;
+  flex-wrap: nowrap; // ✅ giữ 1 hàng
 
-.citySelect {
-  min-width: 120px;
-}
+  .citySelect {
+    flex: 0 0 auto; // ❌ KHÔNG cho co, chỉ chiếm theo width
+    width: auto; // ✅ width cố định (hoặc auto + min-width)
+    min-width: 70px; // ✅ luôn giữ tối thiểu
+    overflow: hidden; // tránh vỡ layout
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.categorySelect {
-  min-width: 180px;
-}
+  .categorySelect {
+    flex: 0 0 auto; // ❌ KHÔNG cho co, chỉ chiếm theo width
+    width: auto; // ✅ width cố định (hoặc auto + min-width)
+    min-width: 70px; // ✅ luôn giữ tối thiểu
+    overflow: hidden; // tránh vỡ layout
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.searchInput {
-  width: 300px;
-  max-width: 100%;
+  .searchInput {
+    flex: 1 1 auto; // ✅ chiếm hết phần còn lại
+    min-width: 100px;
+  }
 }
 
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-shrink: 0; // ✅ không bị co hẹp quá
 }
 
-.popoverBox {
-  padding: 16px;
-  min-width: 200px;
-}
-
-/* ----------------- Responsive ----------------- */
-
-/* Tablet */
-@media (max-width: 1024px) {
-  .searchInput {
-    width: 200px; /* nhỏ lại */
-  }
-  .headerInner {
-    gap: 12px;
-  }
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .headerInner {
-    flex-direction: column; /* xếp cột */
-    align-items: flex-start;
-  }
-
+@media (max-width: 480px) {
   .searchSection {
-    justify-content: flex-start;
-    width: 100%;
-  }
+    gap: 4px;
 
-  .searchInput {
-    width: 100%; /* full width */
+    .citySelect {
+      flex: 0 1 60px;
+      min-width: 50px;
+    }
+
+    .categorySelect {
+      flex: 0 1 90px;
+      min-width: 70px;
+    }
+
+    .searchInput {
+      min-width: 80px;
+    }
   }
 
   .rightSection {
-    width: 100%;
-    justify-content: flex-end;
+    gap: 6px;
   }
 }

@@ -202,7 +202,6 @@ const Header = () => {
           <IconButton>
             <NotificationsNoneIcon />
           </IconButton>
-
           <LanguageSelector />
           <ThemeToggleButton />
         </Box>

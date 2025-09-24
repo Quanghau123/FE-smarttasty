@@ -3,30 +3,90 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
   padding: 16px;
+
+  // Background gradient kiểu nhà hàng (ấm, gỗ, sang trọng)
+  background: linear-gradient(135deg, #fff8f0 0%, #f1e2d1 50%, #f9f3eb 100%);
+
+  // Nếu muốn thêm background hình mờ (vd: hình nhà hàng blur)
+  //background-image: url("/access/image/bg-restaurant.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(6px);
+  }
 }
 
 .loginCard {
+  position: relative;
+  z-index: 2;
   width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  background-color: #fff;
+  max-width: 420px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  padding: 32px 28px;
 
-  @media (max-width: 480px) {
-    padding: 24px 16px !important;
+  // Logo nhà hàng
+  .logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+
+    img {
+      width: 100px;
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  // Tiêu đề
+  .title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    font-family: "Georgia", serif; // font sang kiểu nhà hàng
+  }
+
+  // Input form
+  .MuiTextField-root {
+    margin-bottom: 20px;
+  }
+
+  // Nút login
+  .MuiButton-root {
+    background: linear-gradient(135deg, #d35400, #e67e22);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: linear-gradient(135deg, #c0392b, #d35400);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(211, 84, 0, 0.3);
+    }
   }
 }
 
 .loginBottom {
+  text-align: center;
   font-size: 14px;
-  margin-top: 8px;
+  margin-top: 12px;
   color: #666;
 
   a {
-    color: #1976d2;
-    font-weight: 500;
+    color: #d35400;
+    font-weight: 600;
     cursor: pointer;
 
     &:hover {

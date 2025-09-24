@@ -11,7 +11,12 @@ export default function LocaleLayout({
 }) {
   const pathname = usePathname();
 
-  const authRoutes = ["/login", "/register"];
+  const authRoutes = [
+    "/login",
+    "/register",
+    "/register-business",
+    "/ErrorPages/notfound",
+  ];
   const hideHeaderFooter = authRoutes.some((route) => pathname.includes(route));
 
   return (
