@@ -22,6 +22,7 @@ import {
 } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
+import type { DishPromotion } from "@/types/dishpromotion";
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -145,6 +146,16 @@ const RestaurantPage = () => {
 
   // memo: map dishId -> best discounted price (chọn giá thấp nhất nếu có nhiều KM)
   const bestDiscountByDishId = useMemo(() => {
+    type DishPromotionFlat = DishPromotion & {
+      discountType?: "percent" | "fixed_amount";
+      discountValue?: number;
+    };
+
+    const getDiscount = (dp: DishPromotionFlat) => ({
+      type: dp.promotion?.discountType ?? dp.discountType,
+      value: dp.promotion?.discountValue ?? dp.discountValue,
+    });
+
     const map = new Map<number, number>();
     for (const dish of dishes) {
       const orig = dish.price;
@@ -153,11 +164,8 @@ const RestaurantPage = () => {
 
       let best = orig;
       for (const p of related) {
-        const after = computeDiscountedPrice(
-          orig,
-          (p as any).discountType,
-          Number((p as any).discountValue)
-        );
+        const { type, value } = getDiscount(p as DishPromotionFlat);
+        const after = computeDiscountedPrice(orig, type, Number(value));
         if (after < best) best = after;
       }
       if (best < orig) map.set(dish.id, best);

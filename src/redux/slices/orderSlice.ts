@@ -9,6 +9,7 @@ import {
   OrderRequest,
   OrderResponse,
   ApiEnvelope,
+  RawOrderResponse,
   normalizeOrderResponse,
   OrderStatus,
   DeliveryStatus,
@@ -38,20 +39,28 @@ const initialState: OrderState = {
 /*                                   UTILS                                    */
 /* -------------------------------------------------------------------------- */
 
-const getToken = (): string | null => localStorage.getItem("token");
+// Note: Token attachment is handled in axiosInstance interceptor.
 
-const resolveApiData = (body: unknown): unknown => {
-  try {
-    return body as unknown;
-  } catch {
-    return undefined;
-  }
-};
+const resolveApiData = (body: unknown): unknown => body as unknown;
 
 const isApiEnvelope = (v: unknown): v is ApiEnvelope<unknown> => {
   if (typeof v !== "object" || v === null) return false;
   const obj = v as Record<string, unknown>;
   return "errCode" in obj && "errMessage" in obj;
+};
+
+// Normalize various backend shapes into an array of raw order objects (or null)
+const extractItemsArray = (payload: unknown): unknown[] | null => {
+  if (!payload) return null;
+  if (Array.isArray(payload)) return payload as unknown[];
+  if (isApiEnvelope(payload)) {
+    const data = (payload as ApiEnvelope<unknown>).data as unknown;
+    if (Array.isArray(data)) return data as unknown[];
+    if (data && typeof data === "object") return [data as unknown];
+    return null;
+  }
+  if (typeof payload === "object") return [payload as unknown];
+  return null;
 };
 
 // Helper: if API returns only { data: { id: number } } or a single object,
@@ -60,40 +69,12 @@ const fetchOrderByIdInternal = async (
   id: number
 ): Promise<OrderResponse | null> => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.get(`/api/Order/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
-
-    const envelope = resolveApiData(res.data) as ApiEnvelope<unknown> | unknown;
-    const items =
-      isApiEnvelope(envelope) && Array.isArray(envelope.data)
-        ? (envelope.data as unknown[])
-        : Array.isArray(envelope)
-        ? (envelope as unknown[])
-        : null;
-
-    if (Array.isArray(items) && items.length > 0)
-      return normalizeOrderResponse(items[0]);
-
-    // If the envelope contains a single object in data
-    if (
-      isApiEnvelope(envelope) &&
-      envelope.data &&
-      typeof envelope.data === "object"
-    ) {
-      const d = envelope.data as Record<string, unknown>;
-      if (d && typeof d["id"] === "number") return normalizeOrderResponse(d);
+    const res = await axiosInstance.get(`/api/Order/${id}`);
+    const envelope = resolveApiData(res.data);
+    const items = extractItemsArray(envelope);
+    if (Array.isArray(items) && items.length > 0) {
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
     }
-
-    // If the response itself is an object representing the order
-    if (envelope && typeof envelope === "object") {
-      const obj = envelope as Record<string, unknown>;
-      if (typeof obj["id"] === "number") {
-        return normalizeOrderResponse(obj);
-      }
-    }
-
     return null;
   } catch {
     return null;
@@ -111,22 +92,12 @@ export const createOrder = createAsyncThunk<
   { rejectValue: string }
 >("order/createOrder", async (payload, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.post("/api/Order", payload, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    });
+    const res = await axiosInstance.post("/api/Order", payload);
 
     const envelope = resolveApiData(res.data);
-    // Trường hợp BE trả về danh sách order trong data
-    if (isApiEnvelope(envelope) && Array.isArray(envelope.data)) {
-      const items = envelope.data as unknown[];
-      if (items.length > 0) return normalizeOrderResponse(items[0]);
-    }
+    const items = extractItemsArray(envelope);
+    if (Array.isArray(items) && items.length > 0)
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
 
     // Trường hợp BE trả về object data
     if (
@@ -137,26 +108,19 @@ export const createOrder = createAsyncThunk<
       const dataObj = envelope.data as Record<string, unknown>;
       // Nếu BE trả về full object order
       if ("items" in dataObj || "restaurant" in dataObj) {
-        return normalizeOrderResponse(dataObj);
+        return normalizeOrderResponse(dataObj as unknown as RawOrderResponse);
       }
       // Nếu chỉ có id -> thử fetch chi tiết đơn hàng rồi trả về
       const idVal = dataObj["id"];
       if (typeof idVal === "number") {
         try {
-          const token2 = getToken();
-          const detail = await axiosInstance.get(`/api/Order/${idVal}`, {
-            headers: token2 ? { Authorization: `Bearer ${token2}` } : undefined,
-          });
+          const detail = await axiosInstance.get(`/api/Order/${idVal}`);
           const env2 = resolveApiData(detail.data) as
             | ApiEnvelope<unknown>
             | unknown;
-          const items2 = Array.isArray((env2 as ApiEnvelope<unknown>)?.data)
-            ? ((env2 as ApiEnvelope<unknown>).data as unknown[])
-            : Array.isArray(env2)
-            ? (env2 as unknown[])
-            : null;
+          const items2 = extractItemsArray(env2);
           if (Array.isArray(items2) && items2.length > 0)
-            return normalizeOrderResponse(items2[0]);
+            return normalizeOrderResponse(items2[0] as RawOrderResponse);
         } catch {
           // ignore, fallback phía dưới
         }
@@ -170,19 +134,25 @@ export const createOrder = createAsyncThunk<
           recipientPhone: payload.recipientPhone,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          items: payload.items ?? [],
+          items: (payload.items ?? []).map((i) => ({
+            id: 0,
+            dishId: i.dishId,
+            dishName: "",
+            quantity: i.quantity,
+            totalPrice: 0,
+          })),
           restaurant: {},
           totalPrice: 0,
           finalPrice: 0,
           status: OrderStatus.Pending,
           deliveryStatus: DeliveryStatus.Preparing,
-        });
+        } as RawOrderResponse);
       }
     }
 
     // Trường hợp BE trả về mảng trực tiếp
     if (Array.isArray(envelope) && envelope.length > 0)
-      return normalizeOrderResponse(envelope[0]);
+      return normalizeOrderResponse(envelope[0] as RawOrderResponse);
 
     return rejectWithValue(
       isApiEnvelope(envelope) ? envelope.errMessage : "Không thể tạo đơn hàng"
@@ -202,22 +172,12 @@ export const addItemToOrder = createAsyncThunk<
   { rejectValue: string }
 >("order/addItemToOrder", async ({ orderId, item }, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.post(`/api/Order/${orderId}/items`, item, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    });
+    const res = await axiosInstance.post(`/api/Order/${orderId}/items`, item);
 
     const envelope = resolveApiData(res.data);
-    // Nếu BE trả về mảng order trong data
-    if (isApiEnvelope(envelope) && Array.isArray(envelope.data)) {
-      const items = envelope.data as unknown[];
-      if (items.length > 0) return normalizeOrderResponse(items[0]);
-    }
+    const items = extractItemsArray(envelope);
+    if (Array.isArray(items) && items.length > 0)
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
 
     // Nếu BE trả về success nhưng data không phải mảng -> xem như thành công,
     // cố gắng lấy chi tiết đơn hàng; nếu thất bại thì trả về một order tối thiểu
@@ -231,7 +191,7 @@ export const addItemToOrder = createAsyncThunk<
       }
 
       // Fallback: tạo một OrderResponse tối thiểu để coi là thành công
-      const fallbackOrder = {
+      const fallbackOrder: RawOrderResponse = {
         id: orderId,
         userId: 0,
         restaurantId: 0,
@@ -240,8 +200,8 @@ export const addItemToOrder = createAsyncThunk<
         recipientPhone: "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        items: [] as unknown[],
-        restaurant: {} as Record<string, unknown>,
+        items: [],
+        restaurant: {},
         totalPrice: 0,
         finalPrice: 0,
         status: OrderStatus.Pending,
@@ -252,7 +212,7 @@ export const addItemToOrder = createAsyncThunk<
 
     // Trường hợp trả về mảng trực tiếp
     if (Array.isArray(envelope) && envelope.length > 0)
-      return normalizeOrderResponse(envelope[0]);
+      return normalizeOrderResponse(envelope[0] as RawOrderResponse);
 
     return rejectWithValue(
       isApiEnvelope(envelope)
@@ -271,23 +231,15 @@ export const fetchOrderById = createAsyncThunk<
   { rejectValue: string }
 >("order/fetchOrderById", async (id, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.get(`/api/Order/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await axiosInstance.get(`/api/Order/${id}`);
 
-    const envelope = resolveApiData(res.data) as ApiEnvelope<unknown> | unknown;
-    const items = Array.isArray((envelope as ApiEnvelope<unknown>)?.data)
-      ? ((envelope as ApiEnvelope<unknown>).data as unknown[])
-      : Array.isArray(envelope)
-      ? (envelope as unknown[])
-      : null;
-
+    const envelope = resolveApiData(res.data);
+    const items = extractItemsArray(envelope);
     if (Array.isArray(items) && items.length > 0)
-      return normalizeOrderResponse(items[0]);
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
 
     return rejectWithValue(
-      (envelope as ApiEnvelope<unknown>)?.errMessage ||
+      (isApiEnvelope(envelope) && envelope.errMessage) ||
         "Không tìm thấy đơn hàng"
     );
   } catch (e: unknown) {
@@ -302,29 +254,15 @@ export const updateOrder = createAsyncThunk<
   { rejectValue: string }
 >("order/updateOrder", async ({ id, payload }, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.put(`/api/Order/${id}`, payload, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    });
+    const res = await axiosInstance.put(`/api/Order/${id}`, payload);
 
     const envelope = resolveApiData(res.data);
-    const items =
-      isApiEnvelope(envelope) && Array.isArray(envelope.data)
-        ? (envelope.data as unknown[])
-        : Array.isArray(envelope)
-        ? (envelope as unknown[])
-        : null;
-
+    const items = extractItemsArray(envelope);
     if (Array.isArray(items) && items.length > 0)
-      return normalizeOrderResponse(items[0]);
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
 
     return rejectWithValue(
-      (envelope as ApiEnvelope<unknown>)?.errMessage ||
+      (isApiEnvelope(envelope) && envelope.errMessage) ||
         "Cập nhật đơn hàng thất bại"
     );
   } catch (e: unknown) {
@@ -339,10 +277,7 @@ export const deleteOrder = createAsyncThunk<
   { rejectValue: string }
 >("order/deleteOrder", async (id, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.delete(`/api/Order/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await axiosInstance.delete(`/api/Order/${id}`);
     if (res.data?.errCode === "success" || res.status === 200) return id;
     return rejectWithValue(res.data?.errMessage || "Xóa đơn hàng thất bại");
   } catch (e: unknown) {
@@ -359,25 +294,17 @@ export const deleteOrderItem = createAsyncThunk<
   "order/deleteOrderItem",
   async ({ orderId, orderItemId }, { rejectWithValue }) => {
     try {
-      const token = getToken();
       const res = await axiosInstance.delete(
-        `/api/Order/${orderId}/items/${orderItemId}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        `/api/Order/${orderId}/items/${orderItemId}`
       );
 
       const envelope = resolveApiData(res.data);
-      const items =
-        isApiEnvelope(envelope) && Array.isArray(envelope.data)
-          ? (envelope.data as unknown[])
-          : Array.isArray(envelope)
-          ? (envelope as unknown[])
-          : null;
-
+      const items = extractItemsArray(envelope);
       if (Array.isArray(items) && items.length > 0)
-        return normalizeOrderResponse(items[0]);
+        return normalizeOrderResponse(items[0] as RawOrderResponse);
 
       return rejectWithValue(
-        (envelope as ApiEnvelope<unknown>)?.errMessage ||
+        (isApiEnvelope(envelope) && envelope.errMessage) ||
           "Không thể xóa món khỏi đơn hàng"
       );
     } catch (e: unknown) {
@@ -393,21 +320,16 @@ export const fetchOrdersByUser = createAsyncThunk<
   { rejectValue: string }
 >("order/fetchByUser", async (userId, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.get(`/api/Order/user/${userId}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await axiosInstance.get(`/api/Order/user/${userId}`);
 
-    const envelope = resolveApiData(res.data) as ApiEnvelope<unknown> | unknown;
-    const items = Array.isArray((envelope as ApiEnvelope<unknown>)?.data)
-      ? ((envelope as ApiEnvelope<unknown>).data as unknown[])
-      : Array.isArray(envelope)
-      ? (envelope as unknown[])
-      : null;
-
-    if (Array.isArray(items)) return items.map(normalizeOrderResponse);
+    const envelope = resolveApiData(res.data);
+    const items = extractItemsArray(envelope);
+    if (Array.isArray(items))
+      return (items as RawOrderResponse[]).map((it) =>
+        normalizeOrderResponse(it)
+      );
     return rejectWithValue(
-      (envelope as ApiEnvelope<unknown>)?.errMessage ||
+      (isApiEnvelope(envelope) && envelope.errMessage) ||
         "Không thể lấy danh sách đơn hàng của người dùng"
     );
   } catch (e: unknown) {
@@ -422,22 +344,16 @@ export const fetchOrdersByStatus = createAsyncThunk<
   { rejectValue: string }
 >("order/fetchByStatus", async (status, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.get(`/api/Order/status/${status}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await axiosInstance.get(`/api/Order/status/${status}`);
 
     const envelope = resolveApiData(res.data);
-    const items =
-      isApiEnvelope(envelope) && Array.isArray(envelope.data)
-        ? (envelope.data as unknown[])
-        : Array.isArray(envelope)
-        ? (envelope as unknown[])
-        : null;
-
-    if (Array.isArray(items)) return items.map(normalizeOrderResponse);
+    const items = extractItemsArray(envelope);
+    if (Array.isArray(items))
+      return (items as RawOrderResponse[]).map((it) =>
+        normalizeOrderResponse(it)
+      );
     return rejectWithValue(
-      (envelope as ApiEnvelope<unknown>)?.errMessage ||
+      (isApiEnvelope(envelope) && envelope.errMessage) ||
         "Không thể lấy danh sách đơn hàng theo trạng thái"
     );
   } catch (e: unknown) {
@@ -452,33 +368,17 @@ export const updateOrderStatus = createAsyncThunk<
   { rejectValue: string }
 >("order/updateStatus", async ({ id, status }, { rejectWithValue }) => {
   try {
-    const token = getToken();
-    const res = await axiosInstance.patch(
-      `/api/Order/${id}/status`,
-      { status },
-      {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            }
-          : { "Content-Type": "application/json" },
-      }
-    );
+    const res = await axiosInstance.patch(`/api/Order/${id}/status`, {
+      status,
+    });
 
     const envelope = resolveApiData(res.data);
-    const items =
-      isApiEnvelope(envelope) && Array.isArray(envelope.data)
-        ? (envelope.data as unknown[])
-        : Array.isArray(envelope)
-        ? (envelope as unknown[])
-        : null;
-
+    const items = extractItemsArray(envelope);
     if (Array.isArray(items) && items.length > 0)
-      return normalizeOrderResponse(items[0]);
+      return normalizeOrderResponse(items[0] as RawOrderResponse);
 
     return rejectWithValue(
-      (envelope as ApiEnvelope<unknown>)?.errMessage ||
+      (isApiEnvelope(envelope) && envelope.errMessage) ||
         "Cập nhật trạng thái đơn hàng thất bại"
     );
   } catch (e: unknown) {
@@ -495,33 +395,18 @@ export const updateDeliveryStatus = createAsyncThunk<
   "order/updateDelivery",
   async ({ id, deliveryStatus }, { rejectWithValue }) => {
     try {
-      const token = getToken();
       const res = await axiosInstance.patch(
         `/api/Order/${id}/delivery-status`,
-        { deliveryStatus },
-        {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              }
-            : { "Content-Type": "application/json" },
-        }
+        { deliveryStatus }
       );
 
       const envelope = resolveApiData(res.data);
-      const items =
-        isApiEnvelope(envelope) && Array.isArray(envelope.data)
-          ? (envelope.data as unknown[])
-          : Array.isArray(envelope)
-          ? (envelope as unknown[])
-          : null;
-
+      const items = extractItemsArray(envelope);
       if (Array.isArray(items) && items.length > 0)
-        return normalizeOrderResponse(items[0]);
+        return normalizeOrderResponse(items[0] as RawOrderResponse);
 
       return rejectWithValue(
-        (envelope as ApiEnvelope<unknown>)?.errMessage ||
+        (isApiEnvelope(envelope) && envelope.errMessage) ||
           "Cập nhật trạng thái giao hàng thất bại"
       );
     } catch (e: unknown) {

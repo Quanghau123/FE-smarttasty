@@ -51,6 +51,7 @@ import {
   fetchDishPromotions, // ✅ gọi tổng
 } from "@/redux/slices/dishPromotionSlice";
 import styles from "./styles.module.scss";
+import type { DishPromotion } from "@/types/dishpromotion";
 
 type FormState = {
   name: string;
@@ -387,14 +388,27 @@ const ProductPage = () => {
                               const orig = dish.price;
 
                               // Nếu có nhiều KM áp cho cùng món, chọn giá thấp nhất
+                              type DishPromotionFlat = DishPromotion & {
+                                discountType?: "percent" | "fixed_amount";
+                                discountValue?: number;
+                              };
+                              const getDiscount = (dp: DishPromotionFlat) => ({
+                                type:
+                                  dp.promotion?.discountType ?? dp.discountType,
+                                value:
+                                  dp.promotion?.discountValue ??
+                                  dp.discountValue,
+                              });
+
                               const bestDiscounted = related.reduce(
                                 (min, p) => {
+                                  const { type, value } = getDiscount(
+                                    p as DishPromotionFlat
+                                  );
                                   const priceAfter = computeDiscountedPrice(
                                     orig,
-                                    p.discountType as string,
-                                    // BE trả discountValue có thể là % hoặc số tiền tuỳ type
-                                    // ví dụ "percent": 20 | "fixed_amount": 20000
-                                    Number(p.discountValue)
+                                    type,
+                                    Number(value)
                                   );
                                   return Math.min(min, priceAfter);
                                 },

@@ -1,6 +1,7 @@
 // redux/slices/reservationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
+import axios, { AxiosError } from "axios";
 import {
   ReservationRequest,
   ReservationEntity,
@@ -8,6 +9,9 @@ import {
   UpdateReservationStatusResponse,
 } from "@/types/reservation";
 
+/* -------------------------------------------------------------------------- */
+/*                                   STATE                                    */
+/* -------------------------------------------------------------------------- */
 interface ReservationState {
   reservation: ReservationEntity | null;
   loading: boolean;
@@ -20,7 +24,9 @@ const initialState: ReservationState = {
   error: null,
 };
 
-// Generic API response
+/* -------------------------------------------------------------------------- */
+/*                                API RESPONSE                                */
+/* -------------------------------------------------------------------------- */
 interface ApiResponse<T> {
   errCode: string;
   errMessage: string;
@@ -29,7 +35,20 @@ interface ApiResponse<T> {
   status: string;
 }
 
-// POST reservation
+/* -------------------------------------------------------------------------- */
+/*                            HELPER: ERROR HANDLER                           */
+/* -------------------------------------------------------------------------- */
+const handleAxiosError = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<{ errMessage?: string }>;
+    return axiosError.response?.data?.errMessage || "Unexpected API error";
+  }
+  return "Unexpected error";
+};
+
+/* -------------------------------------------------------------------------- */
+/*                           CREATE RESERVATION API                           */
+/* -------------------------------------------------------------------------- */
 export const createReservation = createAsyncThunk<
   ReservationEntity,
   ReservationRequest,
@@ -38,18 +57,17 @@ export const createReservation = createAsyncThunk<
   try {
     const response = await axiosInstance.post<ApiResponse<ReservationEntity>>(
       "/api/Reservation",
-      data 
+      data
     );
-
     return response.data.data;
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.errMessage || "Something went wrong"
-    );
+  } catch (error: unknown) {
+    return rejectWithValue(handleAxiosError(error));
   }
 });
 
-// PUT update reservation status
+/* -------------------------------------------------------------------------- */
+/*                        UPDATE RESERVATION STATUS API                       */
+/* -------------------------------------------------------------------------- */
 export const updateReservationStatus = createAsyncThunk<
   UpdateReservationStatusResponse,
   { id: number; data: UpdateReservationStatusRequest },
@@ -62,14 +80,15 @@ export const updateReservationStatus = createAsyncThunk<
         ApiResponse<UpdateReservationStatusResponse>
       >(`/api/Reservation/${id}/status`, data);
       return response.data.data;
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.errMessage || "Failed to update status"
-      );
+    } catch (error: unknown) {
+      return rejectWithValue(handleAxiosError(error));
     }
   }
 );
 
+/* -------------------------------------------------------------------------- */
+/*                                 SLICE SETUP                                */
+/* -------------------------------------------------------------------------- */
 const reservationSlice = createSlice({
   name: "reservation",
   initialState,
@@ -81,7 +100,7 @@ const reservationSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // POST
+      /* ------------------------------ CREATE ------------------------------ */
       .addCase(createReservation.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -95,9 +114,10 @@ const reservationSlice = createSlice({
       )
       .addCase(createReservation.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to create reservation";
+        state.error = action.payload ?? "Failed to create reservation";
       })
-      // PUT
+
+      /* ------------------------------- UPDATE ----------------------------- */
       .addCase(updateReservationStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -114,7 +134,7 @@ const reservationSlice = createSlice({
       )
       .addCase(updateReservationStatus.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update reservation status";
+        state.error = action.payload ?? "Failed to update reservation status";
       });
   },
 });

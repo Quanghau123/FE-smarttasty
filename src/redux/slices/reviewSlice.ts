@@ -1,14 +1,15 @@
 // src/redux/slices/reviewSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
-import { ReviewRequest, ReviewResponse } from "@/types/review";
+import { ReviewRequest, ReviewResponse, ReviewData } from "@/types/review";
+import { AxiosError } from "axios";
 
 interface ReviewState {
   loading: boolean;
   error: string | null;
   success: boolean;
-  review: ReviewResponse["data"] | null; // khi create
-  reviews: ReviewResponse["data"][]; // khi fetch list
+  review: ReviewData | null; // khi create
+  reviews: ReviewData[]; // khi fetch list
 }
 
 const initialState: ReviewState = {
@@ -19,7 +20,19 @@ const initialState: ReviewState = {
   reviews: [],
 };
 
-// ✅ Async thunk: gọi API tạo review
+// ✅ Utility để lấy message lỗi từ Axios mà không dùng any
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  const axiosErr = error as AxiosError<{ errMessage?: string }>;
+  return (
+    axiosErr.response?.data?.errMessage ||
+    axiosErr.message ||
+    "Đã xảy ra lỗi không xác định"
+  );
+};
+
+// ✅ Async thunk: tạo review
 export const createReview = createAsyncThunk<
   ReviewResponse,
   ReviewRequest,
@@ -31,14 +44,12 @@ export const createReview = createAsyncThunk<
       payload
     );
     return res.data;
-  } catch (err: any) {
-    const message =
-      err.response?.data?.errMessage || err.message || "Lỗi khi tạo review";
-    return rejectWithValue(message);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
   }
 });
 
-// ✅ Async thunk: gọi API lấy list reviews
+// ✅ Async thunk: lấy danh sách review
 export const getReviews = createAsyncThunk<
   ReviewResponse,
   void,
@@ -47,13 +58,12 @@ export const getReviews = createAsyncThunk<
   try {
     const res = await axiosInstance.get<ReviewResponse>("/api/Review");
     return res.data;
-  } catch (err: any) {
-    const message =
-      err.response?.data?.errMessage || err.message || "Lỗi khi lấy reviews";
-    return rejectWithValue(message);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
   }
 });
 
+// ✅ Async thunk: lấy review theo nhà hàng
 export const getReviewsByRestaurant = createAsyncThunk<
   ReviewResponse,
   number,
@@ -66,12 +76,8 @@ export const getReviewsByRestaurant = createAsyncThunk<
         `/api/Review/restaurant/${restaurantId}`
       );
       return res.data;
-    } catch (err: any) {
-      const message =
-        err.response?.data?.errMessage ||
-        err.message ||
-        "Lỗi khi lấy review theo nhà hàng";
-      return rejectWithValue(message);
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -101,13 +107,20 @@ const reviewSlice = createSlice({
         (state, action: PayloadAction<ReviewResponse>) => {
           state.loading = false;
           state.success = true;
-          state.review = action.payload.data;
-          state.reviews.push(action.payload.data);
+
+          const data = action.payload.data;
+          if (Array.isArray(data)) {
+            state.review = data[0] ?? null;
+            if (data.length) state.reviews.push(data[0]);
+          } else if (data) {
+            state.review = data;
+            state.reviews.push(data);
+          }
         }
       )
       .addCase(createReview.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Không thể tạo review";
+        state.error = action.payload ?? "Không thể tạo review";
       });
 
     // GET LIST
@@ -120,13 +133,21 @@ const reviewSlice = createSlice({
         getReviews.fulfilled,
         (state, action: PayloadAction<ReviewResponse>) => {
           state.loading = false;
-          state.reviews = action.payload.data; // data là mảng reviews
+          const data = action.payload.data;
+          if (Array.isArray(data)) {
+            state.reviews = data;
+          } else if (data) {
+            state.reviews = [data];
+          } else {
+            state.reviews = [];
+          }
         }
       )
       .addCase(getReviews.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Không thể lấy reviews";
+        state.error = action.payload ?? "Không thể lấy reviews";
       });
+
     // GET BY RESTAURANT
     builder
       .addCase(getReviewsByRestaurant.pending, (state) => {
@@ -137,12 +158,11 @@ const reviewSlice = createSlice({
         getReviewsByRestaurant.fulfilled,
         (state, action: PayloadAction<ReviewResponse>) => {
           state.loading = false;
-
-          // Nếu API trả về 1 object thì normalize thành mảng
-          if (Array.isArray(action.payload.data)) {
-            state.reviews = action.payload.data;
-          } else if (action.payload.data) {
-            state.reviews = [action.payload.data];
+          const data = action.payload.data;
+          if (Array.isArray(data)) {
+            state.reviews = data;
+          } else if (data) {
+            state.reviews = [data];
           } else {
             state.reviews = [];
           }
@@ -150,7 +170,7 @@ const reviewSlice = createSlice({
       )
       .addCase(getReviewsByRestaurant.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Không thể lấy review theo nhà hàng";
+        state.error = action.payload ?? "Không thể lấy review theo nhà hàng";
       });
   },
 });
