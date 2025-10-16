@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   Box,
@@ -8,57 +8,253 @@ import {
   Typography,
   Chip,
   useTheme,
+  Stack,
+  IconButton,
+  Button,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchRestaurantById } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { getReviewsByRestaurant } from "@/redux/slices/reviewSlice";
+import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice";
+import {
+  fetchOrdersByUser,
+  createOrder,
+  addItemToOrder,
+} from "@/redux/slices/orderSlice";
 import styles from "./styles.module.scss";
 import ReviewForm from "@/components/features/Review/ReviewForm";
 import ReviewList from "@/components/features/Review/ReviewList";
 import ReservationForm from "@/components/features/Reservation";
 import StarIcon from "@mui/icons-material/Star";
 
+// Toast
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const RestaurantDetailPage = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
   const theme = useTheme();
 
-  // Restaurant
   const {
     current: restaurant,
     loading: restaurantLoading,
     error: restaurantError,
   } = useAppSelector((state) => state.restaurant);
-
-  // Dishes
   const { items: dishes, loading: dishesLoading } = useAppSelector(
     (state) => state.dishes
   );
-
-  // Reviews
+  const { items: dishPromotions } = useAppSelector(
+    (state) => state.dishpromotion
+  );
   const {
     reviews = [],
     loading: reviewLoading,
     error: reviewError,
   } = useAppSelector((state) => state.review);
 
+  const authUserId = useAppSelector((s: unknown) => {
+    try {
+      const ss = s as unknown as Record<string, unknown>;
+      const auth = ss["auth"] as Record<string, unknown> | undefined;
+      const user = auth?.["user"] as Record<string, unknown> | undefined;
+      const id = user?.["id"] as number | undefined;
+      return id ?? null;
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     if (!id) return;
-    dispatch(fetchRestaurantById(Number(id)));
-    dispatch(fetchDishes(Number(id)));
-    dispatch(getReviewsByRestaurant(Number(id)));
+    const rid = Number(id);
+    dispatch(fetchRestaurantById(rid));
+    dispatch(fetchDishes(rid));
+    dispatch(getReviewsByRestaurant(rid));
+    dispatch(fetchDishPromotions());
   }, [dispatch, id]);
 
-  if (restaurantLoading || dishesLoading)
+  // ================== GIẢM GIÁ ==================
+  const computeDiscountedPrice = (
+    orig: number,
+    discountType?: string,
+    discountValue?: number
+  ) => {
+    if (!discountType) return orig;
+    if (discountType === "percent")
+      return Math.max(
+        0,
+        Math.round(
+          orig * (1 - Math.max(0, Math.min(100, Number(discountValue))) / 100)
+        )
+      );
+    if (discountType === "fixed_amount")
+      return Math.max(0, orig - (Number(discountValue) || 0));
+    return orig;
+  };
+
+  const bestDiscountByDishId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const d of dishes) {
+      const orig = d.price;
+      const related = dishPromotions.filter((p) => p.dishId === d.id);
+      if (related.length === 0) continue;
+
+      let best = orig;
+      for (const p of related) {
+        const pr = p as unknown as Record<string, unknown>;
+        const after = computeDiscountedPrice(
+          orig,
+          typeof pr["discountType"] === "string"
+            ? (pr["discountType"] as string)
+            : undefined,
+          pr["discountValue"] !== undefined
+            ? Number(pr["discountValue"])
+            : undefined
+        );
+        if (after < best) best = after;
+      }
+      if (best < orig) map.set(d.id, best);
+    }
+    return map;
+  }, [dishes, dishPromotions]);
+
+  // ================== SỐ LƯỢNG ==================
+  const [qtyMap, setQtyMap] = useState<Record<number, number>>({});
+  const inc = (id: number) =>
+    setQtyMap((m) => ({ ...m, [id]: (m[id] || 0) + 1 }));
+  const dec = (id: number) =>
+    setQtyMap((m) => {
+      const cur = m[id] || 0;
+      const next = Math.max(0, cur - 1);
+      const copy = { ...m };
+      if (next === 0) delete copy[id];
+      else copy[id] = next;
+      return copy;
+    });
+
+  // ================== Thêm vào giỏ ==================
+  // ================== Thêm vào giỏ ==================
+  const handleAddToCart = async (dishId: number) => {
+    const quantity = qtyMap[dishId] || 0;
+    if (quantity <= 0) return;
+
+    // Lấy thông tin user
+    let userId = authUserId;
+    let address = "";
+    let name = "";
+    let phone = "";
+
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          userId = parsed.userId ?? userId;
+          address = parsed.address?.trim() || "";
+          name = parsed.userName?.trim() || "";
+          phone = parsed.phone?.trim() || "";
+        } catch {}
+      }
+    }
+
+    if (!userId || !address || !name || !phone) {
+      toast.error(
+        "Thiếu thông tin giao hàng (địa chỉ/tên/sđt). Vui lòng cập nhật trước khi đặt."
+      );
+      return;
+    }
+
+    try {
+      if (!restaurant) {
+        toast.error("Không tìm thấy nhà hàng");
+        return;
+      }
+
+      // Lấy danh sách đơn hàng hiện tại của user
+      const userOrders = await dispatch(
+        fetchOrdersByUser(Number(userId))
+      ).unwrap();
+
+      // Tìm đơn hàng đang mở với nhà hàng này
+      const activeOrder = userOrders.find(
+        (o) =>
+          o.restaurantId === Number(restaurant.id) &&
+          o.userId === Number(userId) &&
+          o.status === "Pending"
+      );
+
+      const discounted =
+        bestDiscountByDishId.get(dishId) ??
+        dishes.find((d) => d.id === dishId)?.price ??
+        0;
+      const totalPrice = discounted * quantity;
+
+      let orderId: number | null = null;
+      let ok = false;
+
+      if (!activeOrder) {
+        // Nếu chưa có đơn hàng → tạo mới cùng với món đã chọn
+        const createRes = await dispatch(
+          createOrder({
+            userId: Number(userId),
+            restaurantId: Number(restaurant.id),
+            deliveryAddress: address,
+            recipientName: name,
+            recipientPhone: phone,
+            items: [
+              {
+                dishId,
+                quantity,
+              },
+            ],
+          })
+        ).unwrap();
+        orderId = createRes.id;
+        ok = Boolean(createRes?.id);
+      } else {
+        orderId = activeOrder.id;
+
+        // Gọi API thêm món vào đơn hàng hiện có
+        const res = await dispatch(
+          addItemToOrder({
+            orderId,
+            item: { dishId, quantity, totalPrice },
+          })
+        );
+        ok = res.meta.requestStatus === "fulfilled";
+      }
+      if (ok) {
+        toast.success("Món đã được thêm vào giỏ hàng!");
+        setQtyMap((m) => {
+          const copy = { ...m };
+          delete copy[dishId];
+          return copy;
+        });
+        dispatch(fetchOrdersByUser(Number(userId)));
+      } else {
+        toast.error("Không thể thêm món vào giỏ hàng!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
+    }
+  };
+
+  // ================== LOADING & ERROR ==================
+  if (restaurantLoading || dishesLoading) {
     return (
       <Box className={styles.centered}>
         <CircularProgress />
       </Box>
     );
+  }
 
-  if (restaurantError || !restaurant)
+  if (restaurantError || !restaurant) {
     return (
       <Box className={styles.centered}>
         <Typography variant="h5">
@@ -66,8 +262,9 @@ const RestaurantDetailPage = () => {
         </Typography>
       </Box>
     );
+  }
 
-  // Tính trung bình và tổng lượt đánh giá
+  // ================== PHẦN CÒN LẠI ==================
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -78,7 +275,6 @@ const RestaurantDetailPage = () => {
     <Box className={styles.container}>
       {/* Bên trái */}
       <Box className={styles.leftContent}>
-        {/* Thông tin nhà hàng */}
         <Box
           className={styles.restaurantCard}
           sx={{
@@ -89,25 +285,22 @@ const RestaurantDetailPage = () => {
           }}
         >
           <Box className={styles.restaurantImage}>
-            <Image src={restaurant.imageUrl} alt={restaurant.name} fill />
+            <Image
+              src={restaurant.imageUrl || "/images/placeholder-restaurant.jpg"}
+              alt={restaurant.name}
+              fill
+            />
           </Box>
-
           <Box className={styles.restaurantInfo} sx={{ mt: 2 }}>
             <Typography variant="h4">{restaurant.name}</Typography>
-
-            {/* Mô tả */}
             {restaurant.description && (
               <Typography sx={{ mt: 1 }}>
                 <strong>Mô tả:</strong> {restaurant.description}
               </Typography>
             )}
-
-            {/* Địa chỉ */}
             <Typography sx={{ mt: 1 }}>
               <strong>Địa chỉ:</strong> {restaurant.address}
             </Typography>
-
-            {/* Trạng thái mở cửa */}
             <Typography sx={{ mt: 1 }}>
               <strong>Trạng thái:</strong>{" "}
               {(() => {
@@ -118,16 +311,12 @@ const RestaurantDetailPage = () => {
                 const [closeHour, closeMinute] = restaurant.closeTime
                   .split(":")
                   .map(Number);
-
                 const openDate = new Date(now);
                 openDate.setHours(openHour, openMinute, 0, 0);
-
                 const closeDate = new Date(now);
                 closeDate.setHours(closeHour, closeMinute, 0, 0);
-
                 if (closeDate <= openDate)
                   closeDate.setDate(closeDate.getDate() + 1);
-
                 return now >= openDate && now <= closeDate ? (
                   <span style={{ color: "green" }}>Đang mở cửa</span>
                 ) : (
@@ -135,14 +324,10 @@ const RestaurantDetailPage = () => {
                 );
               })()}
             </Typography>
-
-            {/* Giờ hoạt động */}
             <Typography sx={{ mt: 1 }}>
               <strong>Giờ hoạt động:</strong> {restaurant.openTime} -{" "}
               {restaurant.closeTime}
             </Typography>
-
-            {/* Đánh giá trung bình */}
             <Box display="flex" alignItems="center" gap={0.2} sx={{ mt: 1 }}>
               <strong>Đánh giá:</strong>
               {Array.from({ length: 5 }).map((_, idx) => (
@@ -176,53 +361,118 @@ const RestaurantDetailPage = () => {
             <Typography>Chưa có món ăn nào.</Typography>
           ) : (
             <Box className={styles.dishGrid}>
-              {dishes.map((dish) => (
-                <Box
-                  key={dish.id}
-                  className={styles.dishCard}
-                  sx={{
-                    backgroundColor: theme.palette.background.default,
-                    color: theme.palette.text.primary,  
-                    borderRadius: 2,
-                    p: 2,         
-                  }}
-                >
-                  <Box className={styles.dishImage}>
-                    <Image
-                      src={dish.imageUrl}
-                      alt={dish.name}
-                      width={300}
-                      height={160}
-                    />
-                  </Box>
-                  <Box className={styles.dishInfo}>
-                    <Typography variant="h6">
-                      {dish.name}
-                      {!dish.isActive && (
-                        <Chip
-                          label="Ngưng bán"
-                          size="small"
-                          sx={{
-                            ml: 1,
-                            backgroundColor: theme.palette.error.main,
-                            color: theme.palette.error.contrastText,
-                          }}
-                        />
+              {dishes.map((dish) => {
+                const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+                const showDiscount =
+                  discounted !== null && discounted < dish.price;
+                const qty = qtyMap[dish.id] || 0;
+                const unitPrice = discounted ?? dish.price;
+
+                return (
+                  <Box
+                    key={dish.id}
+                    className={styles.dishCard}
+                    sx={{
+                      backgroundColor: theme.palette.background.default,
+                      color: theme.palette.text.primary,
+                      borderRadius: 2,
+                      p: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                    }}
+                  >
+                    <Box className={styles.dishImage}>
+                      <Image
+                        src={dish.imageUrl}
+                        alt={dish.name}
+                        width={300}
+                        height={160}
+                      />
+                    </Box>
+                    <Box className={styles.dishInfo}>
+                      <Typography variant="h6">
+                        {dish.name}
+                        {!dish.isActive && (
+                          <Chip
+                            label="Ngưng bán"
+                            size="small"
+                            sx={{
+                              ml: 1,
+                              backgroundColor: theme.palette.error.main,
+                              color: theme.palette.error.contrastText,
+                            }}
+                          />
+                        )}
+                      </Typography>
+                      {showDiscount ? (
+                        <Box>
+                          <Typography
+                            sx={{
+                              textDecoration: "line-through",
+                              color: "#777",
+                            }}
+                          >
+                            {dish.price.toLocaleString()}đ
+                          </Typography>
+                          <Typography fontWeight="bold" color="primary">
+                            {discounted!.toLocaleString()}đ
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography className={styles.price}>
+                          {dish.price.toLocaleString()}đ
+                        </Typography>
                       )}
-                    </Typography>
-                    <Typography className={styles.price}>
-                      {dish.price.toLocaleString()}đ
-                    </Typography>
+                    </Box>
+
+                    {/* Chọn số lượng + Thêm vào giỏ */}
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      mt={1}
+                      gap={1}
+                    >
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <IconButton
+                          size="small"
+                          onClick={() => dec(dish.id)}
+                          disabled={qty === 0}
+                          aria-label="Giảm số lượng"
+                        >
+                          <RemoveIcon />
+                        </IconButton>
+                        <Typography minWidth={24} textAlign="center">
+                          {qty}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => inc(dish.id)}
+                          disabled={!dish.isActive}
+                          aria-label="Tăng số lượng"
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Stack>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        disabled={!dish.isActive || qty === 0}
+                        onClick={() => handleAddToCart(dish.id)}
+                      >
+                        Thêm vào giỏ ({(unitPrice * qty).toLocaleString()}đ)
+                      </Button>
+                    </Stack>
                   </Box>
-                </Box>
-              ))}
+                );
+              })}
             </Box>
           )}
         </Box>
 
         {/* Khu vực đánh giá */}
         <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
-          {/* Review List bên trái */}
           <Box sx={{ flex: 2 }}>
             <ReviewList
               reviews={reviews}
@@ -230,8 +480,6 @@ const RestaurantDetailPage = () => {
               error={reviewError}
             />
           </Box>
-
-          {/* Review Form bên phải */}
           <Box sx={{ flex: 1 }}>
             <ReviewForm />
           </Box>
@@ -242,6 +490,16 @@ const RestaurantDetailPage = () => {
       <Box className={styles.rightContent}>
         <ReservationForm restaurantId={restaurant.id} />
       </Box>
+
+      {/* Toast container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
     </Box>
   );
 };

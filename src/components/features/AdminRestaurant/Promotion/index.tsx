@@ -4,30 +4,33 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  TextField,
-  Typography,
   Card,
   CardContent,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  // Grid,
+  IconButton,
+  MenuItem,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
+  TextField,
+  Typography,
+  DialogContentText,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchPromotions,
@@ -35,139 +38,168 @@ import {
   updatePromotion,
   deletePromotion,
 } from "@/redux/slices/promotionSlice";
-import { Promotion } from "@/types/promotion";
+import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
+import { Promotion, DiscountType, TargetType } from "@/types/promotion";
+import axiosInstance from "@/lib/axios/axiosInstance";
 
-interface Restaurant {
-  id: string;
-  ownerId: number;
-  name?: string;
-}
-
-interface PromotionForm {
-  title: string;
-  description?: string;
-  discountPercent: number;
-  startDate: string;
-  endDate: string;
-}
-
-interface LocalUser {
-  token?: string;
-  user?: { userId: number };
-}
-
-const getUserFromLocalStorage = (): LocalUser => {
+const getUserFromLocalStorage = () => {
   try {
-    return JSON.parse(localStorage.getItem("user") || "{}");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = localStorage.getItem("token");
+    return { user, token };
   } catch {
-    return {};
+    return { user: {}, token: null };
   }
 };
 
+const toISO = (date: string) =>
+  date ? new Date(date + "T00:00:00").toISOString() : "";
+const fromISO = (iso?: string) =>
+  iso ? new Date(iso).toISOString().split("T")[0] : "";
+
 const PromotionPage = () => {
   const dispatch = useAppDispatch();
-  const { promotions, loading } = useAppSelector((state) => state.promotion);
+  const {
+    promotions,
+    loading,
+    error: promotionError,
+  } = useAppSelector((state) => state.promotion);
+  const { current: restaurant } = useAppSelector((state) => state.restaurant);
 
-  const [restaurantId, setRestaurantId] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Promotion | null>(null);
-  const [formData, setFormData] = useState<PromotionForm>({
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
+
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
-    discountPercent: 0,
     startDate: "",
     endDate: "",
+    discountType: "percent" as DiscountType,
+    discountValue: 0,
+    targetType: "dish" as TargetType,
   });
 
+  // ===== INIT =====
   useEffect(() => {
-    const fetchRestaurant = async () => {
-      const { token, user } = getUserFromLocalStorage();
-      const userId = user?.userId;
-      if (!token || !userId) return;
-
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/Restaurant`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        const myRestaurant: Restaurant | undefined = data?.data?.find(
-          (r: Restaurant) => r.ownerId === userId
-        );
-        if (!myRestaurant?.id) return alert("Tài khoản chưa có nhà hàng!");
-        setRestaurantId(myRestaurant.id);
-        dispatch(fetchPromotions(myRestaurant.id));
-      } catch {
-        alert("Không thể lấy thông tin nhà hàng");
-      }
-    };
-
-    fetchRestaurant();
+    const { token } = getUserFromLocalStorage();
+    if (token) {
+      axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+      dispatch(fetchRestaurantByOwner({ token }));
+    }
   }, [dispatch]);
 
+  useEffect(() => {
+    // show errors from promotion slice
+    if (promotionError) {
+      toast.error(promotionError);
+    }
+    if (restaurant?.id) {
+      setRestaurantId(restaurant.id);
+      dispatch(fetchPromotions(restaurant.id));
+    } else if (restaurant) {
+      toast.warning("Tài khoản chưa có nhà hàng!");
+    }
+  }, [restaurant, dispatch, promotionError]);
+
+  // ===== HANDLERS =====
   const handleOpenModal = (promo: Promotion | null = null) => {
     if (promo) {
-      setEditing(promo);
+      setEditingPromo(promo);
       setFormData({
         title: promo.title,
-        description: promo.description ?? "",
-        discountPercent: promo.discountPercent,
-        startDate: promo.startDate?.split("T")[0] || "",
-        endDate: promo.endDate?.split("T")[0] || "",
+        description: promo.description || "",
+        startDate: fromISO(promo.startDate),
+        endDate: fromISO(promo.endDate),
+        discountType: promo.discountType as DiscountType,
+        discountValue: promo.discountValue ?? 0,
+        targetType: promo.targetType as TargetType,
       });
     } else {
-      setEditing(null);
+      setEditingPromo(null);
       setFormData({
         title: "",
         description: "",
-        discountPercent: 0,
         startDate: "",
         endDate: "",
+        discountType: "percent",
+        discountValue: 0,
+        targetType: "dish",
       });
     }
-    setOpen(true);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setEditingPromo(null);
+    setFormData({
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      discountType: "percent",
+      discountValue: 0,
+      targetType: "dish",
+    });
   };
 
   const handleSubmit = async () => {
-    if (!restaurantId) return;
-    const payload = { ...formData, restaurantId };
+    if (!restaurantId) return toast.error("Thiếu nhà hàng!");
+    if (!formData.title.trim()) return toast.warning("Nhập tiêu đề!");
+    if (!formData.startDate || !formData.endDate)
+      return toast.warning("Chọn ngày bắt đầu & kết thúc!");
+
+    const payload = {
+      restaurantId,
+      title: formData.title.trim(),
+      description: formData.description?.trim() || "",
+      startDate: toISO(formData.startDate),
+      endDate: toISO(formData.endDate),
+      discountType: formData.discountType,
+      discountValue: Number(formData.discountValue),
+      targetType: formData.targetType,
+    };
 
     try {
-      if (editing) {
+      if (editingPromo) {
         await dispatch(
-          updatePromotion({ id: editing.id, data: payload })
+          updatePromotion({ id: editingPromo.id, data: payload })
         ).unwrap();
-        alert("Cập nhật thành công");
+        toast.success("Cập nhật khuyến mãi thành công ✅");
       } else {
         await dispatch(addPromotion(payload)).unwrap();
-        alert("Tạo thành công");
+        toast.success("Thêm khuyến mãi thành công ✅");
       }
-      setOpen(false);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        alert(err.message);
-      } else {
-        alert("Thao tác thất bại");
-      }
+      handleCloseModal();
+      dispatch(fetchPromotions(restaurantId));
+    } catch {
+      toast.error("Thao tác thất bại. Vui lòng thử lại!");
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bạn chắc chắn muốn xóa?")) return;
+  const handleClickDelete = (id: number) => {
+    setSelectedPromoId(id);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedPromoId) return;
     try {
-      await dispatch(deletePromotion(id)).unwrap();
-      alert("Đã xóa thành công");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        alert(err.message);
-      } else {
-        alert("Không thể xóa");
-      }
+      await dispatch(deletePromotion(selectedPromoId)).unwrap();
+      toast.success("Xoá khuyến mãi thành công ✅");
+      if (restaurantId) dispatch(fetchPromotions(restaurantId));
+    } catch {
+      toast.error("Không thể xoá. Vui lòng thử lại!");
+    } finally {
+      setOpenDeleteDialog(false);
+      setSelectedPromoId(null);
     }
   };
 
+  // ===== RENDER =====
   return (
     <Box p={3}>
       <Card>
@@ -197,38 +229,34 @@ const PromotionPage = () => {
                   <TableRow>
                     <TableCell>Tiêu đề</TableCell>
                     <TableCell>Mô tả</TableCell>
-                    <TableCell>Giảm giá (%)</TableCell>
-                    <TableCell>Ngày áp dụng</TableCell>
-                    <TableCell>Trạng thái</TableCell>
+                    <TableCell>Thời gian</TableCell>
+                    <TableCell>Nhà hàng</TableCell>
                     <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {promotions.map((promo: Promotion) => (
-                    <TableRow key={promo.id}>
-                      <TableCell>{promo.title}</TableCell>
-                      <TableCell>{promo.description}</TableCell>
-                      <TableCell>{promo.discountPercent}</TableCell>
-                      <TableCell>
-                        {promo.startDate?.split("T")[0]} -{" "}
-                        {promo.endDate?.split("T")[0]}
-                      </TableCell>
-                      <TableCell>
-                        {promo.isActive ? "Đang hoạt động" : "Ngừng"}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton onClick={() => handleOpenModal(promo)}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDelete(promo.id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {Array.isArray(promotions) &&
+                    promotions.map((promo) => (
+                      <TableRow key={promo.id}>
+                        <TableCell>{promo.title}</TableCell>
+                        <TableCell>{promo.description}</TableCell>
+                        <TableCell>
+                          {fromISO(promo.startDate)} - {fromISO(promo.endDate)}
+                        </TableCell>
+                        <TableCell>{promo.restaurant?.name ?? "—"}</TableCell>
+                        <TableCell>
+                          <IconButton onClick={() => handleOpenModal(promo)}>
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleClickDelete(promo.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -236,52 +264,99 @@ const PromotionPage = () => {
         </CardContent>
       </Card>
 
+      {/* Modal thêm/sửa */}
       <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
+        open={openModal}
+        onClose={handleCloseModal}
         fullWidth
         maxWidth="sm"
       >
         <DialogTitle>
-          {editing ? "Sửa khuyến mãi" : "Thêm khuyến mãi"}
+          {editingPromo ? "Cập nhật khuyến mãi" : "Thêm khuyến mãi"}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} mt={1}>
-            <Grid item xs={12} component={"div" as React.ElementType}>
+          <Box mt={1} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+            <Box sx={{ width: "100%" }}>
               <TextField
                 fullWidth
                 label="Tiêu đề"
                 value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
+                  setFormData((s) => ({ ...s, title: e.target.value }))
                 }
               />
-            </Grid>
-            <Grid item xs={12} component={"div" as React.ElementType}>
+            </Box>
+
+            <Box sx={{ width: "100%" }}>
               <TextField
                 fullWidth
                 label="Mô tả"
+                multiline
+                rows={3}
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                  setFormData((s) => ({ ...s, description: e.target.value }))
                 }
               />
-            </Grid>
-            <Grid item xs={12} component={"div" as React.ElementType}>
+            </Box>
+
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
+              <TextField
+                select
+                fullWidth
+                label="Loại giảm giá"
+                value={formData.discountType}
+                onChange={(e) =>
+                  setFormData((s) => ({
+                    ...s,
+                    discountType: e.target.value as DiscountType,
+                  }))
+                }
+              >
+                <MenuItem value="percent">Phần trăm</MenuItem>
+                <MenuItem value="fixed_amount">Số tiền</MenuItem>
+              </TextField>
+            </Box>
+
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
               <TextField
                 fullWidth
                 type="number"
-                label="Giảm giá (%)"
-                value={formData.discountPercent}
+                label={
+                  formData.discountType === "percent"
+                    ? "Giảm (%)"
+                    : "Giảm (VNĐ)"
+                }
+                value={formData.discountValue}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    discountPercent: Number(e.target.value),
-                  })
+                  setFormData((s) => ({
+                    ...s,
+                    discountValue: Number(e.target.value),
+                  }))
                 }
               />
-            </Grid>
-            <Grid item xs={12} component={"div" as React.ElementType}>
+            </Box>
+
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
+              <TextField
+                select
+                fullWidth
+                label="Áp dụng cho"
+                value={formData.targetType}
+                onChange={(e) =>
+                  setFormData((s) => ({
+                    ...s,
+                    targetType: e.target.value as TargetType,
+                  }))
+                }
+              >
+                <MenuItem value="dish">Món ăn</MenuItem>
+                <MenuItem value="order">Đơn hàng</MenuItem>
+                <MenuItem value="category">Danh mục</MenuItem>
+              </TextField>
+            </Box>
+
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
               <TextField
                 fullWidth
                 type="date"
@@ -289,11 +364,12 @@ const PromotionPage = () => {
                 InputLabelProps={{ shrink: true }}
                 value={formData.startDate}
                 onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
+                  setFormData((s) => ({ ...s, startDate: e.target.value }))
                 }
               />
-            </Grid>
-            <Grid item xs={12} component={"div" as React.ElementType}>
+            </Box>
+
+            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
               <TextField
                 fullWidth
                 type="date"
@@ -301,16 +377,39 @@ const PromotionPage = () => {
                 InputLabelProps={{ shrink: true }}
                 value={formData.endDate}
                 onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
+                  setFormData((s) => ({ ...s, endDate: e.target.value }))
                 }
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Hủy</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editing ? "Cập nhật" : "Thêm"}
+          <Button onClick={handleCloseModal}>Hủy</Button>
+          <Button variant="contained" onClick={handleSubmit}>
+            {editingPromo ? "Cập nhật" : "Thêm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog xoá */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+      >
+        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Bạn có chắc chắn muốn xoá khuyến mãi này không?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDelete}
+          >
+            Xoá
           </Button>
         </DialogActions>
       </Dialog>

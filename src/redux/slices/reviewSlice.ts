@@ -56,14 +56,14 @@ export const getReviews = createAsyncThunk<
 
 export const getReviewsByRestaurant = createAsyncThunk<
   ReviewResponse,
-  number, 
+  number,
   { rejectValue: string }
 >(
   "review/getReviewsByRestaurant",
   async (restaurantId, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.get<ReviewResponse>(
-        `/api/Review/${restaurantId}`
+        `/api/Review/restaurant/${restaurantId}`
       );
       return res.data;
     } catch (err: any) {

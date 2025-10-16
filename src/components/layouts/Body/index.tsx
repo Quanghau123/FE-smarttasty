@@ -85,6 +85,7 @@ const BodyPage = () => {
                 </Typography>
 
                 {/* Rating */}
+                {/* Rating + tổng sao */}
                 <Box display="flex" alignItems="center" mb={1}>
                   {Array.from({ length: 5 }).map((_, idx) => (
                     <StarIcon
@@ -95,6 +96,9 @@ const BodyPage = () => {
                       }
                     />
                   ))}
+                  <Typography variant="body2" color="text.secondary" ml={0.5}>
+                    {restaurant.rating ? restaurant.rating.toFixed(1) : "0.0"}
+                  </Typography>
                 </Box>
 
                 {/* Địa chỉ */}

@@ -7,6 +7,8 @@ import promotionReducer from "./slices/promotionSlice";
 import dishpromotionReducer from "./slices/dishPromotionSlice";
 import reservationReducer from "./slices/reservationSlice";
 import reviewReducer from "./slices/reviewSlice";
+import orderRenducer from "./slices/orderSlice";
+import paymentRenducer from "./slices/paymentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,8 +18,10 @@ export const store = configureStore({
     restaurant: restaurantReducer,
     promotion: promotionReducer,
     dishpromotion: dishpromotionReducer,
-    reservation:reservationReducer,
+    reservation: reservationReducer,
     review: reviewReducer,
+    order: orderRenducer,
+    payment: paymentRenducer,
   },
 });
 

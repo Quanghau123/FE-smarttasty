@@ -30,6 +30,7 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  LocalOffer as LocalOfferIcon,
 } from "@mui/icons-material";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -40,9 +41,15 @@ import {
   deleteDish,
 } from "@/redux/slices/dishSlide";
 import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
+import { fetchPromotions } from "@/redux/slices/promotionSlice";
 import { Dish } from "@/types/dish";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { toast } from "react-toastify";
+import {
+  createDishPromotion,
+  // ❌ bỏ fetchDishPromotionById (N+1)
+  fetchDishPromotions, // ✅ gọi tổng
+} from "@/redux/slices/dishPromotionSlice";
 import styles from "./styles.module.scss";
 
 type FormState = {
@@ -88,6 +95,13 @@ const ProductPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDishId, setSelectedDishId] = useState<number | null>(null);
 
+  // voucher (dish-promotion) dialog state
+  const [openVoucherDialog, setOpenVoucherDialog] = useState(false);
+  const [voucherDish, setVoucherDish] = useState<Dish | null>(null);
+  const [selectedPromotionId, setSelectedPromotionId] = useState<number | "">(
+    ""
+  );
+
   useEffect(() => {
     const { token } = getUserFromLocalStorage();
     if (token) {
@@ -96,14 +110,40 @@ const ProductPage = () => {
     }
   }, [dispatch]);
 
+  const { promotions } = useAppSelector((state) => state.promotion);
+  // only promotions that target dishes should be available on this page
+  const filteredPromotions = Array.isArray(promotions)
+    ? promotions.filter((p) => p.targetType === "dish")
+    : [];
+
+  const { items: dishPromotions } = useAppSelector(
+    (state) => state.dishpromotion
+  );
+
   useEffect(() => {
     if (restaurant?.id) {
       setRestaurantId(restaurant.id);
       dispatch(fetchDishes(restaurant.id));
+      // load promotions to attach in dialog
+      dispatch(fetchPromotions(restaurant.id));
+      // ✅ load toàn bộ dish promotions để hiển thị giá giảm
+      dispatch(fetchDishPromotions());
     } else if (restaurant) {
       toast.warning("Tài khoản chưa có nhà hàng!");
     }
   }, [restaurant, dispatch]);
+
+  // ❌ BỎ hẳn N+1 theo từng món
+  // useEffect(() => {
+  //   if (dishes && dishes.length > 0) {
+  //     dishes.forEach((d) => dispatch(fetchDishPromotionById(d.id)));
+  //   }
+  // }, [dishes, dispatch]);
+
+  // debug: watch promotions from store
+  useEffect(() => {
+    if (promotions) console.debug("promotions in store:", promotions);
+  }, [promotions]);
 
   const handleOpenModal = (dish: Dish | null = null) => {
     if (dish) {
@@ -156,6 +196,8 @@ const ProductPage = () => {
       }
       handleCloseModal();
       dispatch(fetchDishes(restaurantId));
+      // Sau khi thêm/cập nhật món, có thể giá trị khuyến mãi áp dụng thay đổi theo danh sách món
+      dispatch(fetchDishPromotions());
     } catch {
       toast.error("Thao tác thất bại. Vui lòng thử lại!");
     }
@@ -166,12 +208,56 @@ const ProductPage = () => {
     setOpenDeleteDialog(true);
   };
 
+  const handleOpenVoucherModal = (dish: Dish) => {
+    setVoucherDish(dish);
+    setSelectedPromotionId("");
+    setOpenVoucherDialog(true);
+    // ❌ không cần gọi fetch theo dish id nữa
+  };
+
+  const handleCloseVoucherModal = () => {
+    setOpenVoucherDialog(false);
+    setVoucherDish(null);
+    setSelectedPromotionId("");
+  };
+
+  const handleAddVoucher = async () => {
+    if (!voucherDish) return toast.error("Thiếu món ăn");
+    if (!selectedPromotionId) return toast.warning("Vui lòng chọn khuyến mãi");
+    try {
+      const payload: Omit<
+        import("@/types/dishpromotion").DishPromotion,
+        "dish" | "promotion"
+      > = {
+        id: 0,
+        dishId: voucherDish.id,
+        promotionId: Number(selectedPromotionId),
+      };
+
+      await dispatch(createDishPromotion(payload)).unwrap();
+      toast.success("Gán voucher cho món thành công ✅");
+
+      // ✅ Refresh toàn bộ danh sách khuyến mãi món để cột giá cập nhật ngay
+      dispatch(fetchDishPromotions());
+
+      handleCloseVoucherModal();
+    } catch (err: unknown) {
+      let message = "Gán voucher thất bại. Vui lòng thử lại!";
+      if (err && typeof err === "object" && "message" in err) {
+        message = (err as { message: string }).message;
+      }
+      toast.error(message);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!selectedDishId) return;
     try {
       await dispatch(deleteDish(selectedDishId)).unwrap();
       toast.success("Xóa món ăn thành công ✅");
       if (restaurantId) dispatch(fetchDishes(restaurantId));
+      // Xoá món xong reload promotions để tránh hiển thị dư
+      dispatch(fetchDishPromotions());
     } catch (error: unknown) {
       let message = "Xóa món ăn thất bại. Vui lòng thử lại!";
       if (error && typeof error === "object" && "message" in error) {
@@ -205,6 +291,25 @@ const ProductPage = () => {
   );
 
   const totalPages = Math.ceil(filteredDishes.length / itemsPerPage);
+
+  // Helper tính giá đã giảm từ 1 promotion record
+  const computeDiscountedPrice = (
+    orig: number,
+    discountType?: string,
+    discountValue?: number
+  ) => {
+    if (!discountType) return orig;
+    if (discountType === "percent") {
+      const pct = Number(discountValue) || 0;
+      const safePct = Math.max(0, Math.min(100, pct)); // clamp để tránh dữ liệu sai
+      return Math.max(0, Math.round(orig * (1 - safePct / 100)));
+    }
+    if (discountType === "fixed_amount") {
+      const amt = Number(discountValue) || 0;
+      return Math.max(0, orig - amt);
+    }
+    return orig;
+  };
 
   return (
     <Box className={styles.productPage}>
@@ -271,7 +376,59 @@ const ProductPage = () => {
                     {paginatedDishes.map((dish) => (
                       <TableRow key={dish.id}>
                         <TableCell>{dish.name}</TableCell>
-                        <TableCell>{dish.price.toLocaleString()}đ</TableCell>
+                        <TableCell>
+                          {/* Tính giá đã giảm dựa trên danh sách dishPromotions (toàn trang) */}
+                          {(() => {
+                            const related = dishPromotions.filter(
+                              (it) => it.dishId === dish.id
+                            );
+
+                            if (related.length > 0) {
+                              const orig = dish.price;
+
+                              // Nếu có nhiều KM áp cho cùng món, chọn giá thấp nhất
+                              const bestDiscounted = related.reduce(
+                                (min, p) => {
+                                  const priceAfter = computeDiscountedPrice(
+                                    orig,
+                                    p.discountType as string,
+                                    // BE trả discountValue có thể là % hoặc số tiền tuỳ type
+                                    // ví dụ "percent": 20 | "fixed_amount": 20000
+                                    Number(p.discountValue)
+                                  );
+                                  return Math.min(min, priceAfter);
+                                },
+                                orig
+                              );
+
+                              if (bestDiscounted < orig) {
+                                return (
+                                  <>
+                                    <div
+                                      style={{
+                                        textDecoration: "line-through",
+                                        color: "#999",
+                                      }}
+                                    >
+                                      {orig.toLocaleString()}đ
+                                    </div>
+                                    <div
+                                      style={{
+                                        color: "#d32f2f",
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {bestDiscounted.toLocaleString()}đ
+                                    </div>
+                                  </>
+                                );
+                              }
+                            }
+
+                            // Không có KM
+                            return <>{dish.price.toLocaleString()}đ</>;
+                          })()}
+                        </TableCell>
                         <TableCell>{dish.category}</TableCell>
                         <TableCell>
                           <Typography
@@ -299,6 +456,12 @@ const ProductPage = () => {
                         <TableCell>
                           <IconButton onClick={() => handleOpenModal(dish)}>
                             <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            title="Gán voucher"
+                            onClick={() => handleOpenVoucherModal(dish)}
+                          >
+                            <LocalOfferIcon />
                           </IconButton>
                           <IconButton
                             color="error"
@@ -441,6 +604,58 @@ const ProductPage = () => {
             onClick={handleConfirmDelete}
           >
             Xoá
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog gán voucher cho món */}
+      <Dialog
+        open={openVoucherDialog}
+        onClose={handleCloseVoucherModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Gán voucher cho món</DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} mt={1}>
+            <TextField
+              label="Món"
+              value={voucherDish?.name || ""}
+              fullWidth
+              disabled
+            />
+
+            <TextField
+              label="Chọn khuyến mãi"
+              select
+              value={selectedPromotionId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const v = e.target.value;
+                setSelectedPromotionId(v === "" ? "" : Number(v));
+              }}
+              fullWidth
+            >
+              <MenuItem value="">-- Chọn --</MenuItem>
+              {filteredPromotions.map((p) => (
+                <MenuItem key={p.id} value={p.id}>
+                  {p.title}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseVoucherModal}>Hủy</Button>
+          <Button
+            variant="contained"
+            onClick={handleAddVoucher}
+            disabled={
+              !Array.isArray(promotions) ||
+              promotions.length === 0 ||
+              selectedPromotionId === ""
+            }
+          >
+            Gán
           </Button>
         </DialogActions>
       </Dialog>

@@ -11,11 +11,14 @@ import {
   MenuItem,
   Typography,
   IconButton,
+  Badge,
 } from "@mui/material";
+import { fetchOrdersByUser } from "@/redux/slices/orderSlice";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
 import { FaUserCircle } from "react-icons/fa";
-import { useAppDispatch } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchRestaurants,
   fetchRestaurantsByCategory,
@@ -23,7 +26,7 @@ import {
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import LanguageSelector from "@/components/layouts/LanguageSelector";
 import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
-import { useTranslations } from "next-intl"; // ✅ thêm vào
+import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 
 const getCookie = (name: string): string | null => {
@@ -40,7 +43,26 @@ const Header = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const dispatch = useAppDispatch();
-  const t = useTranslations("header"); // ✅ gọi namespace header
+  const t = useTranslations("header");
+
+  // ✅ Lấy thông tin giỏ hàng từ Redux
+  // ✅ Lấy toàn bộ danh sách đơn hàng của user
+  const orders = useAppSelector((state) => state.order.orders);
+
+  // ✅ Đếm số lượng đơn hàng
+  const totalOrders = orders?.length || 0;
+
+  useEffect(() => {
+    // ✅ Khi user đăng nhập, gọi API lấy giỏ hàng hiện tại
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const { id } = JSON.parse(storedUser);
+      if (id) {
+        console.log("🧩 Fetching orders for user:", id);
+        dispatch(fetchOrdersByUser(id));
+      }
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     setHydrated(true);
@@ -199,9 +221,19 @@ const Header = () => {
             </>
           )}
 
+          {/* ✅ Icon giỏ hàng có badge hiển thị số lượng món */}
+          <Link href="/cart">
+            <IconButton>
+              <Badge badgeContent={totalOrders} color="primary">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+          </Link>
+
           <IconButton>
             <NotificationsNoneIcon />
           </IconButton>
+
           <LanguageSelector />
           <ThemeToggleButton />
         </Box>

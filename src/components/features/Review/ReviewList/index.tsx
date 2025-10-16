@@ -19,9 +19,17 @@ interface ReviewListProps {
 
 const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
   if (loading) return <CircularProgress />;
-  if (error) return <Typography color="error">{error}</Typography>;
-  if (!reviews || reviews.length === 0)
+  if (error) {
+    return (
+      <Typography color="error">
+        {error === "No reviews found" ? "Chưa có đánh giá nào." : error}
+      </Typography>
+    );
+  }
+
+  if (!reviews || reviews.length === 0) {
     return <Typography>Chưa có đánh giá nào.</Typography>;
+  }
 
   return (
     <Box className={styles.reviewList}>
