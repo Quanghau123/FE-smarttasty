@@ -42,7 +42,7 @@ export default function RestaurantLayout({
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log("✅ Token decode thành công:", decoded);
+    //  console.log("✅ Token decode thành công:", decoded);
 
       if (decoded.role !== "business") {
         console.warn("⛔ Sai role:", decoded.role);

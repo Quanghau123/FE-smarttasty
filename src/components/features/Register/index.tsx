@@ -16,8 +16,13 @@ import { createUser } from "@/redux/slices/userSlice";
 import styles from "./styles.module.scss";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import Image from "next/image";
+import { getImageUrl } from "@/constants/config/imageBaseUrl";
+import { useTranslations } from "next-intl";
 
 const Register = () => {
+  const t_register = useTranslations("register");
+
   const [formValues, setFormValues] = useState({
     userName: "",
     userPassword: "",
@@ -36,32 +41,34 @@ const Register = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!formValues.userName)
-      newErrors.userName = "Vui lòng nhập tên người dùng!";
+      newErrors.userName = `${t_register("username_placeholder")} is required`;
     if (!formValues.userPassword) {
-      newErrors.userPassword = "Vui lòng nhập mật khẩu!";
+      newErrors.userPassword = `${t_register(
+        "password_placeholder"
+      )} is required`;
     } else if (
       !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/.test(
         formValues.userPassword
       )
     ) {
       newErrors.userPassword =
-        "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự.";
+        "Password must contain uppercase, lowercase, number, special character and be longer than 5 characters.";
     }
 
     if (!formValues.email) {
-      newErrors.email = "Vui lòng nhập Email!";
+      newErrors.email = `${t_register("email_placeholder")} is required`;
     } else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formValues.email)) {
-      newErrors.email = "Email không hợp lệ.";
+      newErrors.email = "Invalid email format.";
     }
 
     if (!formValues.phone) {
-      newErrors.phone = "Vui lòng nhập số điện thoại!";
+      newErrors.phone = `${t_register("phone_placeholder")} is required`;
     } else if (!/^(03|05|07|08|09)\d{8}$/.test(formValues.phone)) {
-      newErrors.phone =
-        "Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và có 10 chữ số).";
+      newErrors.phone = "Invalid phone number.";
     }
 
-    if (!formValues.address) newErrors.address = "Vui lòng nhập địa chỉ!";
+    if (!formValues.address)
+      newErrors.address = `${t_register("address_placeholder")} is required`;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,23 +86,34 @@ const Register = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    const action = await dispatch(
-      createUser({ ...formValues, role: "user" }) // 👈 Gán role là "user"
-    );
+    const action = await dispatch(createUser({ ...formValues, role: "user" }));
 
     if (createUser.fulfilled.match(action)) {
-      toast.success("Đăng ký thành công!");
-      router.push("/");
+      toast.success("✅ " + t_register("register_btn_title") + " thành công!");
+      router.push("/login");
     } else {
       toast.error(action.payload as string);
     }
   };
 
   return (
-    <div className={styles.registerContainer}>
-      <Card className={styles.registerCard} sx={{ padding: 4 }}>
-        <Typography variant="h4" textAlign="center" gutterBottom>
-          Đăng ký
+    <div className={styles.loginContainer}>
+      <Card className={styles.loginCard} sx={{ padding: 4 }}>
+        {/* Logo */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <Link href="/">
+            <Image
+              src={getImageUrl("Logo/anhdaidienmoi.png")}
+              alt="Logo"
+              width={100}
+              height={80}
+              priority
+            />
+          </Link>
+        </Box>
+
+        <Typography variant="h5" align="center" gutterBottom>
+          {t_register("title")}
         </Typography>
 
         <Box
@@ -106,7 +124,7 @@ const Register = () => {
           gap={2}
         >
           <TextField
-            label="Tài khoản"
+            label={t_register("username_placeholder")}
             name="userName"
             value={formValues.userName}
             onChange={handleChange}
@@ -116,7 +134,7 @@ const Register = () => {
           />
 
           <TextField
-            label="Mật khẩu"
+            label={t_register("password_placeholder")}
             type="password"
             name="userPassword"
             value={formValues.userPassword}
@@ -127,7 +145,7 @@ const Register = () => {
           />
 
           <TextField
-            label="Email"
+            label={t_register("email_placeholder")}
             name="email"
             value={formValues.email}
             onChange={handleChange}
@@ -137,7 +155,7 @@ const Register = () => {
           />
 
           <TextField
-            label="Số điện thoại"
+            label={t_register("phone_placeholder")}
             name="phone"
             value={formValues.phone}
             onChange={handleChange}
@@ -147,7 +165,7 @@ const Register = () => {
           />
 
           <TextField
-            label="Địa chỉ"
+            label={t_register("address_placeholder")}
             name="address"
             value={formValues.address}
             onChange={handleChange}
@@ -159,38 +177,37 @@ const Register = () => {
           <Button
             type="submit"
             variant="contained"
-            color="primary"
             fullWidth
             disabled={loading}
           >
             {loading ? (
-              <CircularProgress size={24} color="inherit" />
+              <CircularProgress size={24} />
             ) : (
-              "Đăng ký"
+              t_register("register_btn_title")
             )}
           </Button>
+        </Box>
 
-          <Typography textAlign="center" mt={1}>
-            Bạn đã có tài khoản?{" "}
-            <MuiLink
-              component="button"
-              onClick={() => router.push("/login")}
-              underline="hover"
-              color="primary"
-            >
-              Đăng nhập
+        {/* Bottom */}
+        <Box className={styles.loginBottom} mt={2} textAlign="center">
+          {t_register("have_account_text")}{" "}
+          <MuiLink
+            underline="hover"
+            onClick={() => router.push("/login")}
+            sx={{ cursor: "pointer" }}
+          >
+            {t_register("login_btn_title")}
+          </MuiLink>
+        </Box>
+
+        <Box className={styles.loginBottom} mt={1} textAlign="center">
+          <Link href="/register-business" passHref>
+            <MuiLink underline="hover" sx={{ cursor: "pointer" }}>
+              {t_register("register_business_btn_title")}
             </MuiLink>
-          </Typography>
+          </Link>
         </Box>
       </Card>
-
-      <Box className={styles.formbusiness} mt={2} textAlign="center">
-        <Link href="/register-business" passHref>
-          <MuiLink underline="hover" color="primary">
-            Đăng ký cho doanh nghiệp
-          </MuiLink>
-        </Link>
-      </Box>
     </div>
   );
 };

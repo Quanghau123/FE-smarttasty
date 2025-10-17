@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Box,
@@ -21,6 +21,8 @@ import {
   updateRestaurant,
 } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
+import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
+import type { DishPromotion } from "@/types/dishpromotion";
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -30,6 +32,11 @@ const RestaurantPage = () => {
     useAppSelector((state) => state.restaurant);
   const { items: dishes, loading: dishLoading } = useAppSelector(
     (state) => state.dishes
+  );
+
+  // ✅ danh sách DishPromotions toàn trang (id, dishId, promotionId, discountType, discountValue, ...)
+  const { items: dishPromotions } = useAppSelector(
+    (state) => state.dishpromotion
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -62,6 +69,9 @@ const RestaurantPage = () => {
   useEffect(() => {
     if (restaurantInfo?.id) {
       dispatch(fetchDishes(restaurantInfo.id));
+      // ✅ lấy toàn bộ khuyến mãi món để tính giá hiển thị
+      dispatch(fetchDishPromotions());
+
       setFormState({
         name: restaurantInfo.name || "",
         address: restaurantInfo.address || "",
@@ -114,6 +124,54 @@ const RestaurantPage = () => {
     });
     setIsEditing(false);
   };
+
+  // helper: tính giá sau giảm theo 1 record KM
+  const computeDiscountedPrice = (
+    orig: number,
+    discountType?: string,
+    discountValue?: number
+  ) => {
+    if (!discountType) return orig;
+    if (discountType === "percent") {
+      const pct = Number(discountValue) || 0;
+      const safePct = Math.max(0, Math.min(100, pct)); // đề phòng dữ liệu sai
+      return Math.max(0, Math.round(orig * (1 - safePct / 100)));
+    }
+    if (discountType === "fixed_amount") {
+      const amt = Number(discountValue) || 0;
+      return Math.max(0, orig - amt);
+    }
+    return orig;
+  };
+
+  // memo: map dishId -> best discounted price (chọn giá thấp nhất nếu có nhiều KM)
+  const bestDiscountByDishId = useMemo(() => {
+    type DishPromotionFlat = DishPromotion & {
+      discountType?: "percent" | "fixed_amount";
+      discountValue?: number;
+    };
+
+    const getDiscount = (dp: DishPromotionFlat) => ({
+      type: dp.promotion?.discountType ?? dp.discountType,
+      value: dp.promotion?.discountValue ?? dp.discountValue,
+    });
+
+    const map = new Map<number, number>();
+    for (const dish of dishes) {
+      const orig = dish.price;
+      const related = dishPromotions.filter((p) => p.dishId === dish.id);
+      if (related.length === 0) continue;
+
+      let best = orig;
+      for (const p of related) {
+        const { type, value } = getDiscount(p as DishPromotionFlat);
+        const after = computeDiscountedPrice(orig, type, Number(value));
+        if (after < best) best = after;
+      }
+      if (best < orig) map.set(dish.id, best);
+    }
+    return map;
+  }, [dishes, dishPromotions]);
 
   if (restaurantLoading) {
     return (
@@ -274,42 +332,74 @@ const RestaurantPage = () => {
           <Typography>Chưa có món ăn nào.</Typography>
         ) : (
           <Grid container spacing={2}>
-            {dishes.map((dish) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={dish.id} component={"div" as React.ElementType}>
-                <Paper elevation={2}>
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: "100%",
-                      height: 160,
-                    }}
-                  >
-                    <Image
-                      src={dish.imageUrl}
-                      alt={dish.name}
-                      fill
-                      style={{ objectFit: "cover" }}
-                    />
-                  </Box>
-                  <Box p={2}>
-                    <Typography variant="h6">
-                      {dish.name}
-                      {!dish.isActive && (
-                        <Chip
-                          label="Ngưng bán"
-                          color="error"
-                          size="small"
-                          sx={{ ml: 1 }}
-                        />
+            {dishes.map((dish) => {
+              const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+              const showDiscount =
+                discounted !== null && discounted < dish.price;
+
+              return (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  key={dish.id}
+                  component={"div" as React.ElementType}
+                >
+                  <Paper elevation={2}>
+                    <Box
+                      sx={{
+                        position: "relative",
+                        width: "100%",
+                        height: 160,
+                      }}
+                    >
+                      <Image
+                        src={dish.imageUrl}
+                        alt={dish.name}
+                        fill
+                        style={{ objectFit: "cover" }}
+                      />
+                    </Box>
+                    <Box p={2}>
+                      <Typography variant="h6">
+                        {dish.name}
+                        {!dish.isActive && (
+                          <Chip
+                            label="Ngưng bán"
+                            color="error"
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        )}
+                      </Typography>
+
+                      {/* ✅ Giá: gốc gạch + giá sau giảm (nếu có) */}
+                      {showDiscount ? (
+                        <Box>
+                          <Typography
+                            sx={{
+                              textDecoration: "line-through",
+                              color: "#777",
+                            }}
+                          >
+                            {dish.price.toLocaleString()}đ
+                          </Typography>
+                          <Typography fontWeight="bold" color="primary">
+                            {discounted!.toLocaleString()}đ
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography fontWeight="bold" color="primary">
+                          {dish.price.toLocaleString()}đ
+                        </Typography>
                       )}
-                    </Typography>
-                    <Typography fontWeight="bold" color="primary">
-                      {dish.price.toLocaleString()}đ
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))}
+                    </Box>
+                  </Paper>
+                </Grid>
+              );
+            })}
           </Grid>
         )}
       </Box>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Box, Typography, Divider, IconButton } from "@mui/material";
+import { Typography, Divider, IconButton } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MailIcon from "@mui/icons-material/Mail";
@@ -9,104 +9,77 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { SiTiktok } from "react-icons/si";
 
+import styles from "./styles.module.scss";
+
 const Footer = () => {
   return (
-    <Box component="footer" sx={{ bgcolor: "#111", color: "#fff", p: 4 }}>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "1fr 1fr",
-            md: "repeat(4, 1fr)",
-          },
-          gap: 4,
-        }}
-      >
+    <footer className={styles.footer}>
+      <div className={styles.grid}>
         {/* Liên hệ */}
-        <Box>
+        <div className={styles.section}>
           <Typography variant="h6" gutterBottom>
             Liên Hệ Với Chúng Tôi
           </Typography>
-          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
+          <Divider className={styles.divider} />
 
-          <Link
-            href="/"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#fff",
-              marginBottom: 8,
-            }}
-          >
-            <LocationOnIcon sx={{ mr: 1 }} />
+          <Link href="/" className={styles.link}>
+            <LocationOnIcon className={styles.icon} />
             <Typography>Địa Chỉ Các Chi Nhánh</Typography>
           </Link>
 
-          <Link
-            href="mailto:admin@gmail.com"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#fff",
-              marginBottom: 8,
-            }}
-          >
-            <MailIcon sx={{ mr: 1 }} />
+          <Link href="mailto:admin@gmail.com" className={styles.link}>
+            <MailIcon className={styles.icon} />
             <Typography>admin@gmail.com</Typography>
           </Link>
 
-          <Link
-            href="tel:0987654321"
-            style={{ display: "flex", alignItems: "center", color: "#fff" }}
-          >
-            <PhoneIcon sx={{ mr: 1 }} />
+          <Link href="tel:0987654321" className={styles.link}>
+            <PhoneIcon className={styles.icon} />
             <Typography>0987654321</Typography>
           </Link>
-        </Box>
+        </div>
 
         {/* Về chúng tôi */}
-        <Box>
+        <div className={styles.section}>
           <Typography variant="h6" gutterBottom>
             Về Chúng Tôi
           </Typography>
-          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
+          <Divider className={styles.divider} />
           <Typography>Đội ngũ vận hành</Typography>
-        </Box>
+        </div>
 
         {/* Mạng xã hội */}
-        <Box>
+        <div className={styles.section}>
           <Typography variant="h6" gutterBottom>
             Theo dõi qua
           </Typography>
-          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <IconButton component={Link} href="/" sx={{ color: "#1877F2" }}>
+          <Divider className={styles.divider} />
+          <div className={styles.socials}>
+            <IconButton component={Link} href="/" className={styles.facebook}>
               <FacebookIcon fontSize="large" />
             </IconButton>
-            <IconButton component={Link} href="/" sx={{ color: "#fff" }}>
+            <IconButton component={Link} href="/" className={styles.tiktok}>
               <SiTiktok size={28} />
             </IconButton>
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Giờ mở cửa */}
-        <Box>
+        <div className={styles.section}>
           <Typography variant="h6" gutterBottom>
             Giờ Mở Cửa
           </Typography>
-          <Divider sx={{ bgcolor: "gray", mb: 2 }} />
-          <Box display="flex" alignItems="center" gap={1}>
-            <AccessTimeIcon />
+          <Divider className={styles.divider} />
+          <div className={styles.opening}>
+            <AccessTimeIcon className={styles.icon} />
             <Typography>
               Hằng Ngày
               <br />
               07:00 AM - 23:00 PM
             </Typography>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 

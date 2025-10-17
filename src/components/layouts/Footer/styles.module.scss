@@ -1,95 +1,64 @@
-.container {
-  width: 100%;
-  min-height: 120px;
-  background-color: #222831;
+.footer {
+  background-color: #111;
+  color: #fff;
+  padding: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+}
+
+.divider {
+  background-color: gray;
+  margin-bottom: 1rem;
+}
+
+.link {
+  display: flex;
   align-items: center;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+
+  &:hover {
+    color: #f39c12;
+  }
 }
 
-.yard {
-  width: 80%;
+.icon {
+  margin-right: 0.5rem;
+}
+
+.socials {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  padding: 20px;
-  color: #ffffff;
-  text-align: center;
+  gap: 1rem;
 }
 
-/* Liên hệ */
-.areaLeft {
-  display: block;
-  color: #ffffff;
+.facebook {
+  color: #1877f2 !important;
 }
 
-.blockAddress {
-  padding-bottom: 10px;
+.tiktok {
+  color: #fff !important;
 }
 
-.linkAddress {
-  color: #ffffff;
-  font-size: 1.5rem;
-}
-
-.blockEmail {
-  padding-bottom: 10px;
-}
-
-.linkEmail {
-  color: #ffffff;
-  font-size: 1.5rem;
-}
-
-.blockPhone {
-  display: block;
-}
-
-.linkPhone {
-  color: #ffffff;
-  font-size: 1.5rem;
-}
-
-/* Về chúng tôi */
-.areaBetween {
-  display: block;
-}
-
-.blockTitle {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #ffffff;
-}
-
-.blockContent {
-  font-size: 1.5rem;
-  line-height: 25px;
-}
-
-/* Mạng xã hội */
-.blockContact {
-  display: block;
-}
-
-.blockFacebook {
-  padding-top: 10px;
+.opening {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
-}
-
-.linkFacebook {
-  color: inherit;
-}
-
-.linkTiktok {
-  color: inherit;
-}
-
-/* Giờ mở cửa */
-.areaRight {
-  display: block;
+  gap: 0.5rem;
 }

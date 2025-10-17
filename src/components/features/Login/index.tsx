@@ -13,6 +13,7 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
+import Image from "next/image";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,8 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { loginUser } from "@/redux/slices/userSlice";
+import { getImageUrl } from "@/constants/config/imageBaseUrl";
+import { useTranslations } from "next-intl"; // ✅ import i18n
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -30,12 +33,12 @@ const LoginPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const t = useTranslations("login"); // ✅ dùng namespace "login"
 
   const { loading, error, user } = useSelector(
     (state: RootState) => state.user
   );
 
-  // Lấy thông tin đã lưu nếu chọn nhớ đăng nhập
   useEffect(() => {
     const savedLogin = localStorage.getItem("rememberedLogin");
     if (savedLogin) {
@@ -46,10 +49,9 @@ const LoginPage = () => {
     }
   }, []);
 
-  // Chuyển hướng khi đăng nhập thành công
   useEffect(() => {
     if (user) {
-      toast.success("Đăng nhập thành công!");
+      toast.success(t("login_success")); // ✅ thêm key login_success trong file dịch
       switch (user.role) {
         case "admin":
           router.push("/admin");
@@ -61,9 +63,8 @@ const LoginPage = () => {
           router.push("/");
       }
     }
-  }, [user, router]);
+  }, [user, router, t]);
 
-  // Hiển thị lỗi nếu có
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -78,8 +79,21 @@ const LoginPage = () => {
   return (
     <div className={styles.loginContainer}>
       <Card className={styles.loginCard} sx={{ padding: 4 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Đăng nhập
+        {/* Header logo */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <Link href="/">
+            <Image
+              src={getImageUrl("Logo/anhdaidienmoi.png")}
+              alt="Logo"
+              width={100}
+              height={80}
+              priority
+            />
+          </Link>
+        </Box>
+
+        <Typography variant="h5" align="center" gutterBottom>
+          SmartTasty {t("welcome_text")}
         </Typography>
 
         <Box
@@ -89,9 +103,8 @@ const LoginPage = () => {
           flexDirection="column"
           gap={2}
         >
-          {/* Email */}
           <TextField
-            label="Email"
+            label={t("email_placeholder")}
             variant="outlined"
             fullWidth
             required
@@ -100,9 +113,8 @@ const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          {/* Mật khẩu với icon mắt */}
           <TextField
-            label="Mật khẩu"
+            label={t("password_placeholder")}
             variant="outlined"
             fullWidth
             required
@@ -123,7 +135,6 @@ const LoginPage = () => {
             }}
           />
 
-          {/* Nhớ đăng nhập & quên mật khẩu */}
           <Box
             display="flex"
             justifyContent="space-between"
@@ -137,18 +148,17 @@ const LoginPage = () => {
                   color="primary"
                 />
               }
-              label="Lưu đăng nhập"
+              label={t("remember_me_checkbox")}
             />
             <Link
               underline="hover"
               sx={{ cursor: "pointer" }}
               onClick={() => router.push("/forgotPassword")}
             >
-              Quên mật khẩu?
+              {t("forgot_password_btn_title")}
             </Link>
           </Box>
 
-          {/* Nút đăng nhập */}
           <Button
             type="submit"
             variant="contained"
@@ -156,23 +166,18 @@ const LoginPage = () => {
             fullWidth
             disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Đăng nhập"
-            )}
+            {loading ? <CircularProgress size={24} /> : t("login_btn_title")}
           </Button>
         </Box>
 
-        {/* Link đăng ký */}
         <Box className={styles.loginBottom} mt={2} textAlign="center">
-          Bạn mới biết đến Smarttasty?{" "}
+          {t("new_to_smartasty_text")}{" "}
           <Link
             underline="hover"
             onClick={() => router.push("/register")}
             sx={{ cursor: "pointer" }}
           >
-            Đăng ký
+            {t("register_btn_title")}
           </Link>
         </Box>
       </Card>

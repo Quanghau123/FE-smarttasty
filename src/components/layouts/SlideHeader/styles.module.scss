@@ -1,9 +1,8 @@
-/* styles.module.scss */
-
 .container {
-  position: relative; /* cực kỳ quan trọng cho Image fill */
-  width: 100vw;
-  height: 60vh; /* chiều cao slide */
+  position: relative;
+  width: 100%;
+  height: 60vh; // tuỳ, có thể 50vh hay 60vh
+  max-height: 600px;
   overflow: hidden;
 }
 
@@ -14,37 +13,57 @@
 }
 
 .slideImage {
-  position: relative; /* bắt buộc để Image fill hiển thị */
-  min-width: 100%;
-  height: 60vh;
+  position: relative;
+  flex: 0 0 100%; // ✅ mỗi slide chiếm 100% width container
+  height: 100%;
 }
 
 .overlay {
- // position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3); /* ví dụ overlay */
+  position: absolute;
+  inset: 0;
+ // background: rgba(0, 0, 0, 0.3);
 }
 
 .dotWrapper {
   position: absolute;
-  bottom: 20px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
+  gap: 6px;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: white;
-  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 0.3s;
 }
 
 .dot.active {
-  opacity: 1;
+  background: #fff;
+}
+
+/* ✅ Responsive */
+@media (max-width: 768px) {
+  .container {
+    height: 30vh;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    height: 25vh;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
 }

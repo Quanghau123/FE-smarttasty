@@ -1,134 +1,218 @@
 .container {
-  padding: 2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 20px;
+}
+
+.leftContent {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rightContent {
+  flex: 1;
+  position: sticky;
+  top: 20px; // giữ form cố định khi cuộn
+  align-self: flex-start;
+}
+
+.restaurantCard {
+  display: flex;
+  gap: 16px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  
+}
+
+.restaurantImage {
+  position: relative;
+  width: 300px; // cố định khung ảnh
+  height: 200px; // chiều cao ảnh
+  border-radius: 12px;
+  overflow: hidden;
+
+  img {
+    object-fit: cover;
+  }
+}
+
+.restaurantInfo {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+//  gap: 8px;
+}
+
+.menuSection {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.dishGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.dishCard {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+
+  transition: 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.dishImage {
+  width: 100%;
+  height: 160px; // tất cả món ăn cao bằng nhau
+  border-radius: 10px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+}
+
+.price {
+  font-weight: bold;
+  color: #e53935;
+}
+
+.chip {
+  margin-left: 8px;
+  font-size: 12px;
+  background: #ccc;
 }
 
 .centered {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6rem 0;
+  min-height: 200px;
 }
 
-.restaurantCard {
-  display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.restaurantImage {
-  width: 300px;
-  height: 200px;
-  border-radius: 8px;
-  overflow: hidden;
-
-  img {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.restaurantInfo {
+.rightContent {
   flex: 1;
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
 
-  h4 {
-    margin-bottom: 0.5rem;
-  }
+  // Style riêng cho form đặt chỗ
+  form {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
-  p {
-    margin: 0.25rem 0;
-  }
+    h5 {
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #d32f2f;
+    }
 
-  .open {
-    color: green;
-    font-weight: bold;
-  }
+    .MuiFormControl-root {
+      margin-bottom: 16px;
+    }
 
-  .closed {
-    color: red;
-    font-weight: bold;
+    button {
+      margin-top: 12px;
+      border-radius: 8px;
+      padding: 10px 16px;
+      background: #d32f2f;
+      color: #fff;
+      font-weight: 600;
+      &:hover {
+        background: #b71c1c;
+      }
+    }
   }
 }
-
-.menuSection {
-  h5 {
-    margin-bottom: 1rem;
-  }
-}
-
-.dishGrid {
+/* ReviewForm */
+.reviewForm {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-.dishCard {
-  flex: 0 0 15%;
-  max-width: 20%;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-
-  .dishImage {
+  textarea {
     width: 100%;
-    height: 160px;
-    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 8px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    &:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
   }
 
-  .dishInfo {
-    padding: 0.5rem 1rem;
+  button {
+    align-self: flex-end;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: #1976d2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 
-    h6 {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.25rem;
+    &:hover {
+      background-color: #115293;
     }
-
-    .chip {
-      margin-left: 0.25rem;
-    }
-
-    .price {
-      font-weight: bold;
-      color: #1976d2;
-    }
-  }
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .dishCard {
-    flex: 0 0 25%;
-    max-width: 25%;
   }
 }
 
-@media (max-width: 900px) {
-  .restaurantCard {
+/* ReviewList */
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .reviewItem {
+    display: flex;
     flex-direction: column;
-    align-items: center;
-  }
+    gap: 4px;
+    background-color: #fff;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
 
-  .dishCard {
-    flex: 0 0 50%;
-    max-width: 50%;
-  }
-}
+    .reviewHeader {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+      font-size: 14px;
+      color: #555;
+    }
 
-@media (max-width: 600px) {
-  .dishCard {
-    flex: 0 0 100%;
-    max-width: 100%;
+    .reviewContent {
+      font-size: 14px;
+      color: #333;
+    }
   }
 }

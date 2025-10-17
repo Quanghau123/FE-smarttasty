@@ -1,0 +1,69 @@
+"use client";
+
+import { Box, Typography, CircularProgress, Rating } from "@mui/material";
+import styles from "./styles.module.scss";
+
+interface Review {
+  id: number;
+  userName: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+interface ReviewListProps {
+  reviews: Review[];
+  loading: boolean;
+  error?: string | null;
+}
+
+const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
+  if (loading) return <CircularProgress />;
+  if (error) {
+    return (
+      <Typography color="error">
+        {error === "No reviews found" ? "Chưa có đánh giá nào." : error}
+      </Typography>
+    );
+  }
+
+  if (!reviews || reviews.length === 0) {
+    return <Typography>Chưa có đánh giá nào.</Typography>;
+  }
+
+  return (
+    <Box className={styles.reviewList}>
+      <Typography variant="h5" className={styles.sectionTitle}>
+        Đánh giá của khách hàng
+      </Typography>
+
+      {reviews.map((r) => (
+        <Box key={r.id} className={styles.reviewCard}>
+          <Box className={styles.reviewHeader}>
+            <Typography variant="subtitle1" className={styles.reviewer}>
+              {r.userName}
+            </Typography>
+            <Typography variant="caption" className={styles.date}>
+              {new Date(r.createdAt).toLocaleString()}
+            </Typography>
+          </Box>
+
+          {/* ⭐ Rating component của MUI */}
+          <Rating
+            name={`review-${r.id}`}
+            value={r.rating}
+            // precision={0.5} // cho phép nửa sao, có thể bỏ nếu muốn chỉ nguyên sao
+            readOnly
+            size="small"
+          />
+
+          <Typography className={styles.comment}>
+            {r.comment || "Không có nội dung"}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+export default ReviewList;

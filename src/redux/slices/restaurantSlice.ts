@@ -46,7 +46,7 @@ export const fetchRestaurantByOwner = createAsyncThunk<
   }
 });
 
-// Fetch by category
+// Fetch by category      
 export const fetchRestaurantsByCategory = createAsyncThunk<
   Restaurant[],
   string,

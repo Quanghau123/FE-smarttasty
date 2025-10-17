@@ -7,59 +7,6 @@ import {
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { DishPromotion } from "@/types/dishpromotion";
 
-// ======================= CRUD API =======================
-
-// Create
-export const createDishPromotion = createAsyncThunk<
-  DishPromotion,
-  Omit<DishPromotion, "dish" | "promotion">
->("dishPromotion/create", async (data) => {
-  const { data: created } = await axiosInstance.post(
-    "/api/DishPromotion",
-    data
-  );
-  return created;
-});
-
-// Read by DishId
-export const fetchDishPromotionsByDishId = createAsyncThunk<
-  DishPromotion[],
-  number
->("dishPromotion/fetchByDishId", async (dishId) => {
-  const { data } = await axiosInstance.get(`/api/DishPromotion/${dishId}`);
-  return data;
-});
-
-// Read by PromotionId
-export const fetchDishPromotionsByPromotionId = createAsyncThunk<
-  DishPromotion[],
-  number
->("dishPromotion/fetchByPromotionId", async (promotionId) => {
-  const { data } = await axiosInstance.get(
-    `/api/DishPromotion/promotion/${promotionId}`
-  );
-  return data;
-});
-
-// Update
-export const updateDishPromotion = createAsyncThunk<
-  DishPromotion,
-  Omit<DishPromotion, "dish" | "promotion">
->("dishPromotion/update", async (data) => {
-  const { data: updated } = await axiosInstance.put("/api/DishPromotion", data);
-  return updated;
-});
-
-// Delete
-export const deleteDishPromotion = createAsyncThunk<
-  { dishId: number; promotionId: number },
-  { dishId: number; promotionId: number }
->("dishPromotion/delete", async (data) => {
-  await axiosInstance.delete("/api/DishPromotion", { data });
-  return data; // trả lại để xoá trong store
-});
-
-// ======================= SLICE =======================
 interface DishPromotionState {
   items: DishPromotion[];
   loading: boolean;
@@ -72,66 +19,164 @@ const initialState: DishPromotionState = {
   error: null,
 };
 
+const getToken = (): string | null => localStorage.getItem("token");
+
+const parseResponse = <T>(res: unknown): T => {
+  if (typeof res === "object" && res !== null && "errCode" in res) {
+    const r = res as { data?: T };
+    return (r.data ?? null) as T;
+  }
+  return res as T;
+};
+
+/* -------------------------------------------
+   🔹 1. GET /api/DishPromotions
+------------------------------------------- */
+export const fetchDishPromotions = createAsyncThunk<
+  DishPromotion[],
+  void,
+  { rejectValue: string }
+>("dishPromotion/fetchAll", async (_, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.get("/api/DishPromotions", {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return parseResponse<DishPromotion[]>(res.data);
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể tải danh sách khuyến mãi món ăn");
+  }
+});
+
+/* -------------------------------------------
+   🔹 2. GET /api/DishPromotions/{id}
+------------------------------------------- */
+export const fetchDishPromotionById = createAsyncThunk<
+  DishPromotion,
+  number,
+  { rejectValue: string }
+>("dishPromotion/fetchById", async (id, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.get(`/api/DishPromotions/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return parseResponse<DishPromotion>(res.data);
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể tải thông tin khuyến mãi");
+  }
+});
+
+/* -------------------------------------------
+   🔹 3. POST /api/DishPromotions
+------------------------------------------- */
+export const createDishPromotion = createAsyncThunk<
+  DishPromotion,
+  Omit<DishPromotion, "id">,
+  { rejectValue: string }
+>("dishPromotion/create", async (payload, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.post("/api/DishPromotions", payload, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        : { "Content-Type": "application/json" },
+    });
+    return parseResponse<DishPromotion>(res.data);
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể tạo khuyến mãi món ăn");
+  }
+});
+
+/* -------------------------------------------
+   🔹 4. PUT /api/DishPromotions/{id}
+------------------------------------------- */
+export const updateDishPromotion = createAsyncThunk<
+  DishPromotion,
+  DishPromotion,
+  { rejectValue: string }
+>("dishPromotion/update", async (payload, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.put(
+      `/api/DishPromotions/${payload.id}`,
+      payload,
+      {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            }
+          : { "Content-Type": "application/json" },
+      }
+    );
+    return parseResponse<DishPromotion>(res.data);
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể cập nhật khuyến mãi món ăn");
+  }
+});
+
+/* -------------------------------------------
+   🔹 5. DELETE /api/DishPromotions/{id}
+------------------------------------------- */
+export const deleteDishPromotion = createAsyncThunk<
+  number,
+  number,
+  { rejectValue: string }
+>("dishPromotion/delete", async (id, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    await axiosInstance.delete(`/api/DishPromotions/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return id;
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể xóa khuyến mãi món ăn");
+  }
+});
+
+/* -------------------------------------------
+   🔹 Slice
+------------------------------------------- */
 const dishPromotionSlice = createSlice({
   name: "dishPromotion",
   initialState,
-  reducers: {},
+  reducers: {
+    setItems: (state, action: PayloadAction<DishPromotion[]>) => {
+      state.items = action.payload;
+    },
+    clearItems: (state) => {
+      state.items = [];
+      state.loading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
-    // Create
-    builder.addCase(
-      createDishPromotion.fulfilled,
-      (state, action: PayloadAction<DishPromotion>) => {
-        state.items.push(action.payload);
-      }
-    );
+    builder.addCase(fetchDishPromotions.fulfilled, (state, action) => {
+      state.items = action.payload;
+    });
 
-    // Fetch by DishId
-    builder.addCase(
-      fetchDishPromotionsByDishId.fulfilled,
-      (state, action: PayloadAction<DishPromotion[]>) => {
-        state.items = action.payload;
-      }
-    );
+    builder.addCase(createDishPromotion.fulfilled, (state, action) => {
+      state.items.push(action.payload);
+    });
 
-    // Fetch by PromotionId
-    builder.addCase(
-      fetchDishPromotionsByPromotionId.fulfilled,
-      (state, action: PayloadAction<DishPromotion[]>) => {
-        state.items = action.payload;
-      }
-    );
+    builder.addCase(updateDishPromotion.fulfilled, (state, action) => {
+      const idx = state.items.findIndex((it) => it.id === action.payload.id);
+      if (idx !== -1) state.items[idx] = action.payload;
+    });
 
-    // Update
-    builder.addCase(
-      updateDishPromotion.fulfilled,
-      (state, action: PayloadAction<DishPromotion>) => {
-        const index = state.items.findIndex(
-          (dp) =>
-            dp.dishId === action.payload.dishId &&
-            dp.promotionId === action.payload.promotionId
-        );
-        if (index !== -1) state.items[index] = action.payload;
-      }
-    );
+    builder.addCase(deleteDishPromotion.fulfilled, (state, action) => {
+      state.items = state.items.filter((it) => it.id !== action.payload);
+    });
 
-    // Delete
-    builder.addCase(
-      deleteDishPromotion.fulfilled,
-      (
-        state,
-        action: PayloadAction<{ dishId: number; promotionId: number }>
-      ) => {
-        state.items = state.items.filter(
-          (dp) =>
-            !(
-              dp.dishId === action.payload.dishId &&
-              dp.promotionId === action.payload.promotionId
-            )
-        );
-      }
-    );
-
-    // Loading + Error
     builder.addMatcher(
       (action) => action.type.endsWith("/pending"),
       (state) => {
@@ -139,20 +184,24 @@ const dishPromotionSlice = createSlice({
         state.error = null;
       }
     );
+
     builder.addMatcher(
       (action) => action.type.endsWith("/fulfilled"),
       (state) => {
         state.loading = false;
       }
     );
+
     builder.addMatcher(
       (action) => action.type.endsWith("/rejected"),
       (state, action: AnyAction) => {
         state.loading = false;
-        state.error = action.error?.message || "Thao tác thất bại";
+        state.error =
+          action.payload ?? action.error?.message ?? "Thao tác thất bại";
       }
     );
   },
 });
 
+export const { setItems, clearItems } = dishPromotionSlice.actions;
 export default dishPromotionSlice.reducer;
