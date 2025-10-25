@@ -1,13 +1,26 @@
 .headerWrapper {
   width: 100%;
-  background-color: var(--mui-palette-background-paper);
-  border-bottom: 1px solid var(--mui-palette-divider);
-  z-index: 1000;
+  /* Keep styles neutral here — theme-specific colors are applied via MUI sx in the component */
+  background-color: transparent;
+  border-bottom: none;
+  z-index: 1200;
+  position: sticky;
+  top: 0;
+  /* expose header height so pages can offset content: use var(--header-height) */
+  --header-height: 72px;
+  height: var(--header-height);
+
+  /* ensure it sits above other content */
+  will-change: transform;
+  /* prefer theme variables; provide sensible fallbacks */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 
   .headerInner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 8px 16px;
+    padding: 0 16px;
+    height: 100%;
 
     display: flex;
     align-items: center;
@@ -15,6 +28,19 @@
     gap: 16px;
     flex-wrap: nowrap; // ✅ KHÔNG xuống hàng
   }
+}
+
+.popoverBox {
+  padding: 12px;
+  min-width: 200px;
+  /* color/background handled by MUI theme (sx). Keep stylesheet neutral to avoid forcing white */
+  color: inherit;
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.headerInner :is(button, a) {
+  color: inherit; /* let buttons inherit text color from theme */
 }
 
 .searchSection {

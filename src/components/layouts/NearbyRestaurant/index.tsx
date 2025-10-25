@@ -22,7 +22,13 @@ import { Restaurant } from "@/types/restaurant";
 import StarIcon from "@mui/icons-material/Star";
 import styles from "./styles.module.scss";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -66,6 +72,12 @@ const NearbyRestaurantsPage = () => {
     lat: number;
     lng: number;
   } | null>(null);
+  const [routeCoords, setRouteCoords] = useState<Array<
+    [number, number]
+  > | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
+    number | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -217,6 +229,56 @@ const NearbyRestaurantsPage = () => {
                   >
                     Đặt chỗ ngay
                   </Button>
+                  <Box mt={1}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      fullWidth
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // show route from userPosition to this restaurant
+                        if (!userPosition) {
+                          setError("Vui lòng cho phép vị trí để xem đường đi.");
+                          return;
+                        }
+                        setSelectedRestaurantId(restaurant.id);
+                        const userLon = userPosition.lng;
+                        const userLat = userPosition.lat;
+                        const destLon = restaurant.longitude;
+                        const destLat = restaurant.latitude;
+
+                        // try OSRM route
+                        fetch(
+                          `https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson`
+                        )
+                          .then((r) => r.json())
+                          .then((data) => {
+                            if (data && data.routes && data.routes.length > 0) {
+                              const coords: Array<[number, number]> =
+                                data.routes[0].geometry.coordinates.map(
+                                  (c: [number, number]) => [c[1], c[0]]
+                                );
+                              setRouteCoords(coords);
+                              return;
+                            }
+                            // fallback straight line
+                            setRouteCoords([
+                              [userLat, userLon],
+                              [destLat, destLon],
+                            ]);
+                          })
+                          .catch(() => {
+                            setRouteCoords([
+                              [userLat, userLon],
+                              [destLat, destLon],
+                            ]);
+                          });
+                      }}
+                    >
+                      Chỉ đường
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             ))}
@@ -256,6 +318,30 @@ const NearbyRestaurantsPage = () => {
                   </Popup>
                 </Marker>
               ))}
+              {routeCoords && (
+                <>
+                  <Polyline positions={routeCoords} color="blue" />
+                  {/* show destination marker for the selected restaurant */}
+                  {selectedRestaurantId &&
+                    (() => {
+                      const r = nearby.find(
+                        (x) => x.id === selectedRestaurantId
+                      );
+                      if (!r) return null;
+                      return (
+                        <Marker
+                          position={[r.latitude, r.longitude]}
+                          icon={restaurantIcon}
+                        >
+                          <Popup>
+                            <Typography fontWeight="bold">{r.name}</Typography>
+                            <Typography variant="body2">{r.address}</Typography>
+                          </Popup>
+                        </Marker>
+                      );
+                    })()}
+                </>
+              )}
             </MapContainer>
           </Box>
         </Box>

@@ -6,6 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { DishPromotion } from "@/types/dishpromotion";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 interface DishPromotionState {
   items: DishPromotion[];
@@ -19,7 +20,7 @@ const initialState: DishPromotionState = {
   error: null,
 };
 
-const getToken = (): string | null => localStorage.getItem("token");
+const getToken = getAccessToken;
 
 const parseResponse = <T>(res: unknown): T => {
   if (typeof res === "object" && res !== null && "errCode" in res) {

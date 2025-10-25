@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import Sidebar from "@/components/features/AdminRestaurant/SideBar";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 interface JwtPayload {
   role: string;
@@ -19,20 +20,8 @@ export default function RestaurantLayout({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    let token: string | null = null;
-
-    // Ưu tiên lấy từ cookie
-    const cookieToken = document.cookie
-      .split("; ")
-      .find((c) => c.startsWith("token="));
-    if (cookieToken) {
-      token = cookieToken.split("=")[1];
-    }
-
-    // Fallback nếu cookie không có
-    if (!token) {
-      token = localStorage.getItem("token");
-    }
+    // ✅ Lấy token từ cookie
+    const token = getAccessToken();
 
     if (!token) {
       console.warn("❌ Không tìm thấy token");

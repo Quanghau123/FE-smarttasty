@@ -7,11 +7,12 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchPromotions } from "@/redux/slices/promotionSlice";
 import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const getTokenFromLocalStorage = () => {
-  return localStorage.getItem("token") || "";
+  return getAccessToken() || "";
 };
 
 const DashboardChart = () => {

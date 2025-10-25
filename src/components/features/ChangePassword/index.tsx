@@ -18,6 +18,7 @@ import {
   resetChangePasswordState,
   clearUser,
 } from "@/redux/slices/userSlice";
+import { clearTokens } from "@/lib/utils/tokenHelper";
 import { useState, useEffect } from "react";
 
 type ChangePasswordFormProps = {
@@ -70,8 +71,8 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     if (changePasswordSuccess) {
       toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
 
-      // Xóa token + Redux user
-      localStorage.removeItem("token");
+      // ✅ Xóa tokens từ cookie và Redux user
+      clearTokens();
       dispatch(clearUser());
 
       // Nếu có callback từ cha, gọi trước

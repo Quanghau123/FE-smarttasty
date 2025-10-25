@@ -34,6 +34,7 @@ import {
 } from "@mui/icons-material";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 import {
   fetchDishes,
   addDish,
@@ -70,7 +71,7 @@ const defaultForm: FormState = {
 const getUserFromLocalStorage = () => {
   try {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     return { user, token };
   } catch {
     return { user: {}, token: null };
