@@ -1,159 +1,106 @@
-// "use client";
+"use client";
 
-// import { useEffect, useState } from "react";
-// import { Card, Typography, Modal, Divider, Spin } from "antd";
-// import axios from "axios";
-// import styles from "./styles.module.scss";
+import Image from "next/image";
+import { Card, CardContent, Box, Stack, Typography, Chip } from "@mui/material";
+import { useRouter } from "next/navigation";
+import type { Dish } from "@/types/dish";
 
-// const { Title, Paragraph, Text } = Typography;
+type Props = {
+  dish: Dish;
+  discountedPrice?: number | null;
+};
 
-// // Kiểu dữ liệu cho Dish
-// type Dish = {
-//   id: number;
-//   name: string;
-//   category: number; // enum từ BE: 0-Buffet, 1-Thức ăn, 2-Nước uống, 3-Thức ăn thêm
-//   description: string;
-//   price: number;
-//   imageUrl: string;
-//   isActive: boolean;
-//   restaurantId: number;
-// };
+export default function DishCard({ dish, discountedPrice }: Props) {
+  const router = useRouter();
+  const showDiscount =
+    discountedPrice !== null &&
+    discountedPrice !== undefined &&
+    discountedPrice < dish.price;
 
-// // Map category enum sang tiếng Việt
-// const categoryMap: Record<number, string> = {
-//   0: "Buffet",
-//   1: "Thức ăn",
-//   2: "Nước uống",
-//   3: "Thức ăn thêm",
-// };
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        // fixed frame so all cards are uniform
+        height: 300,
+        width: 250,
+        display: "flex",
+        flexDirection: "column",
+        transition: "box-shadow 200ms ease",
+        "&:hover": { boxShadow: 6 },
+      }}
+    >
+      {/* image area fixed */}
+      <Box
+        sx={{ position: "relative", width: "100%", height: 160, flexShrink: 0 }}
+      >
+        <Image
+          src={dish.imageUrl}
+          alt={dish.name}
+          fill
+          style={{ objectFit: "cover" }}
+        />
+      </Box>
+      {/* content area fixed height so it cannot expand */}
+      <CardContent
+        sx={{
+          p: 1.5,
+          // keep content stacked from the top so title and price sit close together
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          flex: 1,
+        }}
+      >
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontSize: "1rem",
+              margin: 0,
+              lineHeight: 1.2,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {dish.name}
+          </Typography>
+          <Stack direction="column" alignItems="flex-end">
+            {!dish.isActive && (
+              <Chip label="Ngưng bán" color="error" size="small" />
+            )}
+            {showDiscount && (
+              <Chip label="KM" color="secondary" size="small" sx={{ mt: 1 }} />
+            )}
+          </Stack>
+        </Stack>
 
-// // Tính giá cuối (tạm chưa có discount từ BE)
-// const getFinalPrice = (price: number) => price;
-
-// export default function DishPage() {
-//   const [dishes, setDishes] = useState<Dish[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [activeCategory, setActiveCategory] = useState("Tất cả");
-
-//   const categories = [
-//     "Tất cả",
-//     "Buffet",
-//     "Thức ăn",
-//     "Nước uống",
-//     "Thức ăn thêm",
-//   ];
-
-//   // Gọi API lấy danh sách dish
-//   useEffect(() => {
-//     const fetchDishes = async () => {
-//       try {
-//         const response = await axios.get("/api/dish"); // hoặc http://localhost:5000/api/dish
-//         setDishes(response.data);
-//       } catch (error) {
-//         console.error("Lỗi khi lấy dữ liệu:", error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchDishes();
-//   }, []);
-
-//   const handleClickDish = (dish: Dish) => {
-//     setSelectedDish(dish);
-//     setIsModalOpen(true);
-//   };
-
-//   const handleCloseModal = () => {
-//     setIsModalOpen(false);
-//     setSelectedDish(null);
-//   };
-
-//   const filteredDishes = dishes.filter((dish) => {
-//     if (activeCategory === "Tất cả") return true;
-//     return categoryMap[dish.category] === activeCategory;
-//   });
-
-//   return (
-//     <div className={styles.container}>
-//       <Title level={2}>Danh sách món ăn</Title>
-
-//       {/* Bộ lọc danh mục */}
-//       <div className={styles.navBar}>
-//         {categories.map((cat) => (
-//           <button
-//             key={cat}
-//             className={`${styles.navButton} ${
-//               activeCategory === cat ? styles.active : ""
-//             }`}
-//             onClick={() => setActiveCategory(cat)}
-//           >
-//             {cat}
-//           </button>
-//         ))}
-//       </div>
-
-//       {/* Hiển thị danh sách món ăn */}
-//       {loading ? (
-//         <div style={{ textAlign: "center", marginTop: 50 }}>
-//           <Spin size="large" />
-//         </div>
-//       ) : (
-//         <div className={styles.dishGrid}>
-//           {filteredDishes.map((dish) => (
-//             <Card
-//               key={dish.id}
-//               hoverable
-//               className={styles.dishCard}
-//               cover={<img alt={dish.name} src={dish.imageUrl} />}
-//               onClick={() => handleClickDish(dish)}
-//             >
-//               <Card.Meta title={dish.name} description={dish.description} />
-//               <Paragraph className={styles.priceText}>
-//                 Giá:{" "}
-//                 <Text strong>
-//                   {getFinalPrice(dish.price).toLocaleString()} VNĐ
-//                 </Text>
-//               </Paragraph>
-//             </Card>
-//           ))}
-//         </div>
-//       )}
-
-//       {/* Modal chi tiết món ăn */}
-//       <Modal
-//         title="Chi tiết món ăn"
-//         open={isModalOpen}
-//         onCancel={handleCloseModal}
-//         footer={null}
-//       >
-//         {selectedDish && (
-//           <div style={{ textAlign: "center" }}>
-//             <img
-//               src={selectedDish.imageUrl}
-//               alt={selectedDish.name}
-//               style={{
-//                 maxWidth: "100%",
-//                 borderRadius: 8,
-//                 marginBottom: 16,
-//               }}
-//             />
-//             <Title level={4}>{selectedDish.name}</Title>
-//             <Paragraph>
-//               <strong>Loại:</strong> {categoryMap[selectedDish.category]}
-//             </Paragraph>
-//             <Paragraph>
-//               <strong>Mô tả:</strong> {selectedDish.description}
-//             </Paragraph>
-//             <Divider />
-//             <Paragraph>
-//               <strong>Giá:</strong>{" "}
-//               <Text strong>{selectedDish.price.toLocaleString()} VNĐ</Text>
-//             </Paragraph>
-//           </div>
-//         )}
-//       </Modal>
-//     </div>
-//   );
-// }
+        <Box mt={0.5}>
+          {showDiscount ? (
+            <>
+              <Typography
+                sx={{ textDecoration: "line-through", color: "#777" }}
+              >
+                {dish.price.toLocaleString()}đ
+              </Typography>
+              <Typography fontWeight="bold" color="primary">
+                {discountedPrice!.toLocaleString()}đ
+              </Typography>
+            </>
+          ) : (
+            <Typography fontWeight="bold" color="primary">
+              {dish.price.toLocaleString()}đ
+            </Typography>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}

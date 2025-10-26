@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { User, CreateUserDto } from "@/types/user";
+import { setTokens, clearTokens, getAccessToken } from "@/lib/utils/tokenHelper";
 
 interface ChangePasswordPayload {
   currentPassword: string;
@@ -11,6 +12,8 @@ interface ChangePasswordPayload {
 interface UserState {
   users: User[];
   user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   loading: boolean;
   error: string | null;
   changePasswordLoading: boolean;
@@ -21,6 +24,8 @@ interface UserState {
 const initialState: UserState = {
   users: [],
   user: null,
+  accessToken: null,
+  refreshToken: null,
   loading: false,
   error: null,
   changePasswordLoading: false,
@@ -28,33 +33,45 @@ const initialState: UserState = {
   changePasswordSuccess: false,
 };
 
-// Helper lấy token
-const getToken = (): string | null => localStorage.getItem("token");
+// Helper lấy token từ cookie
+const getToken = getAccessToken;
 
 // ================== THUNKS ==================
 
 // Login
 export const loginUser = createAsyncThunk<
-  User,
+  { user: User; access_token: string; refresh_token: string },
   { email: string; userPassword: string; remember: boolean },
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post("/api/User/login", data);
-    const { errMessage, data: resData } = response.data;
-    if (errMessage === "OK" && resData?.user && resData?.token) {
-      document.cookie = `token=${resData.token}; path=/; max-age=86400`;
+    const { errCode, errMessage, data: resData } = response.data;
+    
+    if (errCode === "success" && resData?.user && resData?.access_token) {
+      // ✅ Lưu tokens vào cookie (bảo mật hơn)
+      setTokens(resData.access_token, resData.refresh_token);
+      
+      // Lưu user info vào localStorage (không nhạy cảm)
       localStorage.setItem("user", JSON.stringify(resData.user));
-      localStorage.setItem("token", resData.token);
+      
+      // Lưu thông tin remember login
       if (data.remember) {
         localStorage.setItem(
           "rememberedLogin",
           JSON.stringify({ email: data.email, userPassword: data.userPassword })
         );
-      } else localStorage.removeItem("rememberedLogin");
-      return resData.user as User;
+      } else {
+        localStorage.removeItem("rememberedLogin");
+      }
+      
+      return {
+        user: resData.user as User,
+        access_token: resData.access_token,
+        refresh_token: resData.refresh_token,
+      };
     } else {
-      return rejectWithValue("Email hoặc mật khẩu không chính xác!");
+      return rejectWithValue(errMessage || "Email hoặc mật khẩu không chính xác!");
     }
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
@@ -110,7 +127,11 @@ export const updateUser = createAsyncThunk<
         "Content-Type": "application/json",
       },
     });
-    localStorage.setItem("user", JSON.stringify({ ...updatedUser, token }));
+    const currentUser = localStorage.getItem("user");
+    if (currentUser) {
+      const parsedUser = JSON.parse(currentUser);
+      localStorage.setItem("user", JSON.stringify({ ...parsedUser, ...updatedUser }));
+    }
     return updatedUser as User;
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
@@ -163,13 +184,20 @@ const userSlice = createSlice({
     },
     clearUser: (state) => {
       state.user = null;
-      document.cookie = "token=; path=/; max-age=0";
-      localStorage.removeItem("user");
+      state.accessToken = null;
+      state.refreshToken = null;
+      // ✅ Xóa tokens từ cookie và localStorage
+      clearTokens();
       state.loading = false;
       state.error = null;
       state.changePasswordLoading = false;
       state.changePasswordError = null;
       state.changePasswordSuccess = false;
+    },
+    updateAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      // ✅ Cập nhật access token trong cookie
+      setTokens(action.payload, state.refreshToken || "");
     },
     resetChangePasswordState: (state) => {
       state.changePasswordLoading = false;
@@ -184,9 +212,11 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.access_token;
+        state.refreshToken = action.payload.refresh_token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -255,6 +285,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser, resetChangePasswordState } =
+export const { setUser, clearUser, updateAccessToken, resetChangePasswordState } =
   userSlice.actions;
 export default userSlice.reducer;

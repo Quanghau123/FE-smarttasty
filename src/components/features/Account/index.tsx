@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { updateUser } from "@/redux/slices/userSlice";
+import { clearTokens } from "@/lib/utils/tokenHelper";
 import ChangePasswordForm from "@/components/features/ChangePassword";
 import { toast } from "react-toastify";
 import styles from "./styles.module.scss";
@@ -64,11 +65,9 @@ const AccountPage = () => {
 
   // Callback khi đổi mật khẩu thành công
   const handlePasswordChanged = () => {
-    // Xóa token
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
+    // ✅ Xóa tokens từ cookie và localStorage
+    clearTokens();
+    
     // Điều hướng login sau 1.5s để toast hiển thị
     setTimeout(() => router.push("/login"), 1500);
   };

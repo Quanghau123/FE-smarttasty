@@ -1,5 +1,7 @@
 .dashboard {
-  padding: 24px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 24px;
 }
 
 .cards {
@@ -16,4 +18,45 @@
 
 .charts {
   margin-top: 24px;
+}
+
+.cardGradient {
+  background: linear-gradient(135deg, #1976d2 0%, #63a4ff 100%);
+  color: #fff;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.cardGradientBusiness {
+  background: linear-gradient(135deg, #d32f2f 0%, #ff7b7b 100%);
+  color: #fff;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.cardGradientGreen {
+  background: linear-gradient(135deg, #388e3c 0%, #6fcf97 100%);
+  color: #fff;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.avatarGradient {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .cards {
+    margin-bottom: 16px;
+  }
 }

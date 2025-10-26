@@ -2,6 +2,8 @@
 /*                                ENUMS (FE)                                 */
 /* -------------------------------------------------------------------------- */
 
+// NOTE: these enums mirror backend `backend.Domain.Enums.PaymentMethod` and `PaymentStatus`.
+// Keep the string values stable to match API responses which may return either names or numeric values.
 export enum PaymentMethod {
   VNPay = "VNPay",
   ZaloPay = "ZaloPay",
@@ -9,11 +11,11 @@ export enum PaymentMethod {
 }
 
 export enum PaymentStatus {
-  Pending = "Pending",
-  Completed = "Completed",
-  Failed = "Failed",
-  Refunded = "Refunded",
-  Cancelled = "Cancelled",
+  Pending = "Pending",    // backend: Pending = 0
+  Success = "Success",    // backend: Success = 1
+  Failed = "Failed",      // backend: Failed = 2
+  Cancelled = "Cancelled",// backend: Cancelled = 3
+  Refunded = "Refunded",  // backend: Refunded = 4
 }
 
 /* -------------------------------------------------------------------------- */
@@ -23,39 +25,51 @@ export enum PaymentStatus {
 export interface PaymentTransactionLog {
   id: number;
   paymentId: number;
-  message: string;
-  status: string;
+  // provider corresponds to backend PaymentTransactionLog.Provider (enum PaymentMethod)
+  provider: PaymentMethod;
+  // status corresponds to backend PaymentTransactionLog.Status (enum PaymentStatus)
+  status: PaymentStatus;
+  rawData?: string | null;
+  errorMessage?: string | null;
   createdAt: string;
 }
 
 export interface VNPayPayment {
   id: number;
   paymentId: number;
-  vnpTransactionNo: string;
-  vnpResponseCode: string;
+  // VnpTxnRef on backend
+  vnpTxnRef: string;
+  bankCode?: string | null;
+  cardType?: string | null;
+  responseCode?: string | null;
 }
 
 export interface ZaloPayPayment {
   id: number;
   paymentId: number;
+  // AppTransId on backend
   appTransId: string;
-  zpTransId: string;
-  returnCode: number;
+  zpTransId?: string | null;
+  responseMessage?: string | null;
 }
 
 export interface CODPayment {
   id: number;
   paymentId: number;
-  isReceived: boolean;
-  receivedAt?: string;
+  isCollected: boolean; // backend: IsCollected
+  collectedAt?: string | null;
 }
 
 export interface Refund {
   id: number;
   paymentId: number;
   amount: number;
-  reason: string;
+  // backend: Refund.Reason nullable
+  reason?: string | null;
+  status: string; // RefundStatus on backend (as string here)
+  transactionId?: string | null;
   createdAt: string;
+  processedAt?: string | null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -67,20 +81,20 @@ export interface Payment {
   orderId: number;
 
   method: PaymentMethod;
-  status: PaymentStatus;
+  status: PaymentStatus | string; // backend PaymentDto.Status can be a string message
   amount: number;
 
-  transactionId?: string;
-  paymentUrl?: string;
-  paidAt?: string;
+  transactionId?: string | null;
+  paymentUrl?: string | null;
+  paidAt?: string | null;
 
   createdAt: string;
-  updatedAt?: string;
+  updatedAt?: string | null;
 
   transactionLogs: PaymentTransactionLog[];
 
-  vnpayPayment?: VNPayPayment;
-  zaloPayPayment?: ZaloPayPayment;
-  codPayment?: CODPayment;
+  vnpPayPayment?: VNPayPayment | null;
+  zaloPayPayment?: ZaloPayPayment | null;
+  codPayment?: CODPayment | null;
   refunds: Refund[];
 }

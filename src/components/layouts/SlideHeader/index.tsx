@@ -22,9 +22,9 @@ const Index = () => {
 
   useEffect(() => {
     if (sliderRef.current) {
-      sliderRef.current.style.transform = `translateX(-${
-        currentIndex * 100
-      }vw)`;
+      // use percentage relative to the slider container so each slide
+      // shifts by exactly one slide width (works when container is not full viewport)
+      sliderRef.current.style.transform = `translateX(-${currentIndex * 100}%)`;
       sliderRef.current.style.transition = "transform 0.5s ease-in-out";
     }
   }, [currentIndex]);

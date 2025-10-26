@@ -6,6 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { Promotion } from "@/types/promotion";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 interface PromotionState {
   promotions: Promotion[];
@@ -19,7 +20,7 @@ const initialState: PromotionState = {
   error: null,
 };
 
-const getToken = (): string | null => localStorage.getItem("token");
+const getToken = getAccessToken;
 
 export const fetchPromotions = createAsyncThunk<
   Promotion[],

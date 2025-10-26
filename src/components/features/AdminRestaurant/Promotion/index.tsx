@@ -41,11 +41,12 @@ import {
 import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
 import { Promotion, DiscountType, TargetType } from "@/types/promotion";
 import axiosInstance from "@/lib/axios/axiosInstance";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 const getUserFromLocalStorage = () => {
   try {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     return { user, token };
   } catch {
     return { user: {}, token: null };

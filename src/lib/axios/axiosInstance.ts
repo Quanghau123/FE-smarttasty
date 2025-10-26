@@ -1,5 +1,6 @@
 // @/axios/axiosInstance.ts
 import axios from "axios";
+import { getAccessToken, getRefreshToken, updateAccessToken } from "@/lib/utils/tokenHelper";
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -13,19 +14,10 @@ const axiosInstance = axios.create({
 // Interceptor: Gắn token + xử lý Content-Type động
 axiosInstance.interceptors.request.use(
   (config) => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        try {
-          const token = localStorage.getItem("token");
-          //  const token = parsed.token;
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        } catch (err) {
-          console.warn("Lỗi khi parse user data:", err);
-        }
-      }
+    // ✅ Lấy access token từ cookie
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     // ✅ Nếu là FormData, KHÔNG tự set Content-Type (để axios tự gán với boundary)
@@ -40,6 +32,57 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Response interceptor để xử lý refresh token khi access token hết hạn
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Nếu lỗi 401 và chưa retry
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // ✅ Lấy refresh token từ cookie
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          // Không có refresh token, chuyển về login
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+          }
+          return Promise.reject(error);
+        }
+
+        // Gọi API refresh token
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`,
+          { refreshToken }
+        );
+
+        if (response.data.errCode === "success" && response.data.data?.access_token) {
+          const newAccessToken = response.data.data.access_token;
+          // ✅ Cập nhật access token mới vào cookie
+          updateAccessToken(newAccessToken);
+
+          // Retry request ban đầu với token mới
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh token thất bại, đăng xuất
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;

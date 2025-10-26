@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 import {
   Box,
   Typography,
@@ -32,7 +33,7 @@ const CartPage = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
 
     if (!token) {
       console.warn("⚠️ Không có token => chưa đăng nhập");

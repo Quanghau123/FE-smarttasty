@@ -20,9 +20,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "react-toastify";
+import AddressAutocomplete from "./AddressAutocomplete";
 import dayjs, { Dayjs } from "dayjs";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { createRestaurant } from "@/redux/slices/restaurantSlice";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 const MapView = dynamic(() => import("@/components/layouts/MapView"), {
   ssr: false,
@@ -69,42 +71,56 @@ const RestaurantCreatePage = () => {
     }
   };
 
-  const [addressTimeout, setAddressTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  const handleAddressChange = (value: string) => {
+    setForm((prev) => ({ ...prev, address: value }));
+  };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const address = e.target.value;
-    setForm((prev) => ({ ...prev, address }));
-
-    // Nếu đang có timeout trước đó thì hủy
-    if (addressTimeout) clearTimeout(addressTimeout);
-
-    // Tạo timeout mới
-    const timeout = setTimeout(async () => {
-      if (!address.trim()) return;
-
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            address
-          )}`
-        );
-        const data = await res.json();
-        if (data.length > 0) {
-          const lat = parseFloat(data[0].lat);
-          const lon = parseFloat(data[0].lon);
-          setLatitude(lat);
-          setLongitude(lon);
-        } else {
-          toast.error("Không tìm thấy tọa độ từ địa chỉ.");
-        }
-      } catch {
-        toast.error("Lỗi khi lấy tọa độ từ địa chỉ.");
+  const handleAddressSelect = (address: string, lat: number, lon: number) => {
+    // When a suggestion is selected, keep only the string up to and including the first
+    // occurrence of Ho Chi Minh (various spellings). This ensures the stored address
+    // ends at the city level as requested.
+    const variants = [
+      "Hồ Chí Minh",
+      "Ho Chi Minh",
+      "TP. Hồ Chí Minh",
+      "TP HCM",
+      "HCMC",
+    ];
+    let newAddress = address;
+    const lowered = address;
+    let foundEnd = -1;
+    for (const v of variants) {
+      const idx = lowered.indexOf(v);
+      if (idx !== -1) {
+        foundEnd = idx + v.length;
+        break;
       }
-    }, 700); // chỉ gọi API sau 700ms không gõ
+    }
+    if (foundEnd !== -1) {
+      newAddress = address.substring(0, foundEnd);
+    }
 
-    setAddressTimeout(timeout);
+    setForm((prev) => {
+      // If the user already typed a house number at the start of the address input
+      // (e.g. "123 Nguyen Hue"), preserve it by prepending to the selected label
+      // unless the selected label already begins with that number.
+      const m = prev.address.match(/^\s*([0-9]+[A-Za-z0-9\-\/]*)\s*(.*)$/);
+      let preserved = "";
+      if (m) preserved = m[1];
+
+      let finalAddress = newAddress;
+      if (preserved) {
+        // if finalAddress doesn't already start with preserved number, prepend it
+        const re = new RegExp(`^\\s*${preserved}\\b`);
+        if (!re.test(finalAddress)) {
+          finalAddress = `${preserved} ${finalAddress}`;
+        }
+      }
+
+      return { ...prev, address: finalAddress };
+    });
+    setLatitude(lat);
+    setLongitude(lon);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,7 +138,7 @@ const RestaurantCreatePage = () => {
       updatedAt: new Date().toISOString(),
     };
 
-    const token = localStorage.getItem("token") || "";
+    const token = getAccessToken() || "";
 
     const resultAction = await dispatch(
       createRestaurant({ token, data: restaurantData })
@@ -170,15 +186,14 @@ const RestaurantCreatePage = () => {
               </Select>
             </FormControl>
 
-            <TextField
-              fullWidth
-              label="Địa chỉ"
-              name="address"
+            <AddressAutocomplete
               value={form.address}
               onChange={handleAddressChange}
-              margin="normal"
-              required
+              onSelect={handleAddressSelect}
+              placeholder="Địa chỉ"
             />
+
+            {/* house number input removed per request — address will be truncated to Ho Chi Minh on selection */}
 
             {mounted && (
               <Box mt={2}>

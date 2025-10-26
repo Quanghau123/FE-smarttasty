@@ -23,17 +23,13 @@ import {
   fetchRestaurants,
   fetchRestaurantsByCategory,
 } from "@/redux/slices/restaurantSlice";
+import { clearUser } from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 import LanguageSelector from "@/components/layouts/LanguageSelector";
 import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
-
-const getCookie = (name: string): string | null => {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
-  return match ? match[2] : null;
-};
 
 const Header = () => {
   const [localUserName, setLocalUserName] = useState<string | null>(null);
@@ -45,6 +41,9 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const t = useTranslations("header");
 
+  // Lấy user từ Redux để detect khi login thành công
+  const currentUser = useAppSelector((state) => state.user.user);
+
   // ✅ Lấy thông tin giỏ hàng từ Redux
   // ✅ Lấy toàn bộ danh sách đơn hàng của user
   const orders = useAppSelector((state) => state.order.orders);
@@ -53,34 +52,78 @@ const Header = () => {
   const totalOrders = orders?.length || 0;
 
   useEffect(() => {
-    // ✅ Khi user đăng nhập, gọi API lấy giỏ hàng hiện tại
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const { id } = JSON.parse(storedUser);
-      if (id) {
-        console.log("🧩 Fetching orders for user:", id);
-        dispatch(fetchOrdersByUser(id));
+    // Khi user đăng nhập (Redux hoặc localStorage), gọi API lấy giỏ hàng hiện tại
+    let id: number | undefined | null = undefined;
+
+    // 1) Nếu có user trong Redux (thường xảy ra ngay khi login thành công)
+    if (currentUser && typeof currentUser === "object") {
+      // backend/user shape có thể là userId hoặc id
+      const cu = currentUser as unknown as {
+        userId?: number;
+        id?: number;
+      };
+      id = cu.userId ?? cu.id;
+    }
+
+    // 2) Fallback: kiểm tra localStorage (trường hợp reload trang)
+    if (!id) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          id = parsed?.userId ?? parsed?.id;
+        } catch {
+          // ignore parse error
+        }
       }
     }
-  }, [dispatch]);
+
+    if (id) {
+      console.log("🧩 Fetching orders for user:", id);
+      dispatch(fetchOrdersByUser(Number(id)));
+    }
+  }, [dispatch, currentUser]);
 
   useEffect(() => {
     setHydrated(true);
 
-    const token = getCookie("token");
+    // ✅ Kiểm tra access_token từ cookie
+    const token = getAccessToken();
     setIsLoggedIn(!!token);
 
     try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        const userName = parsedUser?.userName || "User";
+      // Prefer Redux user (available immediately after login), fallback to localStorage
+      if (currentUser && typeof currentUser === "object") {
+        const cu = currentUser as unknown as {
+          userName?: string;
+          fullName?: string;
+          name?: string;
+        };
+        const userName = cu.userName || cu.fullName || cu.name || "User";
         setLocalUserName(userName);
+        setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong Redux
+      } else {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          const userName =
+            parsedUser?.userName ||
+            parsedUser?.fullName ||
+            parsedUser?.name ||
+            "User";
+          setLocalUserName(userName);
+          setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong localStorage
+        } else {
+          setIsLoggedIn(false);
+          setLocalUserName(null);
+        }
       }
-    } catch (err) {
-      console.error("Lỗi khi lấy user từ localStorage:", err);
+    } catch (e) {
+      console.error("Lỗi khi lấy user từ localStorage:", e);
+      setIsLoggedIn(false);
+      setLocalUserName(null);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     if (selectedCategory === "All") {
@@ -91,11 +134,12 @@ const Header = () => {
   }, [selectedCategory, dispatch]);
 
   const handleLogout = () => {
-    document.cookie = "token=; path=/; max-age=0";
-    localStorage.removeItem("user");
-    localStorage.removeItem("id");
+    // ✅ Dispatch clearUser action để xóa user khỏi Redux và localStorage
+    dispatch(clearUser());
+
     setIsLoggedIn(false);
     setLocalUserName(null);
+
     window.location.href = "/login";
   };
 
@@ -112,7 +156,14 @@ const Header = () => {
   if (!hydrated) return null;
 
   return (
-    <Box className={styles.headerWrapper}>
+    <Box
+      className={styles.headerWrapper}
+      sx={(theme) => ({
+        backgroundColor: theme.palette.background.paper,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        color: theme.palette.text.primary,
+      })}
+    >
       <Box className={styles.headerInner}>
         {/* Left: Logo */}
         <Link href="/">
@@ -185,7 +236,15 @@ const Header = () => {
                   horizontal: "right",
                 }}
               >
-                <Box className={styles.popoverBox}>
+                <Box
+                  className={styles.popoverBox}
+                  sx={(theme) => ({
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    boxShadow: theme.shadows[4],
+                    border: `1px solid ${theme.palette.divider}`,
+                  })}
+                >
                   <Typography fontWeight={600} mb={1}>
                     {t("welcome_text")}, {localUserName}
                   </Typography>

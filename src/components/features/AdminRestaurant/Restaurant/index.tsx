@@ -7,11 +7,14 @@ import {
   Button,
   Grid,
   Paper,
+  Card,
+  Stack,
   Typography,
   Chip,
   CircularProgress,
   TextField,
 } from "@mui/material";
+import DishCard from "@/components/features/AdminRestaurant/Dish";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -23,6 +26,7 @@ import {
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
 import type { DishPromotion } from "@/types/dishpromotion";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -51,7 +55,7 @@ const RestaurantPage = () => {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     const role = userData?.role;
 
     if (!token || role !== "business") {
@@ -85,7 +89,7 @@ const RestaurantPage = () => {
   const handleUpdate = async () => {
     if (!restaurantInfo) return;
 
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     if (!token) {
       toast.error("Không tìm thấy token, vui lòng đăng nhập lại.");
       return;
@@ -201,16 +205,21 @@ const RestaurantPage = () => {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Paper elevation={3} sx={{ display: "flex", gap: 4, p: 3, mb: 4 }}>
-        <Box>
+    // remove top padding so layout sits directly under header
+    <Box sx={{ pt: 0, px: 4, pb: 4 }}>
+      <Card
+        elevation={3}
+        sx={{ display: "flex", gap: 4, p: 2, mb: 4, alignItems: "stretch" }}
+      >
+        <Box sx={{ width: { xs: 120, sm: 300 }, flexShrink: 0 }}>
           <Box
             sx={{
               position: "relative",
-              width: 300,
-              height: 200,
+              width: "100%",
+              height: { xs: 90, sm: 200 },
               borderRadius: 2,
               overflow: "hidden",
+              boxShadow: 1,
             }}
           >
             <Image
@@ -226,7 +235,12 @@ const RestaurantPage = () => {
             />
           </Box>
           {isEditing && (
-            <Button variant="outlined" component="label" sx={{ mt: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              component="label"
+              sx={{ mt: 1 }}
+            >
               Chọn ảnh mới
               <input
                 type="file"
@@ -243,46 +257,90 @@ const RestaurantPage = () => {
           )}
         </Box>
 
-        <Box flex={1}>
-          {isEditing ? (
-            <>
-              <TextField
-                fullWidth
-                label="Tên nhà hàng"
-                value={formState.name}
-                onChange={(e) =>
-                  setFormState({ ...formState, name: e.target.value })
-                }
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Địa chỉ"
-                value={formState.address}
-                onChange={(e) =>
-                  setFormState({ ...formState, address: e.target.value })
-                }
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Giờ mở cửa"
-                value={formState.openTime}
-                onChange={(e) =>
-                  setFormState({ ...formState, openTime: e.target.value })
-                }
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Giờ đóng cửa"
-                value={formState.closeTime}
-                onChange={(e) =>
-                  setFormState({ ...formState, closeTime: e.target.value })
-                }
-                margin="normal"
-              />
-              <Box display="flex" gap={2} mt={2}>
+        <Box
+          flex={1}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box>
+            {isEditing ? (
+              <>
+                <TextField
+                  fullWidth
+                  label="Tên nhà hàng"
+                  value={formState.name}
+                  onChange={(e) =>
+                    setFormState({ ...formState, name: e.target.value })
+                  }
+                  margin="normal"
+                />
+                <TextField
+                  fullWidth
+                  label="Địa chỉ"
+                  value={formState.address}
+                  onChange={(e) =>
+                    setFormState({ ...formState, address: e.target.value })
+                  }
+                  margin="normal"
+                />
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                  <TextField
+                    label="Giờ mở cửa"
+                    value={formState.openTime}
+                    onChange={(e) =>
+                      setFormState({ ...formState, openTime: e.target.value })
+                    }
+                    margin="normal"
+                    fullWidth
+                  />
+                  <TextField
+                    label="Giờ đóng cửa"
+                    value={formState.closeTime}
+                    onChange={(e) =>
+                      setFormState({ ...formState, closeTime: e.target.value })
+                    }
+                    margin="normal"
+                    fullWidth
+                  />
+                </Stack>
+              </>
+            ) : (
+              <>
+                <Typography
+                  variant="h4"
+                  gutterBottom
+                  sx={{ wordBreak: "break-word" }}
+                >
+                  {restaurantInfo.name}
+                </Typography>
+                <Typography color="text.secondary" sx={{ mb: 1 }}>
+                  {restaurantInfo.address}
+                </Typography>
+
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip
+                    label={`Giờ: ${restaurantInfo.openTime} - ${restaurantInfo.closeTime}`}
+                    size="small"
+                  />
+                  {(() => {
+                    const ri = restaurantInfo as unknown as {
+                      isVerified?: boolean;
+                    };
+                    return ri.isVerified ? (
+                      <Chip label="Đã xác thực" color="success" size="small" />
+                    ) : null;
+                  })()}
+                </Stack>
+              </>
+            )}
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            {isEditing ? (
+              <Stack direction="row" spacing={2}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -297,106 +355,43 @@ const RestaurantPage = () => {
                 >
                   Huỷ
                 </Button>
-              </Box>
-            </>
-          ) : (
-            <>
-              <Typography variant="h4">{restaurantInfo.name}</Typography>
-              <Typography>
-                <strong>Địa chỉ:</strong> {restaurantInfo.address}
-              </Typography>
-              <Typography>
-                <strong>Giờ hoạt động:</strong> {restaurantInfo.openTime} -{" "}
-                {restaurantInfo.closeTime}
-              </Typography>
+              </Stack>
+            ) : (
               <Button
-                variant="outlined"
+                variant="contained"
                 onClick={() => setIsEditing(true)}
-                sx={{ mt: 2 }}
+                sx={{ mt: 1 }}
               >
-                Sửa
+                Sửa nhà hàng
               </Button>
-            </>
-          )}
+            )}
+          </Box>
         </Box>
-      </Paper>
+      </Card>
 
       {/* Thực đơn */}
       <Box>
-        <Typography variant="h5" gutterBottom>
-          Thực đơn
-        </Typography>
         {dishLoading ? (
           <CircularProgress />
         ) : dishes.length === 0 ? (
           <Typography>Chưa có món ăn nào.</Typography>
         ) : (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} justifyContent="center">
             {dishes.map((dish) => {
               const discounted = bestDiscountByDishId.get(dish.id) ?? null;
-              const showDiscount =
-                discounted !== null && discounted < dish.price;
 
               return (
                 <Grid
                   item
                   xs={12}
                   sm={6}
-                  md={4}
+                  md={3}
                   lg={3}
                   key={dish.id}
                   component={"div" as React.ElementType}
+                  sx={{ display: "flex", justifyContent: "center" }}
                 >
-                  <Paper elevation={2}>
-                    <Box
-                      sx={{
-                        position: "relative",
-                        width: "100%",
-                        height: 160,
-                      }}
-                    >
-                      <Image
-                        src={dish.imageUrl}
-                        alt={dish.name}
-                        fill
-                        style={{ objectFit: "cover" }}
-                      />
-                    </Box>
-                    <Box p={2}>
-                      <Typography variant="h6">
-                        {dish.name}
-                        {!dish.isActive && (
-                          <Chip
-                            label="Ngưng bán"
-                            color="error"
-                            size="small"
-                            sx={{ ml: 1 }}
-                          />
-                        )}
-                      </Typography>
-
-                      {/* ✅ Giá: gốc gạch + giá sau giảm (nếu có) */}
-                      {showDiscount ? (
-                        <Box>
-                          <Typography
-                            sx={{
-                              textDecoration: "line-through",
-                              color: "#777",
-                            }}
-                          >
-                            {dish.price.toLocaleString()}đ
-                          </Typography>
-                          <Typography fontWeight="bold" color="primary">
-                            {discounted!.toLocaleString()}đ
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Typography fontWeight="bold" color="primary">
-                          {dish.price.toLocaleString()}đ
-                        </Typography>
-                      )}
-                    </Box>
-                  </Paper>
+                  <DishCard dish={dish} discountedPrice={discounted ?? null} />
                 </Grid>
               );
             })}

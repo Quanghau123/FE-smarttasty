@@ -6,10 +6,16 @@ import {
   AnyAction,
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
-import {
-  Payment,
-} from "@/types/payment";
-import { ApiEnvelope } from "@/types/order"; // dùng lại kiểu chuẩn hóa từ order
+import { Payment, CODPayment } from "@/types/payment";
+import { ApiEnvelope } from "@/types/order"; // reused API envelope type
+import type { AppDispatch } from "@/redux/store";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
+
+// VNPay IPN response type (backend returns { RspCode, Message })
+export interface VNPayIPNResponse {
+  RspCode: string;
+  Message: string;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                 STATE TYPE                                 */
@@ -33,21 +39,14 @@ const initialState: PaymentState = {
 /*                                   UTILS                                    */
 /* -------------------------------------------------------------------------- */
 
-const getToken = (): string | null => localStorage.getItem("token");
+const getToken = getAccessToken;
 
-const resolveApiData = (body: unknown): unknown => {
-  try {
-    return body as unknown;
-  } catch {
-    return undefined;
-  }
+const resolveApiData = <T>(body: unknown): ApiEnvelope<T> | null => {
+  if (!body || typeof body !== "object") return null;
+  return body as ApiEnvelope<T>;
 };
 
-const isApiEnvelope = (v: unknown): v is ApiEnvelope<unknown> => {
-  if (typeof v !== "object" || v === null) return false;
-  const obj = v as Record<string, unknown>;
-  return "errCode" in obj && "errMessage" in obj;
-};
+// helper is kept inline as resolveApiData return checks are sufficient
 
 /* -------------------------------------------------------------------------- */
 /*                                  THUNKS                                    */
@@ -69,17 +68,12 @@ export const createVNPayPayment = createAsyncThunk<
           }
         : { "Content-Type": "application/json" },
     });
-
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && envelope.data) {
+    const envelope = resolveApiData<Payment>(res.data);
+    if (envelope && envelope.data) {
       return envelope.data as Payment;
     }
 
-    return rejectWithValue(
-      isApiEnvelope(envelope)
-        ? envelope.errMessage
-        : "Không thể tạo thanh toán VNPay"
-    );
+    return rejectWithValue(envelope?.errMessage ?? "Không thể tạo thanh toán VNPay");
   } catch (e: unknown) {
     return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
   }
@@ -87,10 +81,10 @@ export const createVNPayPayment = createAsyncThunk<
 
 // 2️⃣ POST /api/Payment/cod/create
 export const createCODPayment = createAsyncThunk<
-  Payment,
-  { orderId: number; amount: number },
-  { rejectValue: string }
->("payment/createCODPayment", async (payload, { rejectWithValue }) => {
+  CODPayment,
+  { orderId: number; amount: number; shippingAddress?: string; receiverPhone?: string },
+  { rejectValue: string; dispatch: AppDispatch }
+>("payment/createCODPayment", async (payload, { rejectWithValue, dispatch }) => {
   try {
     const token = getToken();
     const res = await axiosInstance.post("/api/Payment/cod/create", payload, {
@@ -101,17 +95,14 @@ export const createCODPayment = createAsyncThunk<
           }
         : { "Content-Type": "application/json" },
     });
-
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && envelope.data) {
-      return envelope.data as Payment;
+    const envelope = resolveApiData<CODPayment>(res.data);
+    if (envelope && envelope.data) {
+      // refresh pending payments list to get the created Payment object
+      dispatch(fetchPendingPayments());
+      return envelope.data as CODPayment;
     }
 
-    return rejectWithValue(
-      isApiEnvelope(envelope)
-        ? envelope.errMessage
-        : "Không thể tạo thanh toán COD"
-    );
+    return rejectWithValue(envelope?.errMessage ?? "Không thể tạo thanh toán COD");
   } catch (e: unknown) {
     return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
   }
@@ -119,35 +110,27 @@ export const createCODPayment = createAsyncThunk<
 
 // 3️⃣ POST /api/Payment/cod/confirm
 export const confirmCODPayment = createAsyncThunk<
-  Payment,
-  { paymentId: number },
-  { rejectValue: string }
->("payment/confirmCODPayment", async ({ paymentId }, { rejectWithValue }) => {
+  CODPayment,
+  { codPaymentId: number },
+  { rejectValue: string; dispatch: AppDispatch }
+>("payment/confirmCODPayment", async ({ codPaymentId }, { rejectWithValue, dispatch }) => {
   try {
     const token = getToken();
-    const res = await axiosInstance.post(
-      "/api/Payment/cod/confirm",
-      { paymentId },
-      {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            }
-          : { "Content-Type": "application/json" },
-      }
-    );
+    // backend expects codPaymentId as query parameter
+    const url = `/api/Payment/cod/confirm?codPaymentId=${codPaymentId}`;
+    const res = await axiosInstance.post(url, null, {
+      headers: token
+        ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+        : { "Content-Type": "application/json" },
+    });
 
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && envelope.data) {
-      return envelope.data as Payment;
+    const envelope = resolveApiData<CODPayment>(res.data);
+    if (envelope && envelope.data) {
+      dispatch(fetchPendingPayments());
+      return envelope.data as CODPayment;
     }
 
-    return rejectWithValue(
-      isApiEnvelope(envelope)
-        ? envelope.errMessage
-        : "Không thể xác nhận thanh toán COD"
-    );
+    return rejectWithValue(envelope?.errMessage ?? "Không thể xác nhận thanh toán COD");
   } catch (e: unknown) {
     return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
   }
@@ -161,8 +144,8 @@ export const handleVNPayReturn = createAsyncThunk<
 >("payment/handleVNPayReturn", async ({ query }, { rejectWithValue }) => {
   try {
     const res = await axiosInstance.get(`/api/Payment/vnpay-return?${query}`);
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && envelope.data) {
+    const envelope = resolveApiData<Payment>(res.data);
+    if (envelope && envelope.data) {
       return envelope.data as Payment;
     }
     return rejectWithValue("Không thể xử lý kết quả VNPay return");
@@ -172,22 +155,17 @@ export const handleVNPayReturn = createAsyncThunk<
 });
 
 // 5️⃣ GET /api/Payment/vnpay-ipn
-export const handleVNPayIPN = createAsyncThunk<
-  Payment,
-  { query: string },
-  { rejectValue: string }
->("payment/handleVNPayIPN", async ({ query }, { rejectWithValue }) => {
-  try {
-    const res = await axiosInstance.get(`/api/Payment/vnpay-ipn?${query}`);
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && envelope.data) {
-      return envelope.data as Payment;
+export const handleVNPayIPN = createAsyncThunk<VNPayIPNResponse, { query: string }, { rejectValue: string }>(
+  "payment/handleVNPayIPN",
+  async ({ query }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get(`/api/Payment/vnpay-ipn?${query}`);
+      return res.data as VNPayIPNResponse;
+    } catch (e: unknown) {
+      return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
     }
-    return rejectWithValue("Không thể xử lý IPN VNPay");
-  } catch (e: unknown) {
-    return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
   }
-});
+);
 
 // 6️⃣ GET /api/Payment/pending
 export const fetchPendingPayments = createAsyncThunk<
@@ -200,13 +178,12 @@ export const fetchPendingPayments = createAsyncThunk<
     const res = await axiosInstance.get("/api/Payment/pending", {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
-
-    const envelope = resolveApiData(res.data);
-    if (isApiEnvelope(envelope) && Array.isArray(envelope.data)) {
+    const envelope = resolveApiData<Payment[]>(res.data);
+    if (envelope && Array.isArray(envelope.data)) {
       return envelope.data as Payment[];
     }
 
-    return rejectWithValue("Không thể lấy danh sách thanh toán pending");
+    return rejectWithValue(envelope?.errMessage ?? "Không thể lấy danh sách thanh toán pending");
   } catch (e: unknown) {
     return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
   }
@@ -236,14 +213,14 @@ const paymentSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createVNPayPayment.fulfilled, (state, action) => {
-        state.payments.push(action.payload);
+        // backend returns a PaymentDto; push it into payments list
+        state.payments.push(action.payload as Payment);
       })
-      .addCase(createCODPayment.fulfilled, (state, action) => {
-        state.payments.push(action.payload);
+      .addCase(createCODPayment.fulfilled, () => {
+        // createCODPayment dispatches fetchPendingPayments internally; no immediate mutation here
       })
-      .addCase(confirmCODPayment.fulfilled, (state, action) => {
-        const idx = state.payments.findIndex((p) => p.id === action.payload.id);
-        if (idx !== -1) state.payments[idx] = action.payload;
+      .addCase(confirmCODPayment.fulfilled, () => {
+        // confirmCODPayment dispatches fetchPendingPayments internally
       })
       .addCase(handleVNPayReturn.fulfilled, (state, action) => {
         state.selectedPayment = action.payload;
