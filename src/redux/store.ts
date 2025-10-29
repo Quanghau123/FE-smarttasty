@@ -9,6 +9,7 @@ import reservationReducer from "./slices/reservationSlice";
 import reviewReducer from "./slices/reviewSlice";
 import orderRenducer from "./slices/orderSlice";
 import paymentRenducer from "./slices/paymentSlice";
+import orderPromtionRenducer from "./slices/orderPromotionsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     review: reviewReducer,
     order: orderRenducer,
     payment: paymentRenducer,
+    orderPromotion: orderPromtionRenducer,
   },
 });
 

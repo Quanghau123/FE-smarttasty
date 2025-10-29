@@ -8,7 +8,8 @@
     "logout_btn_title": "Đăng Xuất",
     "welcome_text": "Xin Chào",
     "register_btn_title": "Đăng Ký",
-    "login_btn_title": "Đăng Nhập"
+    "login_btn_title": "Đăng Nhập",
+    "my_purchase_btn_title": "Đơn Mua"
   },
   "footer": {
     "contactus_btn_title": "Liên Hệ",
@@ -58,5 +59,67 @@
     "register_btn_title": "Đăng ký doanh nghiệp",
     "have_account_text": "Bạn đã có tài khoản?",
     "login_btn_title": "Đăng nhập"
+  }
+  ,
+  "dashboard": {
+    "title": "Tổng quan người dùng & nhà hàng",
+    "summary": "Báo cáo tóm tắt — số liệu cập nhật {lastUpdated}",
+    "no_data": "chưa có",
+    "no_date": "Chưa có",
+    "total_normal_users": "Tổng User thường",
+    "total_business_users": "Tổng User Business",
+    "total_restaurants": "Tổng nhà hàng",
+    "compare_label": "so với tháng trước",
+    "users_by_month": "User thường theo tháng",
+    "business_by_month": "User Business theo tháng",
+    "restaurants_by_month": "Nhà hàng theo tháng",
+    "no_chart_data": "Chưa có dữ liệu",
+    "series_users": "Users",
+    "series_business": "Business",
+    "series_restaurants": "Nhà hàng"
+  }
+  ,
+  "sidebarAdmin": {
+    "title": "Admin",
+    "dashboard": "Dashboard",
+    "management": "Quản lý",
+    "user": "Người dùng",
+    "business": "Doanh nghiệp"
+  }
+  ,
+  "adminUser": {
+    "title": "Thông tin người dùng",
+    "search_label": "Tìm kiếm người dùng",
+    "col_delete": "Xoá",
+    "col_username": "Tên người dùng",
+    "col_email": "Email",
+    "col_phone": "Số điện thoại",
+    "col_role": "Vai trò",
+    "col_created_at": "Ngày tạo",
+    "confirm_title": "Xác nhận xóa",
+    "confirm_text": "Bạn có chắc chắn muốn xóa người dùng này không?",
+    "cancel": "Hủy",
+    "delete_btn": "Xoá",
+    "delete_success": "Xóa thành công!",
+    "delete_failed": "Xóa thất bại"
+  }
+  ,
+  "adminBusiness": {
+    "title": "Người dùng Doanh nghiệp",
+    "search_label": "Tìm kiếm người dùng doanh nghiệp",
+    "col_delete": "Xoá",
+    "col_username": "Tên người dùng",
+    "col_email": "Email",
+    "col_role": "Vai trò",
+    "col_restaurants": "Nhà hàng",
+    "col_created_at": "Ngày tạo",
+    "tooltip_delete": "Xoá người dùng doanh nghiệp",
+    "confirm_title": "Xác nhận xóa",
+    "confirm_text": "Bạn có chắc chắn muốn xóa người dùng doanh nghiệp này không?",
+    "cancel": "Hủy",
+    "delete_btn": "Xoá",
+    "delete_success": "Xóa thành công!",
+    "delete_failed": "Xóa thất bại",
+    "no_restaurants": "Chưa có nhà hàng"
   }
 }

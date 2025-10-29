@@ -14,6 +14,7 @@ import {
   CircularProgress,
   TextField,
 } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import DishCard from "@/components/features/AdminRestaurant/Dish";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -27,6 +28,7 @@ import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
 import type { DishPromotion } from "@/types/dishpromotion";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
+// import { Description } from "@mui/icons-material";
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -44,12 +46,15 @@ const RestaurantPage = () => {
   );
 
   const [isEditing, setIsEditing] = useState(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const [formState, setFormState] = useState({
     name: "",
     address: "",
+    description: "",
     openTime: "",
     closeTime: "",
+
     file: null as File | null,
   });
 
@@ -79,6 +84,7 @@ const RestaurantPage = () => {
       setFormState({
         name: restaurantInfo.name || "",
         address: restaurantInfo.address || "",
+        description: restaurantInfo.description || "",
         openTime: restaurantInfo.openTime || "",
         closeTime: restaurantInfo.closeTime || "",
         file: null,
@@ -99,6 +105,7 @@ const RestaurantPage = () => {
       ...restaurantInfo,
       name: formState.name,
       address: formState.address,
+      description: formState.description,
       openTime: formState.openTime,
       closeTime: formState.closeTime,
       file: formState.file,
@@ -122,6 +129,7 @@ const RestaurantPage = () => {
     setFormState({
       name: restaurantInfo.name || "",
       address: restaurantInfo.address || "",
+      description: restaurantInfo.description || "",
       openTime: restaurantInfo.openTime || "",
       closeTime: restaurantInfo.closeTime || "",
       file: null,
@@ -206,17 +214,24 @@ const RestaurantPage = () => {
 
   return (
     // remove top padding so layout sits directly under header
-    <Box sx={{ pt: 0, px: 4, pb: 4 }}>
+    <Box sx={{ pt: 0, px: { xs: 2, md: 4 }, pb: 4 }}>
       <Card
         elevation={3}
-        sx={{ display: "flex", gap: 4, p: 2, mb: 4, alignItems: "stretch" }}
+        sx={{
+          display: "flex",
+          gap: { xs: 2, md: 4 },
+          p: { xs: 2, md: 3 },
+          mb: 4,
+          alignItems: "stretch",
+          flexDirection: { xs: "column", sm: "row" },
+        }}
       >
-        <Box sx={{ width: { xs: 120, sm: 300 }, flexShrink: 0 }}>
+        <Box sx={{ width: { xs: "100%", sm: 300 }, flexShrink: 0 }}>
           <Box
             sx={{
               position: "relative",
               width: "100%",
-              height: { xs: 90, sm: 200 },
+              height: { xs: 180, sm: 200 },
               borderRadius: 2,
               overflow: "hidden",
               boxShadow: 1,
@@ -286,6 +301,18 @@ const RestaurantPage = () => {
                   }
                   margin="normal"
                 />
+                <TextField
+                  fullWidth
+                  label="Mô tả"
+                  value={formState.description}
+                  onChange={(e) =>
+                    setFormState({ ...formState, description: e.target.value })
+                  }
+                  margin="normal"
+                  multiline
+                  minRows={3}
+                />
+
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                   <TextField
                     label="Giờ mở cửa"
@@ -310,7 +337,7 @@ const RestaurantPage = () => {
             ) : (
               <>
                 <Typography
-                  variant="h4"
+                  variant={isMobile ? "h5" : "h4"}
                   gutterBottom
                   sx={{ wordBreak: "break-word" }}
                 >
@@ -319,6 +346,11 @@ const RestaurantPage = () => {
                 <Typography color="text.secondary" sx={{ mb: 1 }}>
                   {restaurantInfo.address}
                 </Typography>
+                {restaurantInfo.description && (
+                  <Typography variant="body2" sx={{ mb: 1.5 }}>
+                    {restaurantInfo.description}
+                  </Typography>
+                )}
 
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Chip
@@ -340,10 +372,11 @@ const RestaurantPage = () => {
 
           <Box sx={{ mt: 2 }}>
             {isEditing ? (
-              <Stack direction="row" spacing={2}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <Button
                   variant="contained"
                   color="primary"
+                  fullWidth={isMobile}
                   onClick={handleUpdate}
                 >
                   Lưu thay đổi
@@ -351,6 +384,7 @@ const RestaurantPage = () => {
                 <Button
                   variant="outlined"
                   color="secondary"
+                  fullWidth={isMobile}
                   onClick={handleCancelEdit}
                 >
                   Huỷ
@@ -359,6 +393,7 @@ const RestaurantPage = () => {
             ) : (
               <Button
                 variant="contained"
+                fullWidth={isMobile}
                 onClick={() => setIsEditing(true)}
                 sx={{ mt: 1 }}
               >
@@ -376,7 +411,7 @@ const RestaurantPage = () => {
         ) : dishes.length === 0 ? (
           <Typography>Chưa có món ăn nào.</Typography>
         ) : (
-          <Grid container spacing={2} justifyContent="center">
+          <Grid container spacing={{ xs: 1.5, md: 2 }} justifyContent="center">
             {dishes.map((dish) => {
               const discounted = bestDiscountByDishId.get(dish.id) ?? null;
 

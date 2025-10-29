@@ -69,6 +69,7 @@ export interface OrderItem {
   dishName: string;
   quantity: number;
   totalPrice: number;
+  image?: string; // URL hình ảnh món ăn
 }
 
 /* -------------------------------------------------------------------------- */
@@ -141,6 +142,7 @@ export interface RawOrderResponse {
     dishName?: string | null;
     quantity: number;
     totalPrice: number;
+    image?: string | null; // URL hình ảnh món ăn từ backend
   }[];
   restaurant?: Partial<Restaurant>;
   totalPrice?: number | null;
@@ -175,6 +177,7 @@ export const normalizeOrderResponse = (
         dishName: it.dishName ?? "",
         quantity: it.quantity,
         totalPrice: it.totalPrice,
+        image: it.image ?? undefined, // Chuyển null thành undefined
       })) ?? [],
     restaurant: {
       id: raw.restaurant?.id ?? 0,
@@ -197,8 +200,14 @@ export const normalizeOrderResponse = (
       createdAt: raw.restaurant?.createdAt ?? "",
       distanceKm: raw.restaurant?.distanceKm ?? null,
     },
-    totalPrice: raw.totalPrice ?? 0,
-    finalPrice: raw.finalPrice ?? raw.totalPrice ?? 0,
+    // If backend doesn't include order.totalPrice/finalPrice, compute from items
+    totalPrice:
+      raw.totalPrice ??
+      (Array.isArray(raw.items) ? raw.items.reduce((s, it) => s + (it?.totalPrice ?? 0), 0) : 0),
+    finalPrice:
+      raw.finalPrice ??
+      raw.totalPrice ??
+      (Array.isArray(raw.items) ? raw.items.reduce((s, it) => s + (it?.totalPrice ?? 0), 0) : 0),
     status: raw.status ?? OrderStatus.Pending,
     deliveryStatus: raw.deliveryStatus ?? DeliveryStatus.Preparing,
     deliveredAt: raw.deliveredAt ?? undefined,

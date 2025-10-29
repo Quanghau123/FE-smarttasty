@@ -55,11 +55,10 @@ const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
             // precision={0.5} // cho phép nửa sao, có thể bỏ nếu muốn chỉ nguyên sao
             readOnly
             size="small"
+            sx={{ color: "var(--star-color)" }}
           />
 
-          <Typography className={styles.comment}>
-            {r.comment || "Không có nội dung"}
-          </Typography>
+          <Typography className={styles.comment}>{r.comment}</Typography>
         </Box>
       ))}
     </Box>

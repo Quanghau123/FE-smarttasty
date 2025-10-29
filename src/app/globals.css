@@ -23,6 +23,7 @@
   --link-dark: #a9a9a9;
   --primary-light: #e80000;
   --secondary-light: #ffa500;
+  --star-color: #ED710A; /* color for review stars (same in light/dark) */
 }
 
 [data-theme="light"] {

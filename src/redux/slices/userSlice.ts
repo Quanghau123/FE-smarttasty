@@ -174,6 +174,29 @@ export const changePassword = createAsyncThunk<
   }
 });
 
+// Logout - Gọi API BE để revoke refresh tokens
+export const logoutUser = createAsyncThunk<
+  void,
+  number, // userId
+  { rejectValue: string }
+>("user/logoutUser", async (userId, { rejectWithValue }) => {
+  try {
+    // ✅ Gọi API BE để revoke tất cả refresh tokens
+    await axiosInstance.post(`/api/User/logout/${userId}`);
+    
+    // ✅ Xóa tokens và user data ở client
+    clearTokens();
+    
+    return;
+  } catch (err: unknown) {
+    // Dù lỗi vẫn xóa tokens ở client để đảm bảo logout
+    clearTokens();
+    
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Lỗi đăng xuất");
+  }
+});
+
 // ================== SLICE ==================
 const userSlice = createSlice({
   name: "user",
@@ -281,10 +304,32 @@ const userSlice = createSlice({
         state.changePasswordLoading = false;
         state.changePasswordError = action.payload ?? "Đổi mật khẩu thất bại";
         state.changePasswordSuccess = false;
+      })
+
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        // ✅ Clear tất cả user data
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        // ✅ Dù lỗi vẫn clear user data
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.loading = false;
+        state.error = action.payload ?? "Lỗi đăng xuất";
       });
   },
 });
 
 export const { setUser, clearUser, updateAccessToken, resetChangePasswordState } =
   userSlice.actions;
+
 export default userSlice.reducer;

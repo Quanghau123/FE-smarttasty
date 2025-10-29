@@ -23,13 +23,15 @@ import {
   fetchRestaurants,
   fetchRestaurantsByCategory,
 } from "@/redux/slices/restaurantSlice";
-import { clearUser } from "@/redux/slices/userSlice";
+import { clearUser, logoutUser } from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 import LanguageSelector from "@/components/layouts/LanguageSelector";
 import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
+
+import { debugTokens } from "@/lib/utils/tokenHelper";
 
 const Header = () => {
   const [localUserName, setLocalUserName] = useState<string | null>(null);
@@ -52,6 +54,7 @@ const Header = () => {
   const totalOrders = orders?.length || 0;
 
   useEffect(() => {
+    debugTokens();
     // Khi user đăng nhập (Redux hoặc localStorage), gọi API lấy giỏ hàng hiện tại
     let id: number | undefined | null = undefined;
 
@@ -134,13 +137,24 @@ const Header = () => {
   }, [selectedCategory, dispatch]);
 
   const handleLogout = () => {
-    // ✅ Dispatch clearUser action để xóa user khỏi Redux và localStorage
-    dispatch(clearUser());
+    // ✅ Gọi API logout để revoke refresh tokens ở BE
+    const userId = currentUser?.userId;
 
-    setIsLoggedIn(false);
-    setLocalUserName(null);
-
-    window.location.href = "/login";
+    if (userId) {
+      // Có userId, gọi API logout
+      dispatch(logoutUser(userId)).finally(() => {
+        // Sau khi logout (thành công hoặc thất bại), redirect về login
+        setIsLoggedIn(false);
+        setLocalUserName(null);
+        window.location.href = "/login";
+      });
+    } else {
+      // Không có userId (trường hợp bất thường), vẫn clear local data
+      dispatch(clearUser());
+      setIsLoggedIn(false);
+      setLocalUserName(null);
+      window.location.href = "/login";
+    }
   };
 
   const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -178,7 +192,7 @@ const Header = () => {
 
         {/* Middle: Filter + Search */}
         <Box className={styles.searchSection}>
-          <TextField
+          {/* <TextField
             select
             defaultValue="TP. HCM"
             size="small"
@@ -188,7 +202,7 @@ const Header = () => {
             <MenuItem value="TP. HCM">TP. HCM</MenuItem>
             <MenuItem value="HN">Hà Nội</MenuItem>
             <MenuItem value="DN">Đà Nẵng</MenuItem>
-          </TextField>
+          </TextField> */}
 
           <TextField
             select
@@ -197,6 +211,7 @@ const Header = () => {
             size="small"
             variant="standard"
             className={styles.categorySelect}
+            defaultValue="Ăn uống"
           >
             <MenuItem value="All">Ăn uống</MenuItem>
             <MenuItem value="Buffet">Buffet</MenuItem>
@@ -251,6 +266,11 @@ const Header = () => {
                   <Link href="/account">
                     <Button fullWidth size="small" variant="text">
                       {t("account_btn_title")}
+                    </Button>
+                  </Link>
+                  <Link href="/purchase">
+                    <Button fullWidth size="small" variant="text">
+                      {t("my_purchase_btn_title")}
                     </Button>
                   </Link>
                   <Button

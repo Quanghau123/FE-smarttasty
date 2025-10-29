@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  ButtonBase,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
@@ -36,7 +35,7 @@ const BodyPage = () => {
       {restaurants.map((restaurant) => (
         <Grid
           item
-          xs={12}
+          xs={6}
           sm={6}
           md={4}
           lg={3}
@@ -45,32 +44,58 @@ const BodyPage = () => {
         >
           <Card
             className={styles.card}
-            sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              transition: "transform 0.2s, box-shadow 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: 4,
+              },
+            }}
           >
-            <ButtonBase
+            <Box
               onClick={() => router.push(`/RestaurantDetails/${restaurant.id}`)}
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "stretch",
-                textAlign: "left",
-                width: "100%",
-                height: "100%",
+                flexGrow: 1,
+                cursor: "pointer",
               }}
             >
               {/* Ảnh nhà hàng */}
-              <Box
-                component="img"
-                src={restaurant.imageUrl || "/default-restaurant.jpg"}
-                alt={restaurant.name}
-                sx={{
-                  width: "100%",
-                  height: { xs: 150, sm: 180, md: 200 },
-                  objectFit: "cover",
-                  borderTopLeftRadius: "4px",
-                  borderTopRightRadius: "4px",
-                }}
-              />
+              {restaurant.imageUrl ? (
+                <Box
+                  component="img"
+                  src={restaurant.imageUrl}
+                  alt={restaurant.name}
+                  sx={{
+                    width: "100%",
+                    height: { xs: 150, sm: 180, md: 200 },
+                    objectFit: "cover",
+                    borderTopLeftRadius: "4px",
+                    borderTopRightRadius: "4px",
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: { xs: 150, sm: 180, md: 200 },
+                    backgroundColor: "#f5f5f5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderTopLeftRadius: "4px",
+                    borderTopRightRadius: "4px",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Chưa có ảnh
+                  </Typography>
+                </Box>
+              )}
 
               <CardContent sx={{ flexGrow: 1, width: "100%" }}>
                 {/* Tên nhà hàng */}
@@ -111,18 +136,24 @@ const BodyPage = () => {
                 >
                   {restaurant.address || "Đang cập nhật địa chỉ"}
                 </Typography>
-
-                {/* Button đặt chỗ */}
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  fullWidth
-                  size="small"
-                >
-                  Đặt chỗ ngay
-                </Button>
               </CardContent>
-            </ButtonBase>
+            </Box>
+
+            {/* Button đặt chỗ */}
+            <Box sx={{ p: 2, pt: 0 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                fullWidth
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/RestaurantDetails/${restaurant.id}`);
+                }}
+              >
+                Đặt chỗ ngay
+              </Button>
+            </Box>
           </Card>
         </Grid>
       ))}

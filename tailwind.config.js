@@ -4,6 +4,7 @@ module.exports = {
     "./src/app/**/*.{js,ts,jsx,tsx}",
     "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/Screen/**/*.{js,ts,jsx,tsx}",
+    "./src/screens/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: "class",
   theme: {

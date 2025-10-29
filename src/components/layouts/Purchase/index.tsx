@@ -1,12 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Paper, Divider, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  Button,
+  Chip,
+  Stack,
+  CircularProgress,
+  Container,
+} from "@mui/material";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchOrderById, fetchOrdersByUser } from "@/redux/slices/orderSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OrderResponse } from "@/types/order";
-import { Payment as PaymentType } from "@/types/payment";
+import { Payment as PaymentType, InfoPayment } from "@/types/payment";
+import { fetchPaymentHistoryByUser } from "@/redux/slices/paymentSlice";
 
 const OrdersPage = () => {
   const dispatch = useAppDispatch();
@@ -19,6 +31,8 @@ const OrdersPage = () => {
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const paymentState = useAppSelector((s) => s.payment);
+  const history = paymentState.history;
 
   useEffect(() => {
     const init = async () => {
@@ -34,9 +48,8 @@ const OrdersPage = () => {
       if (idParam) {
         const id = Number(idParam);
         if (!Number.isNaN(id) && id > 0) {
-          const res = await dispatch(fetchOrderById(id));
-          if ((res as any).payload)
-            setOrder((res as any).payload as OrderResponse);
+          const res = await dispatch(fetchOrderById(id)).unwrap();
+          if (res) setOrder(res);
           setLoading(false);
           return;
         }
@@ -47,13 +60,12 @@ const OrdersPage = () => {
         try {
           const parsed = JSON.parse(checkoutStored) as Partial<OrderResponse>;
           if (parsed && parsed.id) {
-            const res = await dispatch(fetchOrderById(parsed.id));
-            if ((res as any).payload)
-              setOrder((res as any).payload as OrderResponse);
+            const res = await dispatch(fetchOrderById(parsed.id)).unwrap();
+            if (res) setOrder(res);
             setLoading(false);
             return;
           }
-        } catch (e) {
+        } catch {
           // ignore and fallback
         }
       }
@@ -61,15 +73,21 @@ const OrdersPage = () => {
       // 3) Fallback: try to fetch orders by user and show the most recent one
       if (userData) {
         try {
-          const parsedUser = JSON.parse(userData as string) as { id?: number };
-          if (parsedUser?.id) {
-            const res = await dispatch(fetchOrdersByUser(parsedUser.id));
-            const payload = (res as any).payload as OrderResponse[] | undefined;
-            if (payload && payload.length > 0) setOrder(payload[0]);
+          const parsedUser = JSON.parse(userData as string) as {
+            id?: number;
+            userId?: number;
+          };
+          const uid = parsedUser.userId ?? parsedUser.id;
+          if (uid) {
+            // fetch latest order
+            const orders = await dispatch(fetchOrdersByUser(uid)).unwrap();
+            if (orders && orders.length > 0) setOrder(orders[0]);
+            // fetch payment history for this user as well
+            void dispatch(fetchPaymentHistoryByUser({ userId: uid }));
             setLoading(false);
             return;
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -83,23 +101,106 @@ const OrdersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
-  if (loading) return <Typography>PLease wait...</Typography>;
+  if (loading)
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="60vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
   if (!order)
     return (
-      <Box p={3}>
-        <Typography variant="h6">Không tìm thấy đơn hàng</Typography>
-        <Button
-          variant="contained"
-          sx={{ mt: 2 }}
-          onClick={() => router.push("/")}
-        >
-          Về trang chủ
-        </Button>
-      </Box>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <ShoppingCartOutlinedIcon
+            sx={{ fontSize: 80, color: "text.disabled", mb: 2 }}
+          />
+          <Typography variant="h6" color="text.secondary" mb={2}>
+            Bạn chưa có đơn hàng nào
+          </Typography>
+        </Paper>
+      </Container>
     );
 
   return (
     <Box p={3}>
+      {/* Lịch sử đơn hàng của tôi */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h5" fontWeight="bold" mb={1}>
+          Lịch sử đặt hàng
+        </Typography>
+        {paymentState.loading && history.length === 0 ? (
+          <Typography>Đang tải lịch sử...</Typography>
+        ) : paymentState.error ? (
+          <Typography color="error">{paymentState.error}</Typography>
+        ) : history.length === 0 ? (
+          <Box textAlign="center" py={2}>
+            <ShoppingCartOutlinedIcon
+              sx={{ fontSize: 48, color: "text.disabled", mb: 1 }}
+            />
+            <Typography color="text.secondary">
+              Chưa có đơn hàng nào.
+            </Typography>
+          </Box>
+        ) : (
+          <Stack spacing={1}>
+            {history.map((h: InfoPayment) => (
+              <Paper key={h.id} variant="outlined" sx={{ p: 1.5 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography fontWeight={600}>ĐH #{h.order.id}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(h.order.createdAt).toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2">
+                      Nhà hàng:{" "}
+                      {h.order.restaurant?.name || `#${h.order.restaurantId}`}
+                    </Typography>
+                  </Box>
+                  <Box textAlign="right">
+                    <Chip
+                      label={`TT: ${h.status}`}
+                      color={
+                        h.status === "Success"
+                          ? "success"
+                          : h.status === "Pending"
+                          ? "warning"
+                          : "default"
+                      }
+                      size="small"
+                      sx={{ mr: 1 }}
+                    />
+                    <Typography fontWeight={700}>
+                      {Number(h.amount).toLocaleString()}đ
+                    </Typography>
+                    <Button
+                      size="small"
+                      sx={{ mt: 0.5 }}
+                      variant="text"
+                      onClick={() =>
+                        router.push(`/vi/purchase?id=${h.order.id}`)
+                      }
+                    >
+                      Xem chi tiết
+                    </Button>
+                  </Box>
+                </Box>
+              </Paper>
+            ))}
+          </Stack>
+        )}
+      </Paper>
+
       <Typography variant="h5" fontWeight="bold" mb={2}>
         Đơn hàng #{order.id}
       </Typography>
@@ -163,18 +264,12 @@ const OrdersPage = () => {
                 </Box>
               );
             }
-          } catch (e) {
+          } catch {
             /* ignore */
           }
           return <Typography>Không có thông tin thanh toán</Typography>;
         })()}
       </Paper>
-
-      <Box mt={2}>
-        <Button variant="contained" onClick={() => router.push("/")}>
-          Quay về trang chủ
-        </Button>
-      </Box>
     </Box>
   );
 };

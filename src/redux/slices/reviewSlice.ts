@@ -170,7 +170,16 @@ const reviewSlice = createSlice({
       )
       .addCase(getReviewsByRestaurant.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? "Không thể lấy review theo nhà hàng";
+        const payloadMessage = action.payload ?? action.error?.message ?? "Không thể lấy review theo nhà hàng";
+
+        // Nếu backend trả 404 (không có review cho nhà hàng) => coi như không có review
+        // Một số môi trường axios trả message: 'Request failed with status code 404'
+        if (typeof payloadMessage === "string" && payloadMessage.includes("404")) {
+          state.reviews = [];
+          state.error = null;
+        } else {
+          state.error = payloadMessage;
+        }
       });
   },
 });

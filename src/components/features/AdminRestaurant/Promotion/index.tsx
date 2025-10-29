@@ -11,24 +11,24 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  // Grid,
   IconButton,
   MenuItem,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   DialogContentText,
+  Chip,
+  Stack,
+  Divider,
+  alpha,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  LocalOffer as OfferIcon,
+  EventAvailable as EventIcon,
+  Percent as PercentIcon,
+  AttachMoney as MoneyIcon,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -202,143 +202,433 @@ const PromotionPage = () => {
 
   // ===== RENDER =====
   return (
-    <Box p={3}>
-      <Card>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h6">Quản lý khuyến mãi</Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenModal()}
-            >
-              Thêm khuyến mãi
-            </Button>
+    <Box p={3} pt={0} className="container mx-auto">
+      {/* Header */}
+      <Box mb={4}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={2}
+        >
+          <Box>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Quản lý khuyến mãi
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tạo và quản lý các chương trình khuyến mãi cho nhà hàng của bạn
+            </Typography>
           </Box>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModal()}
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              py: 1.5,
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+          >
+            Tạo khuyến mãi
+          </Button>
+        </Stack>
+      </Box>
 
-          {loading ? (
-            <CircularProgress />
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tiêu đề</TableCell>
-                    <TableCell>Mô tả</TableCell>
-                    <TableCell>Thời gian</TableCell>
-                    <TableCell>Nhà hàng</TableCell>
-                    <TableCell>Hành động</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(promotions) &&
-                    promotions.map((promo) => (
-                      <TableRow key={promo.id}>
-                        <TableCell>{promo.title}</TableCell>
-                        <TableCell>{promo.description}</TableCell>
-                        <TableCell>
-                          {fromISO(promo.startDate)} - {fromISO(promo.endDate)}
-                        </TableCell>
-                        <TableCell>{promo.restaurant?.name ?? "—"}</TableCell>
-                        <TableCell>
-                          <IconButton onClick={() => handleOpenModal(promo)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            color="error"
-                            onClick={() => handleClickDelete(promo.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
+      {/* Content */}
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={8}>
+          <CircularProgress size={40} />
+        </Box>
+      ) : !promotions || promotions.length === 0 ? (
+        <Card
+          sx={{
+            textAlign: "center",
+            py: 8,
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.03),
+          }}
+        >
+          <OfferIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            Chưa có khuyến mãi nào
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Hãy tạo chương trình khuyến mãi đầu tiên để thu hút khách hàng
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModal()}
+          >
+            Tạo khuyến mãi đầu tiên
+          </Button>
+        </Card>
+      ) : (
+        <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {promotions.map((promo) => {
+            const now = new Date();
+            const start = new Date(promo.startDate);
+            const end = new Date(promo.endDate);
+            const isActive = now >= start && now <= end;
+            const isUpcoming = now < start;
+            const statusLabel = isActive
+              ? "Đang diễn ra"
+              : isUpcoming
+              ? "Sắp diễn ra"
+              : "Đã kết thúc";
+            const statusColor = isActive
+              ? "success"
+              : isUpcoming
+              ? "info"
+              : "default";
+
+            const discount = Number(promo.discountValue ?? NaN);
+            const hasDiscount = Number.isFinite(discount) && discount > 0;
+            const discountLabel =
+              promo.discountType === "percent"
+                ? `${discount}%`
+                : `${discount.toLocaleString()}đ`;
+
+            const targetLabel =
+              promo.targetType === "order"
+                ? "Đơn hàng"
+                : promo.targetType === "dish"
+                ? "Món ăn"
+                : "Danh mục";
+
+            return (
+              <Card
+                key={promo.id}
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  transition: "all 0.3s",
+                  "&:hover": {
+                    boxShadow: 6,
+                    transform: "translateY(-4px)",
+                  },
+                }}
+              >
+                {/* Status Badge */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 16,
+                    right: 16,
+                    zIndex: 1,
+                  }}
+                >
+                  <Chip
+                    label={statusLabel}
+                    color={statusColor}
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </Box>
+
+                <CardContent sx={{ flexGrow: 1, pb: 2 }}>
+                  {/* Discount Badge */}
+                  {hasDiscount && (
+                    <Box
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.1),
+                        color: "primary.main",
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 2,
+                        mb: 2,
+                      }}
+                    >
+                      {promo.discountType === "percent" ? (
+                        <PercentIcon sx={{ fontSize: 18 }} />
+                      ) : (
+                        <MoneyIcon sx={{ fontSize: 18 }} />
+                      )}
+                      <Typography variant="h6" fontWeight="bold">
+                        {discountLabel}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Title */}
+                  <Typography
+                    variant="h6"
+                    fontWeight="600"
+                    gutterBottom
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {promo.title}
+                  </Typography>
+
+                  {/* Description */}
+                  {promo.description && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        mb: 2,
+                      }}
+                    >
+                      {promo.description}
+                    </Typography>
+                  )}
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Meta Info */}
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <EventIcon
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {fromISO(promo.startDate)} - {fromISO(promo.endDate)}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1}>
+                      <Chip
+                        label={targetLabel}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Stack>
+                  </Stack>
+                </CardContent>
+
+                {/* Actions */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 1,
+                    p: 2,
+                    pt: 0,
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenModal(promo)}
+                    sx={{
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.1),
+                      "&:hover": {
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.2),
+                      },
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleClickDelete(promo.id)}
+                    sx={{
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.error.main, 0.1),
+                      color: "error.main",
+                      "&:hover": {
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.error.main, 0.2),
+                      },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Card>
+            );
+          })}
+        </Box>
+      )}
 
       {/* Modal thêm/sửa */}
       <Dialog
         open={openModal}
         onClose={handleCloseModal}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          },
+        }}
       >
-        <DialogTitle>
-          {editingPromo ? "Cập nhật khuyến mãi" : "Thêm khuyến mãi"}
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Box
+              sx={{
+                backgroundColor: (theme) =>
+                  alpha(theme.palette.primary.main, 0.1),
+                color: "primary.main",
+                p: 1,
+                borderRadius: 2,
+                display: "flex",
+              }}
+            >
+              <OfferIcon />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight="bold">
+                {editingPromo ? "Cập nhật khuyến mãi" : "Tạo khuyến mãi mới"}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {editingPromo
+                  ? "Chỉnh sửa thông tin khuyến mãi"
+                  : "Điền đầy đủ thông tin bên dưới"}
+              </Typography>
+            </Box>
+          </Stack>
         </DialogTitle>
-        <DialogContent>
-          <Box mt={1} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-            <Box sx={{ width: "100%" }}>
-              <TextField
-                fullWidth
-                label="Tiêu đề"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((s) => ({ ...s, title: e.target.value }))
-                }
-              />
-            </Box>
 
-            <Box sx={{ width: "100%" }}>
-              <TextField
-                fullWidth
-                label="Mô tả"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((s) => ({ ...s, description: e.target.value }))
-                }
-              />
-            </Box>
+        <Divider />
 
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                select
-                fullWidth
-                label="Loại giảm giá"
-                value={formData.discountType}
-                onChange={(e) =>
-                  setFormData((s) => ({
-                    ...s,
-                    discountType: e.target.value as DiscountType,
-                  }))
-                }
+        <DialogContent sx={{ pt: 3 }}>
+          <Stack spacing={3}>
+            {/* Thông tin cơ bản */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight="600"
+                color="text.secondary"
+                mb={2}
               >
-                <MenuItem value="percent">Phần trăm</MenuItem>
-                <MenuItem value="fixed_amount">Số tiền</MenuItem>
-              </TextField>
+                Thông tin cơ bản
+              </Typography>
+              <Stack spacing={2.5}>
+                <TextField
+                  fullWidth
+                  label="Tiêu đề khuyến mãi"
+                  placeholder="VD: Giảm giá cuối tuần, Combo tiết kiệm..."
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData((s) => ({ ...s, title: e.target.value }))
+                  }
+                  required
+                  variant="outlined"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Mô tả chi tiết"
+                  placeholder="Mô tả về chương trình khuyến mãi..."
+                  multiline
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((s) => ({ ...s, description: e.target.value }))
+                  }
+                  variant="outlined"
+                />
+              </Stack>
             </Box>
 
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                fullWidth
-                type="number"
-                label={
-                  formData.discountType === "percent"
-                    ? "Giảm (%)"
-                    : "Giảm (VNĐ)"
-                }
-                value={formData.discountValue}
-                onChange={(e) =>
-                  setFormData((s) => ({
-                    ...s,
-                    discountValue: Number(e.target.value),
-                  }))
-                }
-              />
+            <Divider />
+
+            {/* Cấu hình giảm giá */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight="600"
+                color="text.secondary"
+                mb={2}
+              >
+                Cấu hình giảm giá
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Loại giảm giá"
+                  value={formData.discountType}
+                  onChange={(e) =>
+                    setFormData((s) => ({
+                      ...s,
+                      discountType: e.target.value as DiscountType,
+                    }))
+                  }
+                  SelectProps={{
+                    startAdornment:
+                      formData.discountType === "percent" ? (
+                        <PercentIcon
+                          sx={{ ml: 1, mr: -0.5, color: "action.active" }}
+                        />
+                      ) : (
+                        <MoneyIcon
+                          sx={{ ml: 1, mr: -0.5, color: "action.active" }}
+                        />
+                      ),
+                  }}
+                >
+                  <MenuItem value="percent">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <PercentIcon fontSize="small" />
+                      <span>Phần trăm (%)</span>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="fixed_amount">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <MoneyIcon fontSize="small" />
+                      <span>Số tiền cố định (VNĐ)</span>
+                    </Stack>
+                  </MenuItem>
+                </TextField>
+
+                <TextField
+                  fullWidth
+                  type="number"
+                  label={
+                    formData.discountType === "percent"
+                      ? "Giá trị giảm (%)"
+                      : "Giá trị giảm (VNĐ)"
+                  }
+                  placeholder={
+                    formData.discountType === "percent" ? "10" : "50000"
+                  }
+                  value={formData.discountValue}
+                  onChange={(e) =>
+                    setFormData((s) => ({
+                      ...s,
+                      discountValue: Number(e.target.value),
+                    }))
+                  }
+                  required
+                  inputProps={{
+                    min: 0,
+                    max: formData.discountType === "percent" ? 100 : undefined,
+                  }}
+                />
+              </Stack>
             </Box>
 
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
+            <Divider />
+
+            {/* Phạm vi áp dụng & Thời gian */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight="600"
+                color="text.secondary"
+                mb={2}
+              >
+                Phạm vi áp dụng
+              </Typography>
               <TextField
                 select
                 fullWidth
@@ -351,43 +641,124 @@ const PromotionPage = () => {
                   }))
                 }
               >
-                <MenuItem value="dish">Món ăn</MenuItem>
-                <MenuItem value="order">Đơn hàng</MenuItem>
-                <MenuItem value="category">Danh mục</MenuItem>
+                <MenuItem value="dish">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        bgcolor: "success.main",
+                      }}
+                    />
+                    <span>Món ăn cụ thể</span>
+                  </Stack>
+                </MenuItem>
+                <MenuItem value="order">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        bgcolor: "primary.main",
+                      }}
+                    />
+                    <span>Toàn bộ đơn hàng</span>
+                  </Stack>
+                </MenuItem>
+                <MenuItem value="category">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        bgcolor: "warning.main",
+                      }}
+                    />
+                    <span>Danh mục món ăn</span>
+                  </Stack>
+                </MenuItem>
               </TextField>
             </Box>
 
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Ngày bắt đầu"
-                InputLabelProps={{ shrink: true }}
-                value={formData.startDate}
-                onChange={(e) =>
-                  setFormData((s) => ({ ...s, startDate: e.target.value }))
-                }
-              />
-            </Box>
+            <Divider />
 
-            <Box sx={{ width: { xs: "100%", sm: "50%" } }}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Ngày kết thúc"
-                InputLabelProps={{ shrink: true }}
-                value={formData.endDate}
-                onChange={(e) =>
-                  setFormData((s) => ({ ...s, endDate: e.target.value }))
-                }
-              />
+            {/* Thời gian */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight="600"
+                color="text.secondary"
+                mb={2}
+              >
+                Thời gian hiệu lực
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Ngày bắt đầu"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.startDate}
+                  onChange={(e) =>
+                    setFormData((s) => ({ ...s, startDate: e.target.value }))
+                  }
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <EventIcon sx={{ mr: 1, color: "action.active" }} />
+                    ),
+                  }}
+                />
+
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Ngày kết thúc"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.endDate}
+                  onChange={(e) =>
+                    setFormData((s) => ({ ...s, endDate: e.target.value }))
+                  }
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <EventIcon sx={{ mr: 1, color: "action.active" }} />
+                    ),
+                  }}
+                  inputProps={{
+                    min: formData.startDate,
+                  }}
+                />
+              </Stack>
             </Box>
-          </Box>
+          </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Hủy</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editingPromo ? "Cập nhật" : "Thêm"}
+
+        <Divider />
+
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={handleCloseModal}
+            size="large"
+            sx={{ px: 3, textTransform: "none" }}
+          >
+            Hủy bỏ
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            size="large"
+            sx={{
+              px: 4,
+              textTransform: "none",
+              fontWeight: 600,
+            }}
+            startIcon={editingPromo ? <EditIcon /> : <AddIcon />}
+          >
+            {editingPromo ? "Cập nhật" : "Tạo khuyến mãi"}
           </Button>
         </DialogActions>
       </Dialog>

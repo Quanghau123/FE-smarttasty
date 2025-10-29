@@ -1,18 +1,13 @@
 .headerWrapper {
   width: 100%;
-  /* Keep styles neutral here — theme-specific colors are applied via MUI sx in the component */
   background-color: transparent;
   border-bottom: none;
-  z-index: 1200;
+  z-index: 1000;
   position: sticky;
   top: 0;
-  /* expose header height so pages can offset content: use var(--header-height) */
   --header-height: 72px;
   height: var(--header-height);
-
-  /* ensure it sits above other content */
   will-change: transform;
-  /* prefer theme variables; provide sensible fallbacks */
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 
@@ -21,12 +16,33 @@
     margin: 0 auto;
     padding: 0 16px;
     height: 100%;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    flex-wrap: nowrap; // ✅ KHÔNG xuống hàng
+    flex-wrap: nowrap;
+    
+    @media (max-width: 768px) {
+      padding: 0 8px;
+      gap: 8px;
+    }
+    
+    // Logo responsive
+    a:first-child {
+      flex-shrink: 0;
+      
+      img {
+        @media (max-width: 600px) {
+          max-width: 50px !important;
+          max-height: 36px !important;
+        }
+        
+        @media (max-width: 480px) {
+          max-width: 45px !important;
+          max-height: 32px !important;
+        }
+      }
+    }
   }
 }
 
@@ -48,29 +64,70 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap; // ✅ giữ 1 hàng
+  flex-wrap: nowrap;
+  min-width: 0;
 
   .citySelect {
-    flex: 0 0 auto; // ❌ KHÔNG cho co, chỉ chiếm theo width
-    width: auto; // ✅ width cố định (hoặc auto + min-width)
-    min-width: 70px; // ✅ luôn giữ tối thiểu
-    overflow: hidden; // tránh vỡ layout
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 70px;
+    max-width: 100px;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .categorySelect {
-    flex: 0 0 auto; // ❌ KHÔNG cho co, chỉ chiếm theo width
-    width: auto; // ✅ width cố định (hoặc auto + min-width)
-    min-width: 70px; // ✅ luôn giữ tối thiểu
-    overflow: hidden; // tránh vỡ layout
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 70px;
+    max-width: 120px;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .searchInput {
-    flex: 1 1 auto; // ✅ chiếm hết phần còn lại
+    flex: 1 1 auto;
     min-width: 100px;
+    max-width: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    gap: 4px;
+    
+    .citySelect {
+      min-width: 60px;
+      max-width: 80px;
+      font-size: 0.85rem;
+    }
+
+    .categorySelect {
+      min-width: 60px;
+      max-width: 90px;
+      font-size: 0.85rem;
+    }
+
+    .searchInput {
+      min-width: 80px;
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .citySelect {
+      min-width: 50px;
+      max-width: 70px;
+    }
+
+    .categorySelect {
+      min-width: 50px;
+      max-width: 80px;
+    }
+
+    .searchInput {
+      min-width: 60px;
+    }
   }
 }
 
@@ -78,29 +135,72 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0; // ✅ không bị co hẹp quá
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+    
+    button, a {
+      padding: 6px;
+      font-size: 0.85rem;
+      min-width: auto;
+    }
+    
+    svg {
+      font-size: 1.2rem;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    gap: 4px;
+    
+    button, a {
+      padding: 4px;
+    }
+  }
 }
 
 @media (max-width: 480px) {
+  .headerWrapper {
+    .headerInner {
+      padding: 0 4px;
+      gap: 4px;
+    }
+  }
+  
   .searchSection {
-    gap: 4px;
+    gap: 2px;
 
     .citySelect {
-      flex: 0 1 60px;
-      min-width: 50px;
+      flex: 0 1 50px;
+      min-width: 45px;
+      max-width: 60px;
+      font-size: 0.75rem;
     }
 
     .categorySelect {
-      flex: 0 1 90px;
-      min-width: 70px;
+      flex: 0 1 60px;
+      min-width: 50px;
+      max-width: 70px;
+      font-size: 0.75rem;
     }
 
     .searchInput {
-      min-width: 80px;
+      min-width: 50px;
+      font-size: 0.75rem;
     }
   }
 
   .rightSection {
-    gap: 6px;
+    gap: 2px;
+    
+    button, a {
+      padding: 2px;
+      min-width: auto;
+    }
+    
+    svg {
+      font-size: 1rem;
+    }
   }
 }

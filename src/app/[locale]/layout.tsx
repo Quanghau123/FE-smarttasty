@@ -25,7 +25,11 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale} className={`${roboto.variable} font-sans`}>
+    <html
+      lang={locale}
+      className={`${roboto.variable} font-sans`}
+      suppressHydrationWarning
+    >
       <body>
         <NextIntlClientProvider locale={locale}>
           <LayoutClient>

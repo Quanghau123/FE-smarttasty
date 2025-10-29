@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -23,39 +24,23 @@ import {
 } from "@/redux/slices/paymentSlice";
 import { applyPromotion } from "@/redux/slices/orderPromotionsSlice";
 import { Payment } from "@/types/payment";
+import type { OrderResponse } from "@/types/order";
 import { useRouter } from "next/navigation";
 import { fetchPromotions } from "@/redux/slices/promotionSlice";
 
 /* -------------------------------------------------------------------------- */
 /*                               TYPE DEFINITIONS                             */
 /* -------------------------------------------------------------------------- */
-interface OrderItem {
-  id: number;
-  dishId: number;
-  dishName: string;
-  quantity: number;
-  totalPrice: number;
-}
-
-interface Restaurant {
-  id: number;
-  name: string;
-  address: string;
-}
-
-interface Order {
-  id: number;
-  restaurantId: number;
-  restaurant?: Restaurant;
-  items: OrderItem[];
-}
+/* -------------------------------------------------------------------------- */
+/*  Using shared order types from src/types/order.ts                                */
+/* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
 /*                                 COMPONENT                                  */
 /* -------------------------------------------------------------------------- */
 const PaymentPage = () => {
   const router = useRouter();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderResponse | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "VNPAY">("COD");
   const [loading, setLoading] = useState(false);
   const [voucherCode, setVoucherCode] = useState<string>("");
@@ -69,7 +54,7 @@ const PaymentPage = () => {
     const stored = localStorage.getItem("checkoutOrder");
     if (stored) {
       try {
-        const parsed: Order = JSON.parse(stored);
+        const parsed: OrderResponse = JSON.parse(stored);
         setOrder(parsed);
       } catch (error) {
         console.error("Invalid checkoutOrder format:", error);
@@ -401,7 +386,19 @@ const PaymentPage = () => {
         disabled={loading}
         onClick={handleConfirmPayment}
       >
-        {loading ? "Đang xử lý..." : "Xác nhận thanh toán"}
+        {loading ? (
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+          >
+            <CircularProgress size={18} color="inherit" />
+            <Typography component="span">Đang xử lý...</Typography>
+          </Box>
+        ) : (
+          "Xác nhận thanh toán"
+        )}
       </Button>
     </Box>
   );

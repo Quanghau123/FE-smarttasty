@@ -98,3 +98,17 @@ export interface Payment {
   codPayment?: CODPayment | null;
   refunds: Refund[];
 }
+
+/* -------------------------------------------------------------------------- */
+/*                         INFO PAYMENT (History Item)                        */
+/* -------------------------------------------------------------------------- */
+
+import type { OrderResponse } from "@/types/order";
+
+// Mirrors backend Application.DTOs.Payment.InfoPaymentDto
+export interface InfoPayment {
+  id: number;
+  amount: number;
+  status: string; // BE returns string status in InfoPaymentDto
+  order: OrderResponse;
+}

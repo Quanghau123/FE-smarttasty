@@ -14,6 +14,7 @@ import {
   DialogTitle,
   IconButton,
   MenuItem,
+  Chip,
   Pagination,
   Paper,
   Switch,
@@ -26,6 +27,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -48,6 +50,7 @@ import axiosInstance from "@/lib/axios/axiosInstance";
 import { toast } from "react-toastify";
 import {
   createDishPromotion,
+  deleteDishPromotion,
   // ❌ bỏ fetchDishPromotionById (N+1)
   fetchDishPromotions, // ✅ gọi tổng
 } from "@/redux/slices/dishPromotionSlice";
@@ -82,6 +85,7 @@ const ProductPage = () => {
   const dispatch = useAppDispatch();
   const { items: dishes, loading } = useAppSelector((state) => state.dishes);
   const { current: restaurant } = useAppSelector((state) => state.restaurant);
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [openModal, setOpenModal] = useState(false);
@@ -223,6 +227,21 @@ const ProductPage = () => {
     setSelectedPromotionId("");
   };
 
+  // Hủy một voucher (mapping) đang áp cho món trong dialog
+  const handleRemoveVoucherItem = async (dishPromotionId: number) => {
+    try {
+      await dispatch(deleteDishPromotion(dishPromotionId)).unwrap();
+      toast.success("Đã hủy voucher cho món ✅");
+      dispatch(fetchDishPromotions());
+    } catch (err: unknown) {
+      let message = "Hủy voucher thất bại. Vui lòng thử lại!";
+      if (err && typeof err === "object" && "message" in err) {
+        message = (err as { message: string }).message;
+      }
+      toast.error(message);
+    }
+  };
+
   const handleAddVoucher = async () => {
     if (!voucherDish) return toast.error("Thiếu món ăn");
     if (!selectedPromotionId) return toast.warning("Vui lòng chọn khuyến mãi");
@@ -323,6 +342,7 @@ const ProductPage = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenModal()}
+              fullWidth={isMobile}
             >
               Thêm món
             </Button>
@@ -339,6 +359,7 @@ const ProductPage = () => {
                 setCurrentPage(1);
               }}
               className={styles.searchInput}
+              fullWidth={isMobile}
             />
             <TextField
               label="Danh mục"
@@ -350,6 +371,7 @@ const ProductPage = () => {
                 setCurrentPage(1);
               }}
               className={styles.categorySelect}
+              fullWidth={isMobile}
             >
               <MenuItem value="All">Tất cả</MenuItem>
               <MenuItem value="ThucAn">Thức ăn</MenuItem>
@@ -360,9 +382,161 @@ const ProductPage = () => {
 
           {loading ? (
             <CircularProgress />
+          ) : isMobile ? (
+            <>
+              <Box sx={{ display: "grid", gap: 2 }}>
+                {paginatedDishes.map((dish) => {
+                  const related = dishPromotions.filter(
+                    (it) => it.dishId === dish.id
+                  );
+                  const orig = dish.price;
+                  let bestDiscounted = orig;
+                  if (related.length > 0) {
+                    type DishPromotionFlat = DishPromotion & {
+                      discountType?: "percent" | "fixed_amount";
+                      discountValue?: number;
+                    };
+                    const getDiscount = (dp: DishPromotionFlat) => ({
+                      type: dp.promotion?.discountType ?? dp.discountType,
+                      value: dp.promotion?.discountValue ?? dp.discountValue,
+                    });
+                    bestDiscounted = related.reduce((min, p) => {
+                      const { type, value } = getDiscount(
+                        p as DishPromotionFlat
+                      );
+                      const after = computeDiscountedPrice(
+                        orig,
+                        type,
+                        Number(value)
+                      );
+                      return Math.min(min, after);
+                    }, orig);
+                  }
+                  const hasDiscount = bestDiscounted < orig;
+
+                  return (
+                    <Card key={dish.id} variant="outlined">
+                      <CardContent>
+                        <Box sx={{ display: "flex", gap: 2 }}>
+                          <Box>
+                            {dish.imageUrl ? (
+                              <Image
+                                src={dish.imageUrl}
+                                alt={dish.name}
+                                width={96}
+                                height={96}
+                                style={{ objectFit: "cover", borderRadius: 8 }}
+                              />
+                            ) : (
+                              <Box
+                                sx={{
+                                  width: 96,
+                                  height: 96,
+                                  bgcolor: "#f5f5f5",
+                                  borderRadius: 1,
+                                }}
+                              />
+                            )}
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={600}
+                              noWrap
+                            >
+                              {dish.name}
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                flexWrap: "wrap",
+                                mt: 0.5,
+                              }}
+                            >
+                              <Chip
+                                label={dish.category}
+                                size="small"
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={dish.isActive ? "Đang bán" : "Ngưng"}
+                                size="small"
+                                color={dish.isActive ? "success" : "default"}
+                                variant={dish.isActive ? "filled" : "outlined"}
+                              />
+                            </Box>
+                            <Box sx={{ mt: 1 }}>
+                              {hasDiscount ? (
+                                <>
+                                  <Typography
+                                    sx={{
+                                      textDecoration: "line-through",
+                                      color: "#999",
+                                    }}
+                                  >
+                                    {orig.toLocaleString()}đ
+                                  </Typography>
+                                  <Typography color="error" fontWeight={700}>
+                                    {bestDiscounted.toLocaleString()}đ
+                                  </Typography>
+                                </>
+                              ) : (
+                                <Typography fontWeight={700}>
+                                  {orig.toLocaleString()}đ
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleOpenModal(dish)}
+                            startIcon={<EditIcon />}
+                            fullWidth
+                          >
+                            Sửa
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleOpenVoucherModal(dish)}
+                            startIcon={<LocalOfferIcon />}
+                            fullWidth
+                          >
+                            Voucher
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="contained"
+                            onClick={() => handleClickDelete(dish.id)}
+                            startIcon={<DeleteIcon />}
+                            fullWidth
+                          >
+                            Xoá
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Box>
+
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_, page) => setCurrentPage(page)}
+                  color="primary"
+                />
+              </Box>
+            </>
           ) : (
             <>
-              <TableContainer component={Paper}>
+              <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -640,6 +814,71 @@ const ProductPage = () => {
               disabled
             />
 
+            {voucherDish &&
+              (() => {
+                const related = dishPromotions.filter(
+                  (dp) => dp.dishId === voucherDish.id
+                );
+                if (related.length === 0) return null;
+                return (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Voucher đang áp dụng
+                    </Typography>
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
+                      {related.map((rp) => {
+                        const promoInfo =
+                          rp.promotion ||
+                          promotions?.find((p) => p.id === rp.promotionId);
+                        const disc = Number(promoInfo?.discountValue);
+                        const hasDisc = Number.isFinite(disc) && disc > 0;
+                        const suffix = promoInfo
+                          ? promoInfo.discountType === "percent"
+                            ? hasDisc
+                              ? ` (${disc}%)`
+                              : ""
+                            : hasDisc
+                            ? ` (${disc.toLocaleString()}đ)`
+                            : ""
+                          : "";
+                        const label = promoInfo
+                          ? `${
+                              promoInfo.title ?? `KM #${rp.promotionId}`
+                            }${suffix}`
+                          : `ID ${rp.promotionId}`;
+                        return (
+                          <Box
+                            key={rp.id}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 1,
+                            }}
+                          >
+                            <Chip
+                              label={label}
+                              size="small"
+                              variant="outlined"
+                            />
+                            <Button
+                              color="error"
+                              size="small"
+                              sx={{ textTransform: "none", px: 0 }}
+                              onClick={() => handleRemoveVoucherItem(rp.id)}
+                            >
+                              Hủy voucher
+                            </Button>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                );
+              })()}
+
             <TextField
               label="Chọn khuyến mãi"
               select
@@ -651,11 +890,23 @@ const ProductPage = () => {
               fullWidth
             >
               <MenuItem value="">-- Chọn --</MenuItem>
-              {filteredPromotions.map((p) => (
-                <MenuItem key={p.id} value={p.id}>
-                  {p.title}
-                </MenuItem>
-              ))}
+              {filteredPromotions
+                .filter(
+                  (p) =>
+                    !(
+                      voucherDish &&
+                      dishPromotions.some(
+                        (dp) =>
+                          dp.dishId === voucherDish.id &&
+                          dp.promotionId === p.id
+                      )
+                    )
+                )
+                .map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.title}
+                  </MenuItem>
+                ))}
             </TextField>
           </Box>
         </DialogContent>

@@ -1,6 +1,6 @@
 // @/axios/axiosInstance.ts
 import axios from "axios";
-import { getAccessToken, getRefreshToken, updateAccessToken } from "@/lib/utils/tokenHelper";
+import { getAccessToken, getRefreshToken, updateAccessToken, setTokens } from "@/lib/utils/tokenHelper";
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -47,8 +47,10 @@ axiosInstance.interceptors.response.use(
       try {
         // ✅ Lấy refresh token từ cookie
         const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          // Không có refresh token, chuyển về login
+        const accessToken = getAccessToken();
+        
+        if (!refreshToken || !accessToken) {
+          // Không có tokens, chuyển về login
           if (typeof window !== "undefined") {
             localStorage.removeItem("user");
             window.location.href = "/login";
@@ -56,16 +58,27 @@ axiosInstance.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        // Gọi API refresh token
+        // ✅ Gọi API refresh token với CẢ accessToken VÀ refreshToken
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`,
-          { refreshToken }
+          { 
+            accessToken: accessToken,
+            refreshToken: refreshToken 
+          }
         );
 
         if (response.data.errCode === "success" && response.data.data?.access_token) {
           const newAccessToken = response.data.data.access_token;
-          // ✅ Cập nhật access token mới vào cookie
-          updateAccessToken(newAccessToken);
+          const newRefreshToken = response.data.data.refresh_token;
+          
+          // ✅ Cập nhật CẢ HAI tokens mới vào cookie (Token Rotation)
+          if (newRefreshToken) {
+            // Cập nhật cả access token và refresh token
+            setTokens(newAccessToken, newRefreshToken);
+          } else {
+            // Chỉ cập nhật access token nếu không có refresh token mới
+            updateAccessToken(newAccessToken);
+          }
 
           // Retry request ban đầu với token mới
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

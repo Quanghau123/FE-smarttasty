@@ -8,7 +8,8 @@
     "logout_btn_title": "Logout",
     "welcome_text": "Hello",
     "register_btn_title": "Register",
-    "login_btn_title": "Login"
+    "login_btn_title": "Login",
+    "my_purchase_btn_title": "My Purchase"
   },
   "footer": {
     "contactus_btn_title": "Contact us",
@@ -59,5 +60,67 @@
     "register_btn_title": "Register Business",
     "have_account_text": "Already have an account?",
     "login_btn_title": "Login"
+  }
+  ,
+  "dashboard": {
+    "title": "Overview of users & restaurants",
+    "summary": "Summary report — data updated {lastUpdated}",
+    "no_data": "no data",
+    "no_date": "No date",
+    "total_normal_users": "Total Normal Users",
+    "total_business_users": "Total Business Users",
+    "total_restaurants": "Total Restaurants",
+    "compare_label": "Compared to last month",
+    "users_by_month": "Users by month",
+    "business_by_month": "Business users by month",
+    "restaurants_by_month": "Restaurants by month",
+    "no_chart_data": "No data",
+    "series_users": "Users",
+    "series_business": "Business",
+    "series_restaurants": "Restaurants"
+  }
+  ,
+  "sidebarAdmin": {
+    "title": "Admin",
+    "dashboard": "Dashboard",
+    "management": "Management",
+    "user": "User",
+    "business": "Business"
+  }
+  ,
+  "adminUser": {
+    "title": "User Information",
+    "search_label": "Search users",
+    "col_delete": "Delete",
+    "col_username": "Username",
+    "col_email": "Email",
+    "col_phone": "Phone",
+    "col_role": "Role",
+    "col_created_at": "Created At",
+    "confirm_title": "Confirm deletion",
+    "confirm_text": "Are you sure you want to delete this user?",
+    "cancel": "Cancel",
+    "delete_btn": "Delete",
+    "delete_success": "Deleted successfully!",
+    "delete_failed": "Delete failed"
+  }
+  ,
+  "adminBusiness": {
+    "title": "Business Users",
+    "search_label": "Search business users",
+    "col_delete": "Delete",
+    "col_username": "Username",
+    "col_email": "Email",
+    "col_role": "Role",
+    "col_restaurants": "Restaurants",
+    "col_created_at": "Created At",
+    "tooltip_delete": "Delete business user",
+    "confirm_title": "Confirm deletion",
+    "confirm_text": "Are you sure you want to delete this business user?",
+    "cancel": "Cancel",
+    "delete_btn": "Delete",
+    "delete_success": "Deleted successfully!",
+    "delete_failed": "Delete failed",
+    "no_restaurants": "No restaurants"
   }
 }

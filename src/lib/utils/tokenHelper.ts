@@ -65,26 +65,46 @@ export const getRefreshToken = (): string | null => {
 };
 
 /**
+ * Lấy thời gian hết hạn từ JWT token (exp claim)
+ * @param token - JWT token
+ * @returns Số giây còn lại đến khi hết hạn, hoặc null nếu không parse được
+ */
+const getTokenExpiry = (token: string): number | null => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      const expiresIn = payload.exp - now;
+      return expiresIn > 0 ? expiresIn : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Lưu tokens vào cookie
- * @param accessToken - JWT access token
+ * ✅ Sử dụng thời gian expire từ BE (đọc từ JWT token)
+ * @param accessToken - JWT access token (có exp claim từ BE)
  * @param refreshToken - Refresh token
- * @param accessTokenMaxAge - Thời gian sống của access token (seconds), mặc định 2 giờ
- * @param refreshTokenMaxAge - Thời gian sống của refresh token (seconds), mặc định 7 ngày
  */
 export const setTokens = (
   accessToken: string,
-  refreshToken: string,
-  accessTokenMaxAge: number = 7200, // 2 hours
-  refreshTokenMaxAge: number = 604800 // 7 days
+  refreshToken: string
 ): void => {
+  // ✅ Lấy thời gian hết hạn từ JWT token (BE đã set)
+  const accessTokenMaxAge = getTokenExpiry(accessToken);
+  
   setCookie("access_token", accessToken, {
-    maxAge: accessTokenMaxAge,
+    maxAge: accessTokenMaxAge || 7200, // Fallback 2 giờ nếu không đọc được
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
   });
 
+  // ✅ Refresh token: dùng 7 ngày (BE set trong DB, không có trong token)
   setCookie("refresh_token", refreshToken, {
-    maxAge: refreshTokenMaxAge,
+    maxAge: 604800, // 7 ngày (khớp với BE: RefreshTokenExpireDays = 7)
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
   });
@@ -92,13 +112,16 @@ export const setTokens = (
 
 /**
  * Cập nhật access token mới (sau khi refresh)
+ * ✅ Sử dụng thời gian expire từ BE (đọc từ JWT token)
  */
 export const updateAccessToken = (
-  accessToken: string,
-  maxAge: number = 7200
+  accessToken: string
 ): void => {
+  // ✅ Lấy thời gian hết hạn từ JWT token (BE đã set)
+  const maxAge = getTokenExpiry(accessToken);
+  
   setCookie("access_token", accessToken, {
-    maxAge,
+    maxAge: maxAge || 7200, // Fallback 2 giờ nếu không đọc được
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
   });
@@ -120,4 +143,70 @@ export const clearTokens = (): void => {
  */
 export const isAuthenticated = (): boolean => {
   return !!getAccessToken();
+};
+
+/**
+ * 🔍 DEBUG: Lấy thông tin chi tiết về token expiry
+ * @param token - JWT token để kiểm tra
+ * @returns Object chứa thông tin expire time
+ */
+export const getTokenExpiryInfo = (token: string): {
+  expiresAt: Date | null;
+  expiresInSeconds: number | null;
+  isExpired: boolean;
+} => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp) {
+      const expiresAt = new Date(payload.exp * 1000);
+      const now = Math.floor(Date.now() / 1000);
+      const expiresInSeconds = payload.exp - now;
+      return {
+        expiresAt,
+        expiresInSeconds: expiresInSeconds > 0 ? expiresInSeconds : 0,
+        isExpired: expiresInSeconds <= 0,
+      };
+    }
+    return { expiresAt: null, expiresInSeconds: null, isExpired: true };
+  } catch {
+    return { expiresAt: null, expiresInSeconds: null, isExpired: true };
+  }
+};
+
+/**
+ * 🔍 DEBUG: Log thông tin về tokens hiện tại
+ */
+export const debugTokens = (): void => {
+  if (typeof window === "undefined") return;
+  
+  const accessToken = getAccessToken();
+  const refreshToken = getRefreshToken();
+  
+  console.group("🔐 Token Debug Info");
+  
+  if (accessToken) {
+    const info = getTokenExpiryInfo(accessToken);
+    console.log("✅ Access Token:", {
+      exists: true,
+      expiresAt: info.expiresAt?.toLocaleString(),
+      expiresIn: info.expiresInSeconds 
+        ? `${Math.floor(info.expiresInSeconds / 60)} phút (${info.expiresInSeconds}s)`
+        : "N/A",
+      isExpired: info.isExpired,
+    });
+  } else {
+    console.log("❌ Access Token: Không tồn tại");
+  }
+  
+  if (refreshToken) {
+    console.log("✅ Refresh Token:", {
+      exists: true,
+      token: `${refreshToken.substring(0, 20)}...`,
+      note: "Expire time được quản lý bởi BE (7 ngày)",
+    });
+  } else {
+    console.log("❌ Refresh Token: Không tồn tại");
+  }
+  
+  console.groupEnd();
 };

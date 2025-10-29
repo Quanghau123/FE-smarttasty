@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   Divider,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -20,11 +21,13 @@ import { fetchUsers } from "@/redux/slices/userSlice";
 import moment from "moment";
 import styles from "./styles.module.scss";
 import { useTheme } from "@mui/material/styles";
+import { useTranslations } from "next-intl";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
+  const isMobile = useMediaQuery("(max-width:768px)");
 
   const {
     users,
@@ -42,6 +45,8 @@ const Dashboard = () => {
     dispatch(fetchRestaurants());
   }, [dispatch]);
 
+  const t = useTranslations("dashboard");
+
   const businessUsers = useMemo(
     () => users.filter((u) => u.role === "business"),
     [users]
@@ -51,25 +56,31 @@ const Dashboard = () => {
     [users]
   );
 
-  const getChartData = (list: { createdAt?: string }[] | undefined | null) => {
-    if (!Array.isArray(list)) return {};
-    return list.reduce((acc: Record<string, number>, item) => {
-      const date = item?.createdAt
-        ? moment(item.createdAt).format("MM/YYYY")
-        : "Chưa có";
-      acc[date] = acc[date] ? acc[date] + 1 : 1;
-      return acc;
-    }, {});
-  };
+  const getChartData = useCallback(
+    (list: { createdAt?: string }[] | undefined | null) => {
+      if (!Array.isArray(list)) return {};
+      return list.reduce((acc: Record<string, number>, item) => {
+        const date = item?.createdAt
+          ? moment(item.createdAt).format("MM/YYYY")
+          : t("no_date");
+        acc[date] = acc[date] ? acc[date] + 1 : 1;
+        return acc;
+      }, {});
+    },
+    [t]
+  );
 
-  const userChartData = useMemo(() => getChartData(normalUsers), [normalUsers]);
+  const userChartData = useMemo(
+    () => getChartData(normalUsers),
+    [normalUsers, getChartData]
+  );
   const businessChartData = useMemo(
     () => getChartData(businessUsers),
-    [businessUsers]
+    [businessUsers, getChartData]
   );
   const restaurantChartData = useMemo(
     () => getChartData(restaurants),
-    [restaurants]
+    [restaurants, getChartData]
   );
 
   const chartOptions = (categories: string[]) => ({
@@ -137,20 +148,24 @@ const Dashboard = () => {
 
   return (
     <Box className={styles.dashboard}>
-      <Typography variant="h4" fontWeight={600} mb={3}>
-        Tổng quan người dùng & nhà hàng
+      <Typography variant={isMobile ? "h5" : "h4"} fontWeight={600} mb={2}>
+        {t("title")}
       </Typography>
-      <Typography color="text.secondary" mb={3}>
-        Báo cáo tóm tắt — số liệu cập nhật {lastUpdated ?? "chưa có"}
+      <Typography
+        color="text.secondary"
+        mb={3}
+        sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+      >
+        {t("summary", { lastUpdated: lastUpdated ?? t("no_data") })}
       </Typography>
 
       {/* Thống kê tổng quan */}
-      <Grid container spacing={3} className={styles.cards}>
-        <Grid item xs={12} md={4} component={"div" as React.ElementType}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} className={styles.cards}>
+        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
           <Paper
             elevation={3}
             sx={{
-              p: 2,
+              p: { xs: 2, sm: 2.5 },
               background: gradients.blue,
               color: "common.white",
               borderRadius: 2,
@@ -160,43 +175,56 @@ const Dashboard = () => {
               display="flex"
               alignItems="center"
               justifyContent="space-between"
+              flexDirection={{ xs: "column", sm: "row" }}
+              gap={{ xs: 1.5, sm: 0 }}
             >
-              <Box display="flex" alignItems="center">
+              <Box
+                display="flex"
+                alignItems="center"
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
-                  {/* icon */}
                   <PersonIcon />
                 </Avatar>
                 <Box>
-                  <Typography sx={{ color: "white" }}>
-                    Tổng User thường
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    }}
+                  >
+                    {t("total_normal_users")}
                   </Typography>
                   <Typography
-                    variant="h5"
+                    variant={isMobile ? "h6" : "h5"}
                     sx={{ color: "white", fontWeight: 700 }}
                   >
                     {normalUsers.length}
                   </Typography>
                 </Box>
               </Box>
-              <Box textAlign="right">
+              <Box
+                textAlign={{ xs: "center", sm: "right" }}
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Chip label="+3%" size="small" color="success" />
                 <Typography
                   variant="caption"
                   display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)" }}
+                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                 >
-                  so với tháng trước
+                  {t("compare_label")}
                 </Typography>
               </Box>
             </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4} component={"div" as React.ElementType}>
+        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
           <Paper
             elevation={3}
             sx={{
-              p: 2,
+              p: { xs: 2, sm: 2.5 },
               background: gradients.red,
               color: "common.white",
               borderRadius: 2,
@@ -206,42 +234,56 @@ const Dashboard = () => {
               display="flex"
               alignItems="center"
               justifyContent="space-between"
+              flexDirection={{ xs: "column", sm: "row" }}
+              gap={{ xs: 1.5, sm: 0 }}
             >
-              <Box display="flex" alignItems="center">
+              <Box
+                display="flex"
+                alignItems="center"
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
                   <BusinessIcon />
                 </Avatar>
                 <Box>
-                  <Typography sx={{ color: "white" }}>
-                    Tổng User Business
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    }}
+                  >
+                    {t("total_business_users")}
                   </Typography>
                   <Typography
-                    variant="h5"
+                    variant={isMobile ? "h6" : "h5"}
                     sx={{ color: "white", fontWeight: 700 }}
                   >
                     {businessUsers.length}
                   </Typography>
                 </Box>
               </Box>
-              <Box textAlign="right">
+              <Box
+                textAlign={{ xs: "center", sm: "right" }}
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Chip label="-1%" size="small" color="warning" />
                 <Typography
                   variant="caption"
                   display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)" }}
+                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                 >
-                  so với tháng trước
+                  {t("compare_label")}
                 </Typography>
               </Box>
             </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4} component={"div" as React.ElementType}>
+        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
           <Paper
             elevation={3}
             sx={{
-              p: 2,
+              p: { xs: 2, sm: 2.5 },
               background: gradients.green,
               color: "common.white",
               borderRadius: 2,
@@ -251,29 +293,45 @@ const Dashboard = () => {
               display="flex"
               alignItems="center"
               justifyContent="space-between"
+              flexDirection={{ xs: "column", sm: "row" }}
+              gap={{ xs: 1.5, sm: 0 }}
             >
-              <Box display="flex" alignItems="center">
+              <Box
+                display="flex"
+                alignItems="center"
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
                   <BusinessIcon />
                 </Avatar>
                 <Box>
-                  <Typography sx={{ color: "white" }}>Tổng nhà hàng</Typography>
                   <Typography
-                    variant="h5"
+                    sx={{
+                      color: "white",
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    }}
+                  >
+                    {t("total_restaurants")}
+                  </Typography>
+                  <Typography
+                    variant={isMobile ? "h6" : "h5"}
                     sx={{ color: "white", fontWeight: 700 }}
                   >
                     {restaurants.length}
                   </Typography>
                 </Box>
               </Box>
-              <Box textAlign="right">
+              <Box
+                textAlign={{ xs: "center", sm: "right" }}
+                width={{ xs: "100%", sm: "auto" }}
+              >
                 <Chip label="+8%" size="small" color="success" />
                 <Typography
                   variant="caption"
                   display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)" }}
+                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                 >
-                  so với tháng trước
+                  {t("compare_label")}
                 </Typography>
               </Box>
             </Box>
@@ -282,51 +340,76 @@ const Dashboard = () => {
       </Grid>
 
       {/* Biểu đồ */}
-      <Grid container spacing={3} mt={3} className={styles.charts}>
+      <Grid
+        container
+        spacing={{ xs: 2, sm: 3 }}
+        mt={{ xs: 2, sm: 3 }}
+        className={styles.charts}
+      >
         <Grid item xs={12} md={6} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              User thường theo tháng
+          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography
+              variant={isMobile ? "subtitle1" : "h6"}
+              mb={2}
+              fontWeight={600}
+            >
+              {t("users_by_month")}
             </Typography>
             {Object.keys(userChartData).length ? (
               <Chart
                 options={chartOptions(Object.keys(userChartData))}
-                series={[{ name: "Users", data: Object.values(userChartData) }]}
+                series={[
+                  {
+                    name: t("series_users"),
+                    data: Object.values(userChartData),
+                  },
+                ]}
                 type="bar"
                 width="100%"
-                height={300}
+                height={isMobile ? 250 : 300}
               />
             ) : (
-              <Typography>Chưa có dữ liệu</Typography>
+              <Typography>{t("no_chart_data")}</Typography>
             )}
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={6} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              User Business theo tháng
+          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography
+              variant={isMobile ? "subtitle1" : "h6"}
+              mb={2}
+              fontWeight={600}
+            >
+              {t("business_by_month")}
             </Typography>
             {Object.keys(businessChartData).length ? (
               <Chart
                 options={chartOptions(Object.keys(businessChartData))}
                 series={[
-                  { name: "Business", data: Object.values(businessChartData) },
+                  {
+                    name: t("series_business"),
+                    data: Object.values(businessChartData),
+                  },
                 ]}
                 type="bar"
                 width="100%"
-                height={300}
+                height={isMobile ? 250 : 300}
               />
             ) : (
-              <Typography>Chưa có dữ liệu</Typography>
+              <Typography>{t("no_chart_data")}</Typography>
             )}
           </Paper>
         </Grid>
 
         <Grid item xs={12} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              Nhà hàng theo tháng
+          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography
+              variant={isMobile ? "subtitle1" : "h6"}
+              mb={2}
+              fontWeight={600}
+            >
+              {t("restaurants_by_month")}
             </Typography>
             <Divider sx={{ my: 1 }} />
             {Object.keys(restaurantChartData).length ? (
@@ -334,16 +417,16 @@ const Dashboard = () => {
                 options={chartOptions(Object.keys(restaurantChartData))}
                 series={[
                   {
-                    name: "Nhà hàng",
+                    name: t("series_restaurants"),
                     data: Object.values(restaurantChartData),
                   },
                 ]}
                 type="bar"
                 width="100%"
-                height={300}
+                height={isMobile ? 250 : 300}
               />
             ) : (
-              <Typography>Chưa có dữ liệu</Typography>
+              <Typography>{t("no_chart_data")}</Typography>
             )}
           </Paper>
         </Grid>

@@ -6,7 +6,7 @@ import {
   AnyAction,
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
-import { Payment, CODPayment } from "@/types/payment";
+import { Payment, CODPayment, InfoPayment } from "@/types/payment";
 import { ApiEnvelope } from "@/types/order"; // reused API envelope type
 import type { AppDispatch } from "@/redux/store";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
@@ -24,6 +24,7 @@ export interface VNPayIPNResponse {
 interface PaymentState {
   payments: Payment[];
   selectedPayment: Payment | null;
+  history: InfoPayment[];
   loading: boolean;
   error: string | null;
 }
@@ -31,6 +32,7 @@ interface PaymentState {
 const initialState: PaymentState = {
   payments: [],
   selectedPayment: null,
+  history: [],
   loading: false,
   error: null,
 };
@@ -189,6 +191,27 @@ export const fetchPendingPayments = createAsyncThunk<
   }
 });
 
+// 7️⃣ GET /api/Payment/history/{userId}
+export const fetchPaymentHistoryByUser = createAsyncThunk<
+  InfoPayment[],
+  { userId: number },
+  { rejectValue: string }
+>("payment/fetchPaymentHistoryByUser", async ({ userId }, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.get(`/api/Payment/history/${userId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    const envelope = resolveApiData<InfoPayment[]>(res.data);
+    if (envelope && Array.isArray(envelope.data)) {
+      return envelope.data as InfoPayment[];
+    }
+    return rejectWithValue(envelope?.errMessage ?? "Không thể lấy lịch sử thanh toán");
+  } catch (e: unknown) {
+    return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
+  }
+});
+
 /* -------------------------------------------------------------------------- */
 /*                                   SLICE                                    */
 /* -------------------------------------------------------------------------- */
@@ -227,6 +250,9 @@ const paymentSlice = createSlice({
       })
       .addCase(fetchPendingPayments.fulfilled, (state, action) => {
         state.payments = action.payload;
+      })
+      .addCase(fetchPaymentHistoryByUser.fulfilled, (state, action) => {
+        state.history = action.payload;
       })
       .addMatcher(
         (a) => a.type.startsWith("payment/") && a.type.endsWith("/pending"),

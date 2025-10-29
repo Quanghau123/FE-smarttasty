@@ -6,6 +6,7 @@
   display: flex;
   gap: 16px;
   justify-content: center;
+  align-items: stretch;
 }
 
 .list {
@@ -48,4 +49,42 @@
   height: 600px;
   border-radius: 8px;
   overflow: hidden;
+}
+
+.mobileToggle {
+  margin-bottom: 12px;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .container {
+    padding: 12px 12px 16px;
+  }
+
+  .mainContent {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .list {
+    width: 100%;
+    max-height: none; /* Use page scroll instead of inner scroll */
+
+    .card {
+      margin-bottom: 12px;
+
+      .content {
+        padding: 10px 12px;
+
+        .MuiTypography-subtitle1 {
+          font-size: 15px;
+        }
+      }
+    }
+  }
+
+  .map {
+    width: 100%;
+    height: 56vh; /* comfortable height for mobile */
+  }
 }
