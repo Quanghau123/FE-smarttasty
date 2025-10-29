@@ -1,32 +1,76 @@
-// @/axios/axiosInstance.ts
-import axios from "axios";
-import { getAccessToken, getRefreshToken, updateAccessToken } from "@/lib/utils/tokenHelper";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
+import {
+  getAccessToken,
+  setAccessToken,
+  clearAccessToken,
+} from "@/lib/utils/tokenHelper";
 
-const axiosInstance = axios.create({
+const axiosInstance: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   timeout: 60000,
+  withCredentials: true, // gửi cookie HttpOnly (refresh_token)
   headers: {
     Accept: "application/json",
-    // Không set Content-Type ở đây để có thể tùy biến theo từng request
   },
 });
 
-// Interceptor: Gắn token + xử lý Content-Type động
+// Queue
+let isRefreshing = false;
+
+type QueueItem = {
+  resolve: (
+    value?:
+      | AxiosResponse<unknown>
+      | PromiseLike<AxiosResponse<unknown>>
+      | undefined
+  ) => void;
+  reject: (error?: unknown) => void;
+  originalRequest: InternalAxiosRequestConfig & { _retry?: boolean };
+};
+
+let failedQueue: QueueItem[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject, originalRequest }) => {
+    if (error) {
+      reject(error);
+    } else {
+      if (token && originalRequest.headers) {
+        (originalRequest.headers as Record<string, string>)[
+          "Authorization"
+        ] = `Bearer ${token}`;
+      }
+      axiosInstance(originalRequest).then(resolve).catch(reject);
+    }
+  });
+  failedQueue = [];
+};
+
+// Request interceptor
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // ✅ Lấy access token từ cookie
+  (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers = config.headers ?? {};
+      (config.headers as Record<string, string>)[
+        "Authorization"
+      ] = `Bearer ${token}`;
     }
 
-    // ✅ Nếu là FormData, KHÔNG tự set Content-Type (để axios tự gán với boundary)
     const isFormData =
       config.data instanceof FormData ||
       (typeof FormData !== "undefined" && config.data instanceof FormData);
-
-    if (!isFormData && !config.headers["Content-Type"]) {
-      config.headers["Content-Type"] = "application/json";
+    if (!isFormData) {
+      config.headers = config.headers ?? {};
+      if (!("Content-Type" in (config.headers as Record<string, unknown>))) {
+        (config.headers as Record<string, string>)["Content-Type"] =
+          "application/json";
+      }
     }
 
     return config;
@@ -34,54 +78,74 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor để xử lý refresh token khi access token hết hạn
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    // Nếu lỗi 401 và chưa retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // ✅ Lấy refresh token từ cookie
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          // Không có refresh token, chuyển về login
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("user");
-            window.location.href = "/login";
-          }
-          return Promise.reject(error);
-        }
-
-        // Gọi API refresh token
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`,
-          { refreshToken }
-        );
-
-        if (response.data.errCode === "success" && response.data.data?.access_token) {
-          const newAccessToken = response.data.data.access_token;
-          // ✅ Cập nhật access token mới vào cookie
-          updateAccessToken(newAccessToken);
-
-          // Retry request ban đầu với token mới
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return axiosInstance(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh token thất bại, đăng xuất
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-        }
-        return Promise.reject(refreshError);
-      }
+    if (!error.response || error.response.status !== 401) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    if (originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise<AxiosResponse<unknown> | undefined>(
+        (resolve, reject) => {
+          failedQueue.push({ resolve, reject, originalRequest });
+        }
+      );
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`,
+        {},
+        { withCredentials: true }
+      );
+
+      const newAccessToken =
+        refreshResponse.data?.access_token ??
+        refreshResponse.data?.data?.access_token ??
+        refreshResponse.data?.Data?.access_token;
+
+      if (!newAccessToken) {
+        throw new Error("No new access token from refresh endpoint");
+      }
+
+      setAccessToken(newAccessToken);
+
+      processQueue(null, newAccessToken);
+
+      if (originalRequest.headers)
+        (originalRequest.headers as Record<string, string>)[
+          "Authorization"
+        ] = `Bearer ${newAccessToken}`;
+      isRefreshing = false;
+      return axiosInstance(originalRequest);
+    } catch (refreshErr) {
+      processQueue(refreshErr, null);
+      isRefreshing = false;
+      try {
+        clearAccessToken();
+      } catch {
+        // ignore
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+
+      return Promise.reject(refreshErr);
+    }
   }
 );
 
