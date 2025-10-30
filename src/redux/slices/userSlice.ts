@@ -1,7 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axiosInstance from "@/lib/axios/axiosInstance";
 import { User, CreateUserDto } from "@/types/user";
-import { getAccessToken, clearTokens, setAccessToken } from "@/lib/utils/tokenHelper";
+import axiosInstance from "@/lib/axios/axiosInstance";
+import {
+  setAccessToken,
+  setUser as saveUserToStorage,
+} from "@/lib/utils/tokenHelper";
 
 interface ChangePasswordPayload {
   currentPassword: string;
@@ -33,29 +36,38 @@ const initialState: UserState = {
   changePasswordSuccess: false,
 };
 
-// Helper lấy token từ cookie
-const getToken = getAccessToken;
-
 // ================== THUNKS ==================
 
 // Login
 export const loginUser = createAsyncThunk<
-  { user: User; access_token: string; refresh_token: string },
+  { user: User; access_token: string; refresh_token?: string },
   { email: string; userPassword: string; remember: boolean },
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post("/api/User/login", data);
-    const { errCode, errMessage, data: resData } = response.data;
-    
-    if (errCode === "success" && resData?.user && resData?.accessToken) {
-      // ✅ Lưu access token vào localStorage
-      setAccessToken(resData.accessToken);
-      
-      // Lưu user info vào localStorage (không nhạy cảm)
-      localStorage.setItem("user", JSON.stringify(resData.user));
-      
-      // Lưu thông tin remember login
+    const payload = response.data ?? {};
+
+    // support both wrapper shapes
+    const wrapper = payload.data ?? payload;
+    const accessToken =
+      wrapper?.accessToken ??
+      wrapper?.access_token ??
+      payload?.accessToken ??
+      payload?.access_token;
+    const refreshToken =
+      wrapper?.refreshToken ??
+      wrapper?.refresh_token ??
+      payload?.refreshToken ??
+      payload?.refresh_token;
+    const userObj = wrapper?.user ?? payload?.user;
+
+    const errMessage = payload.errMessage ?? payload.message ?? null;
+
+    if (accessToken && userObj) {
+      setAccessToken(accessToken);
+      saveUserToStorage(userObj);
+
       if (data.remember) {
         localStorage.setItem(
           "rememberedLogin",
@@ -64,15 +76,17 @@ export const loginUser = createAsyncThunk<
       } else {
         localStorage.removeItem("rememberedLogin");
       }
-      
+
       return {
-        user: resData.user as User,
-        access_token: resData.accessToken,  // ✅ Đọc đúng camelCase từ BE
-        refresh_token: resData.refreshToken,  // ✅ Đọc đúng camelCase (chỉ để lưu state, không set cookie)
+        user: userObj as User,
+        access_token: accessToken,
+        refresh_token: refreshToken,
       };
-    } else {
-      return rejectWithValue(errMessage || "Email hoặc mật khẩu không chính xác!");
     }
+
+    return rejectWithValue(
+      errMessage || "Email hoặc mật khẩu không chính xác!"
+    );
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Lỗi đăng nhập");
@@ -112,7 +126,6 @@ export const createUser = createAsyncThunk<
   }
 });
 
-
 // Update user
 export const updateUser = createAsyncThunk<
   User,
@@ -130,7 +143,10 @@ export const updateUser = createAsyncThunk<
     const currentUser = localStorage.getItem("user");
     if (currentUser) {
       const parsedUser = JSON.parse(currentUser);
-      localStorage.setItem("user", JSON.stringify({ ...parsedUser, ...updatedUser }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...parsedUser, ...updatedUser })
+      );
     }
     return updatedUser as User;
   } catch (err: unknown) {
@@ -298,7 +314,7 @@ const userSlice = createSlice({
       .addCase(changePassword.fulfilled, (state) => {
         state.changePasswordLoading = false;
         state.changePasswordSuccess = true;
-          state.changePasswordError = null;
+        state.changePasswordError = null;
       })
       .addCase(changePassword.rejected, (state, action) => {
         state.changePasswordLoading = false;

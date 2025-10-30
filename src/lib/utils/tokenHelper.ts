@@ -50,10 +50,9 @@ export const clearUser = () => {
   }
 };
 
-// Xóa tất cả tokens và user data (dùng cho logout)
-export const clearTokens = () => {
-  clearAccessToken();
-  clearUser();
+/**
+ * Kiểm tra xem user có đăng nhập hay không
+ */
+export const isAuthenticated = (): boolean => {
+  return !!getAccessToken();
 };
-
-export const isAuthenticated = (): boolean => !!getAccessToken();
