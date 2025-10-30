@@ -27,16 +27,25 @@ axiosInstance.interceptors.request.use((config) => {
 
 // ======= Chat API =======
 const sendChatMessage = async (text: string, image?: File) => {
+  const token = localStorage.getItem("access_token"); // lấy token từ localStorage
+
   const formData = new FormData();
-  formData.append("Text", text);
+  formData.append("accessToken", token || ""); // 👈 thêm token vào form-data
+  formData.append("text", text);
   if (image) {
-    formData.append("Image", image);
+    formData.append("image", image);
   }
 
-  const response = await axiosInstance.post(
-    "/api/ChatControllerJson/send-form",
-    formData
+  const response = await axios.post(
+    `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
+    formData,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    }
   );
+
   return response.data;
 };
 
