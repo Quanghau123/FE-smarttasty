@@ -13,7 +13,7 @@ import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 // VNPay IPN response type (backend returns { RspCode, Message })
 export interface VNPayIPNResponse {
-  RspCode: string;
+  RspCode: string;  
   Message: string;
 }
 

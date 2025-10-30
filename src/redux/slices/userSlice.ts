@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { User, CreateUserDto } from "@/types/user";
-import { setTokens, clearTokens, getAccessToken } from "@/lib/utils/tokenHelper";
+import { getAccessToken, clearTokens, setAccessToken } from "@/lib/utils/tokenHelper";
 
 interface ChangePasswordPayload {
   currentPassword: string;
@@ -48,9 +48,9 @@ export const loginUser = createAsyncThunk<
     const response = await axiosInstance.post("/api/User/login", data);
     const { errCode, errMessage, data: resData } = response.data;
     
-    if (errCode === "success" && resData?.user && resData?.access_token) {
-      // ✅ Lưu tokens vào cookie (bảo mật hơn)
-      setTokens(resData.access_token, resData.refresh_token);
+    if (errCode === "success" && resData?.user && resData?.accessToken) {
+      // ✅ Lưu access token vào localStorage
+      setAccessToken(resData.accessToken);
       
       // Lưu user info vào localStorage (không nhạy cảm)
       localStorage.setItem("user", JSON.stringify(resData.user));
@@ -67,8 +67,8 @@ export const loginUser = createAsyncThunk<
       
       return {
         user: resData.user as User,
-        access_token: resData.access_token,
-        refresh_token: resData.refresh_token,
+        access_token: resData.accessToken,  // ✅ Đọc đúng camelCase từ BE
+        refresh_token: resData.refreshToken,  // ✅ Đọc đúng camelCase (chỉ để lưu state, không set cookie)
       };
     } else {
       return rejectWithValue(errMessage || "Email hoặc mật khẩu không chính xác!");
@@ -219,8 +219,8 @@ const userSlice = createSlice({
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      // ✅ Cập nhật access token trong cookie
-      setTokens(action.payload, state.refreshToken || "");
+      // ✅ Cập nhật access token trong localStorage
+      setAccessToken(action.payload);
     },
     resetChangePasswordState: (state) => {
       state.changePasswordLoading = false;

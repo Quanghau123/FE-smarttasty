@@ -1,6 +1,7 @@
 "use client";
 
 import Providers from "@/components/commons/Providers/Providers";
+import Chatbot from "@/components/features/Chatbot";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -24,6 +25,8 @@ export default function LayoutClient({
         pauseOnHover
         theme="colored"
       />
+      {/* Chatbot floating button - hiển thị ở mọi trang */}
+      <Chatbot />
     </Providers>
   );
 }

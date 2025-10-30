@@ -35,6 +35,7 @@ import ReviewList from "@/components/features/Review/ReviewList";
 import ReservationForm from "@/components/features/Reservation";
 import MapView from "@/components/layouts/MapView";
 import StarIcon from "@mui/icons-material/Star";
+import { useTranslations } from "next-intl";
 
 // Toast
 import { toast, ToastContainer } from "react-toastify";
@@ -45,14 +46,15 @@ const RestaurantDetailPage = () => {
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width:600px)");
+  const t = useTranslations("restaurantDetails");
   const [mobileView, setMobileView] = useState<
     "info" | "menu" | "map" | "reviews" | "reserve"
   >("info");
-  const infoRef = useRef<HTMLDivElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const reviewsRef = useRef<HTMLDivElement | null>(null);
-  const reserveRef = useRef<HTMLDivElement | null>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  const reserveRef = useRef<HTMLDivElement>(null);
 
   const {
     current: restaurant,
@@ -179,15 +181,13 @@ const RestaurantDetailPage = () => {
     }
 
     if (!userId || !address || !name || !phone) {
-      toast.error(
-        "Thiếu thông tin giao hàng (địa chỉ/tên/sđt). Vui lòng cập nhật trước khi đặt."
-      );
+      toast.error(t("error_missing_info"));
       return;
     }
 
     try {
       if (!restaurant) {
-        toast.error("Không tìm thấy nhà hàng");
+        toast.error(t("error_no_restaurant"));
         return;
       }
 
@@ -245,7 +245,7 @@ const RestaurantDetailPage = () => {
         ok = res.meta.requestStatus === "fulfilled";
       }
       if (ok) {
-        toast.success("Món đã được thêm vào giỏ hàng!");
+        toast.success(t("success_added"));
         setQtyMap((m) => {
           const copy = { ...m };
           delete copy[dishId];
@@ -253,11 +253,11 @@ const RestaurantDetailPage = () => {
         });
         dispatch(fetchOrdersByUser(Number(userId)));
       } else {
-        toast.error("Không thể thêm món vào giỏ hàng!");
+        toast.error(t("error_add_to_cart"));
       }
     } catch (error) {
       console.error(error);
-      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
+      toast.error(t("error_occurred"));
     }
   };
 
@@ -274,7 +274,7 @@ const RestaurantDetailPage = () => {
     return (
       <Box className={styles.centered}>
         <Typography variant="h5">
-          {restaurantError || "Không tìm thấy nhà hàng"}
+          {restaurantError || t("restaurant_not_found")}
         </Typography>
       </Box>
     );
@@ -299,7 +299,7 @@ const RestaurantDetailPage = () => {
               setMobileView(v);
               const mapToRef: Record<
                 string,
-                React.RefObject<HTMLDivElement>
+                React.RefObject<HTMLDivElement | null>
               > = {
                 info: infoRef,
                 menu: menuRef,
@@ -316,20 +316,20 @@ const RestaurantDetailPage = () => {
             sx={{ width: "100%", flexWrap: "wrap", gap: 1 }}
             aria-label="Chuyển mục xem"
           >
-            <ToggleButton value="info" aria-label="Thông tin">
-              Thông tin
+            <ToggleButton value="info" aria-label={t("info")}>
+              {t("info")}
             </ToggleButton>
-            <ToggleButton value="menu" aria-label="Thực đơn">
-              Thực đơn
+            <ToggleButton value="menu" aria-label={t("menu")}>
+              {t("menu")}
             </ToggleButton>
-            <ToggleButton value="map" aria-label="Bản đồ">
-              Bản đồ
+            <ToggleButton value="map" aria-label={t("map")}>
+              {t("map")}
             </ToggleButton>
-            <ToggleButton value="reviews" aria-label="Đánh giá">
-              Đánh giá
+            <ToggleButton value="reviews" aria-label={t("reviews")}>
+              {t("reviews")}
             </ToggleButton>
-            <ToggleButton value="reserve" aria-label="Đặt bàn">
-              Đặt bàn
+            <ToggleButton value="reserve" aria-label={t("reserve")}>
+              {t("reserve")}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -361,7 +361,7 @@ const RestaurantDetailPage = () => {
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Chưa có ảnh nhà hàng
+                    {t("no_image")}
                   </Typography>
                 </Box>
               )}
@@ -370,11 +370,11 @@ const RestaurantDetailPage = () => {
               <Typography variant="h4">{restaurant.name}</Typography>
 
               <Typography sx={{ mt: 1 }}>
-                <strong>Địa chỉ:</strong> {restaurant.address}
+                <strong>{t("address")}:</strong> {restaurant.address}
               </Typography>
               {/* Map is rendered in a dedicated full-width section at the bottom of the page */}
               <Typography sx={{ mt: 1 }}>
-                <strong>Trạng thái:</strong>{" "}
+                <strong>{t("status")}:</strong>{" "}
                 {(() => {
                   const now = new Date();
                   const [openHour, openMinute] = restaurant.openTime
@@ -390,18 +390,18 @@ const RestaurantDetailPage = () => {
                   if (closeDate <= openDate)
                     closeDate.setDate(closeDate.getDate() + 1);
                   return now >= openDate && now <= closeDate ? (
-                    <span style={{ color: "green" }}>Đang mở cửa</span>
+                    <span style={{ color: "green" }}>{t("open")}</span>
                   ) : (
-                    <span style={{ color: "red" }}>Đóng cửa</span>
+                    <span style={{ color: "red" }}>{t("closed")}</span>
                   );
                 })()}
               </Typography>
               <Typography sx={{ mt: 1 }}>
-                <strong>Giờ hoạt động:</strong> {restaurant.openTime} -{" "}
+                <strong>{t("hours")}:</strong> {restaurant.openTime} -{" "}
                 {restaurant.closeTime}
               </Typography>
               <Box display="flex" alignItems="center" gap={0.2} sx={{ mt: 1 }}>
-                <strong>Đánh giá:</strong>
+                <strong>{t("rating")}:</strong>
                 {Array.from({ length: 5 }).map((_, idx) => (
                   <StarIcon
                     key={idx}
@@ -410,8 +410,8 @@ const RestaurantDetailPage = () => {
                   />
                 ))}
                 <Typography variant="body2" color="error" sx={{ ml: 0.5 }}>
-                  {avgRating.toFixed(1)} ({totalReviews.toLocaleString()} Đánh
-                  Giá)
+                  {avgRating.toFixed(1)} ({totalReviews.toLocaleString()}{" "}
+                  {t("rating")})
                 </Typography>
               </Box>
             </Box>
@@ -461,13 +461,13 @@ const RestaurantDetailPage = () => {
               }}
             >
               <Typography variant="h5" sx={{ mb: 1 }}>
-                Khuyến mãi của nhà hàng
+                {t("promotions_title")}
               </Typography>
               {promoLoading ? (
                 <Box display="flex" alignItems="center" gap={1}>
                   <CircularProgress size={20} />
                   <Typography variant="body2">
-                    Đang tải khuyến mãi...
+                    {t("loading_promotions")}
                   </Typography>
                 </Box>
               ) : (
@@ -498,7 +498,7 @@ const RestaurantDetailPage = () => {
                             color="text.secondary"
                             sx={{ mt: 1, display: "block" }}
                           >
-                            Hạn sử dụng đến: {endLabel}
+                            {t("valid_until")}: {endLabel}
                           </Typography>
                         </Box>
                       );
@@ -518,8 +518,8 @@ const RestaurantDetailPage = () => {
           }}
         >
           {restaurant.name && (
-            <Typography sx={{ mt: 1 }}>
-              <Typography variant="h6">Tóm tắt {restaurant.name}</Typography>
+            <Typography variant="h6" sx={{ mt: 1 }}>
+              {t("summary")} {restaurant.name}
             </Typography>
           )}
           {restaurant.description && (
@@ -540,9 +540,9 @@ const RestaurantDetailPage = () => {
             mt: 3,
           }}
         >
-          <Typography variant="h5">Thực đơn</Typography>
+          <Typography variant="h5">{t("menu_title")}</Typography>
           {dishes.length === 0 ? (
-            <Typography>Chưa có món ăn nào.</Typography>
+            <Typography>{t("no_dishes")}</Typography>
           ) : (
             <Box className={styles.dishGrid}>
               {dishes.map((dish) => {
@@ -587,7 +587,7 @@ const RestaurantDetailPage = () => {
                           }}
                         >
                           <Typography variant="body2" color="text.secondary">
-                            Chưa có ảnh
+                            {t("no_dish_image")}
                           </Typography>
                         </Box>
                       )}
@@ -597,7 +597,7 @@ const RestaurantDetailPage = () => {
                         {dish.name}
                         {!dish.isActive && (
                           <Chip
-                            label="Ngưng bán"
+                            label={t("out_of_stock")}
                             size="small"
                             sx={{
                               ml: 1,
@@ -641,7 +641,7 @@ const RestaurantDetailPage = () => {
                           size="small"
                           onClick={() => dec(dish.id)}
                           disabled={qty === 0}
-                          aria-label="Giảm số lượng"
+                          aria-label={t("decrease_quantity")}
                         >
                           <RemoveIcon />
                         </IconButton>
@@ -652,7 +652,7 @@ const RestaurantDetailPage = () => {
                           size="small"
                           onClick={() => inc(dish.id)}
                           disabled={!dish.isActive}
-                          aria-label="Tăng số lượng"
+                          aria-label={t("increase_quantity")}
                         >
                           <AddIcon />
                         </IconButton>
@@ -663,7 +663,8 @@ const RestaurantDetailPage = () => {
                         disabled={!dish.isActive || qty === 0}
                         onClick={() => handleAddToCart(dish.id)}
                       >
-                        Thêm vào giỏ ({(unitPrice * qty).toLocaleString()}đ)
+                        {t("add_to_cart")} ({(unitPrice * qty).toLocaleString()}
+                        đ)
                       </Button>
                     </Stack>
                   </Box>
@@ -688,7 +689,7 @@ const RestaurantDetailPage = () => {
                 p: 2,
               }}
             >
-              <Typography variant="h6">Vị trí trên bản đồ</Typography>
+              <Typography variant="h6">{t("map_title")}</Typography>
               <Box sx={{ mt: 1 }}>
                 <MapView lat={restaurant.latitude} lng={restaurant.longitude} />
               </Box>
@@ -700,13 +701,13 @@ const RestaurantDetailPage = () => {
                 target="_blank"
                 rel="noreferrer"
               >
-                Mở Google Maps
+                {t("open_google_maps")}
               </Button>
             </Box>
           ) : (
             <Box sx={{ p: 2 }}>
               <Typography>
-                <strong>Vị trí:</strong> Không có tọa độ để hiển thị bản đồ
+                <strong>{t("location")}:</strong> {t("no_coordinates")}
               </Typography>
             </Box>
           )}

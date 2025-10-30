@@ -11,7 +11,7 @@
     "login_btn_title": "Đăng Nhập",
     "my_purchase_btn_title": "Đơn Mua"
   },
-  "footer": {
+  "footer": { 
     "contactus_btn_title": "Liên Hệ",
     "aboutus_btn_title": "Về Chúng Tôi",
     "followme_btn_title": "Theo Dõi",
@@ -121,5 +121,68 @@
     "delete_success": "Xóa thành công!",
     "delete_failed": "Xóa thất bại",
     "no_restaurants": "Chưa có nhà hàng"
+  },
+  "restaurantDetails": {
+    "info": "Thông tin",
+    "menu": "Thực đơn",
+    "map": "Bản đồ",
+    "reviews": "Đánh giá",
+    "reserve": "Đặt bàn",
+    "no_image": "Chưa có ảnh nhà hàng",
+    "address": "Địa chỉ",
+    "status": "Trạng thái",
+    "open": "Đang mở cửa",
+    "closed": "Đóng cửa",
+    "hours": "Giờ hoạt động",
+    "rating": "Đánh giá",
+    "promotions_title": "Khuyến mãi của nhà hàng",
+    "loading_promotions": "Đang tải khuyến mãi...",
+    "valid_until": "Hạn sử dụng đến",
+    "summary": "Tóm tắt",
+    "menu_title": "Thực đơn",
+    "no_dishes": "Chưa có món ăn nào.",
+    "no_dish_image": "Chưa có ảnh",
+    "out_of_stock": "Ngưng bán",
+    "decrease_quantity": "Giảm số lượng",
+    "increase_quantity": "Tăng số lượng",
+    "add_to_cart": "Thêm vào giỏ",
+    "map_title": "Vị trí trên bản đồ",
+    "open_google_maps": "Mở Google Maps",
+    "no_coordinates": "Không có tọa độ để hiển thị bản đồ",
+    "location": "Vị trí",
+    "error_missing_info": "Thiếu thông tin giao hàng (địa chỉ/tên/sđt). Vui lòng cập nhật trước khi đặt.",
+    "error_no_restaurant": "Không tìm thấy nhà hàng",
+    "error_add_to_cart": "Không thể thêm món vào giỏ hàng!",
+    "error_occurred": "Có lỗi xảy ra. Vui lòng thử lại.",
+    "success_added": "Món đã được thêm vào giỏ hàng!",
+    "loading": "Đang tải...",
+    "restaurant_not_found": "Không tìm thấy nhà hàng"
+  },
+  "review": {
+    "form_title": "Đánh giá nhà hàng",
+    "comment_label": "Nhận xét của bạn",
+    "submit_button": "Gửi đánh giá",
+    "error_missing_info": "Thiếu thông tin người dùng hoặc nhà hàng!",
+    "success_message": "Đánh giá thành công!",
+    "error_message": "Gửi đánh giá thất bại. Vui lòng thử lại!",
+    "list_title": "Đánh giá của khách hàng",
+    "no_reviews": "Chưa có đánh giá nào.",
+    "loading": "Đang tải..."
+  }
+  ,
+  "reservation": {
+    "title": "Đặt chỗ (Để có chỗ trước khi đến)",
+    "adults_label": "Người lớn",
+    "children_label": "Trẻ em",
+    "arrival_date": "Ngày đến",
+    "arrival_time": "Giờ đến",
+    "contact_name": "Tên liên hệ",
+    "phone": "Số điện thoại",
+    "email": "Email",
+    "note": "Ghi chú",
+    "login_required": "Bạn cần đăng nhập để đặt chỗ!",
+    "success_message": "Đặt chỗ thành công!",
+    "loading": "Đang đặt chỗ...",
+    "reserve_button": "Đặt chỗ ngay"
   }
 }

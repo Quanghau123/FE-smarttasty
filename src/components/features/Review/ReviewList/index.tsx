@@ -2,6 +2,7 @@
 
 import { Box, Typography, CircularProgress, Rating } from "@mui/material";
 import styles from "./styles.module.scss";
+import { useTranslations } from "next-intl";
 
 interface Review {
   id: number;
@@ -18,23 +19,25 @@ interface ReviewListProps {
 }
 
 const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
+  const t = useTranslations("review");
+
   if (loading) return <CircularProgress />;
   if (error) {
     return (
       <Typography color="error">
-        {error === "No reviews found" ? "Chưa có đánh giá nào." : error}
+        {error === "No reviews found" ? t("no_reviews") : error}
       </Typography>
     );
   }
 
   if (!reviews || reviews.length === 0) {
-    return <Typography>Chưa có đánh giá nào.</Typography>;
+    return <Typography>{t("no_reviews")}</Typography>;
   }
 
   return (
     <Box className={styles.reviewList}>
       <Typography variant="h5" className={styles.sectionTitle}>
-        Đánh giá của khách hàng
+        {t("list_title")}
       </Typography>
 
       {reviews.map((r) => (

@@ -12,6 +12,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { createReservation } from "@/redux/slices/reservationSlice";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 
 interface Props {
@@ -22,6 +23,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const reservationState = useAppSelector((state) => state.reservation);
+  const t = useTranslations("reservation");
 
   // ✅ Lấy user từ Redux (sau login đã có trong state)
   const user = useAppSelector((state) => state.user.user);
@@ -43,7 +45,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
 
   const handleReservation = () => {
     if (!user) {
-      toast.error("Bạn cần đăng nhập để đặt chỗ!");
+      toast.error(t("login_required"));
       return;
     }
 
@@ -69,9 +71,9 @@ const ReservationForm = ({ restaurantId }: Props) => {
       toast.error(reservationState.error);
     }
     if (reservationState.reservation) {
-      toast.success("🎉 Đặt chỗ thành công!");
+      toast.success(t("success_message"));
     }
-  }, [reservationState.error, reservationState.reservation]);
+  }, [reservationState.error, reservationState.reservation, t]);
 
   return (
     <Box
@@ -82,14 +84,14 @@ const ReservationForm = ({ restaurantId }: Props) => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Đặt chỗ (Để có chỗ trước khi đến)
+        {t("title")}
       </Typography>
 
       {/* Người lớn & Trẻ em */}
       <Box className={styles.formRow}>
         <TextField
           select
-          label="Người lớn"
+          label={t("adults_label")}
           value={adultCount}
           onChange={(e) => setAdultCount(Number(e.target.value))}
           sx={{ flex: 1 }}
@@ -103,7 +105,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
 
         <TextField
           select
-          label="Trẻ em"
+          label={t("children_label")}
           value={childCount}
           onChange={(e) => setChildCount(Number(e.target.value))}
           sx={{ flex: 1 }}
@@ -120,7 +122,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
       <Box className={styles.formRow}>
         <TextField
           type="date"
-          label="Ngày đến"
+          label={t("arrival_date")}
           value={arrivalDate}
           onChange={(e) => setArrivalDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
@@ -128,7 +130,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
         />
         <TextField
           type="time"
-          label="Giờ đến"
+          label={t("arrival_time")}
           value={reservationTime}
           onChange={(e) => setReservationTime(e.target.value)}
           InputLabelProps={{ shrink: true }}
@@ -138,28 +140,28 @@ const ReservationForm = ({ restaurantId }: Props) => {
 
       {/* Thông tin liên hệ */}
       <TextField
-        label="Tên liên hệ"
+        label={t("contact_name")}
         value={contactName}
         onChange={(e) => setContactName(e.target.value)}
         fullWidth
         margin="normal"
       />
       <TextField
-        label="Số điện thoại"
+        label={t("phone")}
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         fullWidth
         margin="normal"
       />
       <TextField
-        label="Email"
+        label={t("email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         fullWidth
         margin="normal"
       />
       <TextField
-        label="Ghi chú"
+        label={t("note")}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         multiline
@@ -176,7 +178,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
         onClick={handleReservation}
         disabled={reservationState.loading}
       >
-        {reservationState.loading ? "Đang đặt chỗ..." : "Đặt chỗ ngay"}
+        {reservationState.loading ? t("loading") : t("reserve_button")}
       </Button>
     </Box>
   );

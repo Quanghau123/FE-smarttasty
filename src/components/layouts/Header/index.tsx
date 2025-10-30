@@ -31,7 +31,6 @@ import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 
-import { debugTokens } from "@/lib/utils/tokenHelper";
 
 const Header = () => {
   const [localUserName, setLocalUserName] = useState<string | null>(null);
@@ -54,7 +53,6 @@ const Header = () => {
   const totalOrders = orders?.length || 0;
 
   useEffect(() => {
-    debugTokens();
     // Khi user đăng nhập (Redux hoặc localStorage), gọi API lấy giỏ hàng hiện tại
     let id: number | undefined | null = undefined;
 

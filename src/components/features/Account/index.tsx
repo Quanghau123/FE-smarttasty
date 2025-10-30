@@ -9,11 +9,18 @@ import {
   Tab,
   TextField,
   CircularProgress,
+  useMediaQuery,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { updateUser } from "@/redux/slices/userSlice";
-import { clearTokens } from "@/lib/utils/tokenHelper";
+import { updateUser, setUser } from "@/redux/slices/userSlice";
+import { clearTokens, getAccessToken } from "@/lib/utils/tokenHelper";
 import ChangePasswordForm from "@/components/features/ChangePassword";
 import { toast } from "react-toastify";
 import styles from "./styles.module.scss";
@@ -28,8 +35,27 @@ const AccountPage = () => {
   const [editableUser, setEditableUser] = useState<Partial<User>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "password">("info");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const isMobile = useMediaQuery("(max-width:768px)");
   const router = useRouter();
+
+  // ✅ Load user from localStorage if not in Redux (fixes login redirect issue)
+  useEffect(() => {
+    if (!user) {
+      const token = getAccessToken();
+      const storedUser = localStorage.getItem("user");
+
+      if (token && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          dispatch(setUser(parsedUser));
+        } catch (e) {
+          console.error("Error parsing stored user:", e);
+        }
+      }
+    }
+  }, [user, dispatch]);
 
   useEffect(() => {
     if (user) setEditableUser(user);
@@ -67,7 +93,7 @@ const AccountPage = () => {
   const handlePasswordChanged = () => {
     // ✅ Xóa tokens từ cookie và localStorage
     clearTokens();
-    
+
     // Điều hướng login sau 1.5s để toast hiển thị
     setTimeout(() => router.push("/login"), 1500);
   };
@@ -85,23 +111,90 @@ const AccountPage = () => {
     );
   }
 
+  const tabItems = [
+    { label: "Thông tin tài khoản", value: "info" },
+    { label: "Đổi mật khẩu", value: "password" },
+  ];
+
   return (
     <div className={styles.accountContainer}>
-      <div className={styles.sidebar}>
-        <Tabs
-          orientation="vertical"
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <IconButton
+          onClick={() => setDrawerOpen(true)}
+          sx={{
+            position: "fixed",
+            top: 90,
+            left: 16,
+            zIndex: 1100,
+            bgcolor: "white",
+            boxShadow: 2,
+            "&:hover": { bgcolor: "grey.100" },
+          }}
         >
-          <Tab label="Thông tin tài khoản" value="info" />
-          <Tab label="Đổi mật khẩu" value="password" />
-        </Tabs>
-      </div>
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <Box sx={{ width: 250, pt: 2 }}>
+            <List>
+              {tabItems.map((item) => (
+                <ListItem
+                  key={item.value}
+                  onClick={() => {
+                    setActiveTab(item.value as "info" | "password");
+                    setDrawerOpen(false);
+                  }}
+                  sx={{
+                    cursor: "pointer",
+                    bgcolor:
+                      activeTab === item.value
+                        ? "primary.light"
+                        : "transparent",
+                    "&:hover": { bgcolor: "grey.100" },
+                  }}
+                >
+                  <ListItemText
+                    primary={item.label}
+                    sx={{
+                      "& .MuiListItemText-primary": {
+                        fontWeight: activeTab === item.value ? 600 : 400,
+                      },
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+      )}
+
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <div className={styles.sidebar}>
+          <Tabs
+            orientation="vertical"
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+          >
+            {tabItems.map((item) => (
+              <Tab key={item.value} label={item.label} value={item.value} />
+            ))}
+          </Tabs>
+        </div>
+      )}
 
       <div className={styles.contentArea}>
         {activeTab === "info" && (
           <>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
               Thông tin tài khoản
             </Typography>
 
@@ -112,6 +205,7 @@ const AccountPage = () => {
                   value={editableUser.userName || ""}
                   onChange={handleChange("userName")}
                   required
+                  fullWidth
                 />
                 <TextField
                   label="Email"
@@ -119,30 +213,39 @@ const AccountPage = () => {
                   value={editableUser.email || ""}
                   onChange={handleChange("email")}
                   required
+                  fullWidth
                 />
                 <TextField
                   label="Số điện thoại"
                   value={editableUser.phone || ""}
                   onChange={handleChange("phone")}
                   required
+                  fullWidth
                 />
                 <TextField
                   label="Địa chỉ"
                   value={editableUser.address || ""}
                   onChange={handleChange("address")}
+                  fullWidth
                 />
-                <Box display="flex" gap={2}>
+                <Box
+                  display="flex"
+                  gap={2}
+                  flexDirection={isMobile ? "column" : "row"}
+                >
                   <Button
                     variant="contained"
                     color="primary"
                     onClick={handleSave}
                     disabled={loading}
+                    fullWidth={isMobile}
                   >
                     {loading ? <CircularProgress size={24} /> : "Lưu"}
                   </Button>
                   <Button
                     variant="outlined"
                     onClick={() => setIsEditing(false)}
+                    fullWidth={isMobile}
                   >
                     Hủy
                   </Button>
@@ -171,6 +274,7 @@ const AccountPage = () => {
                   variant="contained"
                   onClick={() => setIsEditing(true)}
                   sx={{ mt: 2 }}
+                  fullWidth={isMobile}
                 >
                   Sửa thông tin
                 </Button>
@@ -181,10 +285,10 @@ const AccountPage = () => {
 
         {activeTab === "password" && (
           <>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
               Đổi mật khẩu
             </Typography>
-            <ChangePasswordForm onSuccess={handlePasswordChanged} />
+            <ChangePasswordForm embedded onSuccess={handlePasswordChanged} />
           </>
         )}
       </div>

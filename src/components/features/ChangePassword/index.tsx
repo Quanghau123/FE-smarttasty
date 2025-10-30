@@ -8,6 +8,7 @@ import {
   TextField,
   Button,
   CircularProgress,
+  useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -23,15 +24,18 @@ import { useState, useEffect } from "react";
 
 type ChangePasswordFormProps = {
   onSuccess?: () => void;
+  embedded?: boolean; // true when used inside Account page
 };
 
 const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   onSuccess,
+  embedded = false,
 }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { changePasswordLoading, changePasswordError, changePasswordSuccess } =
     useAppSelector((state) => state.user);
+  const isMobile = useMediaQuery("(max-width:768px)");
 
   const [formValues, setFormValues] = useState({
     currentPassword: "",
@@ -92,6 +96,62 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     }
   }, [changePasswordSuccess, changePasswordError, dispatch, router, onSuccess]);
 
+  const formContent = (
+    <Box component="form" onSubmit={handleSubmit}>
+      <TextField
+        label="Mật khẩu hiện tại"
+        name="currentPassword"
+        type="password"
+        fullWidth
+        margin="normal"
+        required
+        value={formValues.currentPassword}
+        onChange={handleChange}
+      />
+      <TextField
+        label="Mật khẩu mới"
+        name="newPassword"
+        type="password"
+        fullWidth
+        margin="normal"
+        required
+        value={formValues.newPassword}
+        onChange={handleChange}
+      />
+      <TextField
+        label="Xác nhận mật khẩu mới"
+        name="confirmNewPassword"
+        type="password"
+        fullWidth
+        margin="normal"
+        required
+        value={formValues.confirmNewPassword}
+        onChange={handleChange}
+      />
+
+      <Button
+        type="submit"
+        variant="contained"
+        color="primary"
+        fullWidth
+        disabled={changePasswordLoading}
+        sx={{ marginTop: 2 }}
+      >
+        {changePasswordLoading ? (
+          <CircularProgress size={24} />
+        ) : (
+          "Đổi mật khẩu"
+        )}
+      </Button>
+    </Box>
+  );
+
+  // If embedded (used in Account page), return form without Card wrapper
+  if (embedded) {
+    return <Box sx={{ maxWidth: isMobile ? "100%" : 600 }}>{formContent}</Box>;
+  }
+
+  // Standalone page: use Card wrapper
   return (
     <Box className={styles.loginContainer}>
       <Card className={styles.loginCard}>
@@ -99,53 +159,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
           <Typography variant="h4" textAlign="center" gutterBottom>
             Đổi mật khẩu
           </Typography>
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              label="Mật khẩu hiện tại"
-              name="currentPassword"
-              type="password"
-              fullWidth
-              margin="normal"
-              required
-              value={formValues.currentPassword}
-              onChange={handleChange}
-            />
-            <TextField
-              label="Mật khẩu mới"
-              name="newPassword"
-              type="password"
-              fullWidth
-              margin="normal"
-              required
-              value={formValues.newPassword}
-              onChange={handleChange}
-            />
-            <TextField
-              label="Xác nhận mật khẩu mới"
-              name="confirmNewPassword"
-              type="password"
-              fullWidth
-              margin="normal"
-              required
-              value={formValues.confirmNewPassword}
-              onChange={handleChange}
-            />
-
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={changePasswordLoading}
-              sx={{ marginTop: 2 }}
-            >
-              {changePasswordLoading ? (
-                <CircularProgress size={24} />
-              ) : (
-                "Đổi mật khẩu"
-              )}
-            </Button>
-          </Box>
+          {formContent}
         </CardContent>
       </Card>
     </Box>
