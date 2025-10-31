@@ -10,8 +10,14 @@ import { Drawer, IconButton, Box, Typography } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 interface JwtPayload {
+  sub: string; // userId
+  nameid: string; // userId (duplicate)
+  unique_name: string; // username
+  email: string;
   role: string;
   exp: number;
+  iat: number;
+  nbf: number;
 }
 
 export default function RestaurantLayout({
@@ -25,7 +31,7 @@ export default function RestaurantLayout({
   const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
-    // ✅ Lấy token từ cookie
+    // ✅ Lấy token từ localStorage (không phải từ user object)
     const token = getAccessToken();
 
     if (!token) {
@@ -36,7 +42,12 @@ export default function RestaurantLayout({
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log("✅ Token decode thành công:", decoded.Userid);
+      console.log("✅ Token decode thành công:");
+      console.log("  - User ID:", decoded.sub || decoded.nameid);
+      console.log("  - Username:", decoded.unique_name);
+      console.log("  - Role:", decoded.role);
+      console.log("  - Email:", decoded.email);
+
       if (decoded.role !== "business") {
         console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");

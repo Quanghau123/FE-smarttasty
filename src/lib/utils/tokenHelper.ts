@@ -1,5 +1,15 @@
 let accessToken: string | null = null;
 
+// Simple pub-sub to notify when access token changes
+type AccessTokenListener = (token: string | null) => void;
+const accessTokenListeners: AccessTokenListener[] = [];
+
+const notifyAccessTokenChanged = () => {
+  for (const l of accessTokenListeners) {
+    try { l(accessToken); } catch { /* ignore */ }
+  }
+};
+
 export const setAccessToken = (token: string) => {
   accessToken = token;
   if (typeof window !== "undefined") {
@@ -9,6 +19,7 @@ export const setAccessToken = (token: string) => {
       // ignore storage errors
     }
   }
+  notifyAccessTokenChanged();
 };
 
 export const getAccessToken = (): string | null => {
@@ -22,6 +33,7 @@ export const clearAccessToken = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("access_token");
   }
+  notifyAccessTokenChanged();
 };
 
 export const setUser = (user: {
@@ -51,8 +63,59 @@ export const clearUser = () => {
 };
 
 /**
+ * Xóa tất cả tokens và user data (dùng cho logout)
+ */
+export const clearTokens = () => {
+  clearAccessToken();
+  clearUser();
+};
+
+/**
  * Kiểm tra xem user có đăng nhập hay không
  */
 export const isAuthenticated = (): boolean => {
   return !!getAccessToken();
+};
+
+// Allow app to subscribe to access token changes (e.g., to sync Redux state)
+export const subscribeAccessTokenChange = (listener: AccessTokenListener) => {
+  accessTokenListeners.push(listener);
+  return () => {
+    const idx = accessTokenListeners.indexOf(listener);
+    if (idx >= 0) accessTokenListeners.splice(idx, 1);
+  };
+};
+
+/**
+ * Decode JWT token và log thông tin expiration
+ */
+export const logTokenExpiry = () => {
+  const token = getAccessToken();
+  if (!token) {
+    return;
+  }
+
+  try {
+    // Decode JWT (base64)
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return;
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    
+    if (payload.exp) {
+  // const expiryDate = new Date(payload.exp * 1000);
+  // const now = new Date();
+  // const timeLeft = expiryDate.getTime() - now.getTime();
+  // compute time left if needed in future (removed logs)
+  // const minutesLeft = Math.floor(timeLeft / 1000 / 60);
+      
+      // logs removed
+    } else {
+      // no-op
+    }
+  } catch {
+    // no-op
+  }
 };

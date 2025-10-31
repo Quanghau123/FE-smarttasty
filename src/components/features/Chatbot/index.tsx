@@ -107,6 +107,15 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Validate inputs
+      if (!accessToken) {
+        throw new Error("AccessToken is missing. Please login first.");
+      }
+
+      if (!textToSend.trim()) {
+        throw new Error("Message cannot be empty.");
+      }
+
       // Create FormData
       const formData = new FormData();
       formData.append("AccessToken", accessToken);
@@ -115,13 +124,20 @@ const Chatbot: React.FC = () => {
         formData.append("Image", imageToSend);
       }
 
+      // console.log("Sending to chatbot:", {
+      //   url: `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
+      //   hasToken: !!accessToken,
+      //   textLength: textToSend.length,
+      //   hasImage: !!imageToSend,
+      // });
+
       // Call chatbot API
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_CHATBOT_API_URL}/api/Chat/send-form`,
+        `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
           },
         }
       );
@@ -136,6 +152,14 @@ const Chatbot: React.FC = () => {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
+
+      // Log detailed error info
+      // if (axios.isAxiosError(error)) {
+      //   console.error("Response data:", error.response?.data);
+      //   console.error("Response status:", error.response?.status);
+      //   console.error("Request URL:", error.config?.url);
+      // }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",

@@ -3,7 +3,10 @@ import { User, CreateUserDto } from "@/types/user";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import {
   setAccessToken,
+  getAccessToken,
+  clearTokens,
   setUser as saveUserToStorage,
+  logTokenExpiry,
 } from "@/lib/utils/tokenHelper";
 
 interface ChangePasswordPayload {
@@ -45,7 +48,13 @@ export const loginUser = createAsyncThunk<
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post("/api/User/login", data);
+    // Transform to PascalCase for C# backend
+    const loginPayload = {
+      Email: data.email,
+      UserPassword: data.userPassword,
+    };
+    
+    const response = await axiosInstance.post("/api/User/login", loginPayload);
     const payload = response.data ?? {};
 
     // support both wrapper shapes
@@ -66,7 +75,19 @@ export const loginUser = createAsyncThunk<
 
     if (accessToken && userObj) {
       setAccessToken(accessToken);
+      try {
+        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+      } catch {
+        // ignore
+      }
       saveUserToStorage(userObj);
+
+      // Log token expiry info
+      if (typeof window !== "undefined") {
+        setTimeout(() => {
+          logTokenExpiry();
+        }, 100);
+      }
 
       if (data.remember) {
         localStorage.setItem(
@@ -133,7 +154,7 @@ export const updateUser = createAsyncThunk<
   { rejectValue: string }
 >("user/updateUser", async (updatedUser, { rejectWithValue }) => {
   try {
-    const token = getToken();
+    const token = getAccessToken();
     await axiosInstance.put("/api/User", updatedUser, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -177,7 +198,7 @@ export const changePassword = createAsyncThunk<
   { rejectValue: string }
 >("user/changePassword", async (payload, { rejectWithValue }) => {
   try {
-    const token = getToken();
+    const token = getAccessToken();
     const res = await axiosInstance.post("/api/User/change-password", payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -255,7 +276,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.accessToken = action.payload.access_token;
-        state.refreshToken = action.payload.refresh_token;
+        state.refreshToken = action.payload.refresh_token ?? null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
