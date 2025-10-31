@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.4",
     "@hookform/resolvers": "^5.1.1",
+    "@microsoft/signalr": "^9.0.6",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
     "@mui/system": "^7.3.2",
