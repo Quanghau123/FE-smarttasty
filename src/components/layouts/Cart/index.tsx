@@ -208,29 +208,50 @@ const CartPage = () => {
     itemId: number,
     newQuantity: number
   ) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(orderId, itemId);
-      return;
-    }
+    // Lưu ý: API addItemToOrder đang CỘNG THÊM quantity thay vì đặt tuyệt đối.
+    // Vì vậy ta sẽ tính delta so với quantity hiện tại để gọi đúng hành vi.
     setUpdatingItem(true);
     try {
       const order = orders.find((o) => o.id === orderId);
       const orderItem = order?.items?.find((it) => it.id === itemId);
-      const dishId = orderItem?.dishId;
+      if (!orderItem) throw new Error("Không tìm thấy item trong đơn");
+      const currentQty = Number(orderItem.quantity || 0);
+      const dishId = orderItem.dishId;
       if (!dishId) throw new Error("Không tìm thấy dishId của món");
 
-      await dispatch(
-        addItemToOrder({
-          orderId,
-          item: { dishId, quantity: newQuantity, totalPrice: 0 },
-        })
-      );
+      // Nếu đặt về 0 hoặc nhỏ hơn: xoá hẳn món
+      if (newQuantity <= 0) {
+        await dispatch(
+          deleteOrderItem({ orderId, orderItemId: itemId })
+        ).unwrap();
+      } else if (newQuantity > currentQty) {
+        // Tăng: chỉ cộng phần chênh lệch
+        const delta = newQuantity - currentQty;
+        await dispatch(
+          addItemToOrder({
+            orderId,
+            item: { dishId, quantity: delta, totalPrice: 0 },
+          })
+        ).unwrap();
+      } else if (newQuantity < currentQty) {
+        // Giảm: xoá item cũ rồi thêm lại với số lượng mới mong muốn
+        await dispatch(
+          deleteOrderItem({ orderId, orderItemId: itemId })
+        ).unwrap();
+        await dispatch(
+          addItemToOrder({
+            orderId,
+            item: { dishId, quantity: newQuantity, totalPrice: 0 },
+          })
+        ).unwrap();
+      }
 
+      // Làm mới danh sách đơn theo user để đồng bộ UI
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         const userId = parsedUser.id || parsedUser.userId;
-        if (userId) dispatch(fetchOrdersByUser(userId));
+        if (userId) await dispatch(fetchOrdersByUser(userId));
       }
     } catch (error) {
       console.error("Lỗi cập nhật số lượng:", error);
@@ -746,7 +767,6 @@ const CartPage = () => {
 };
 
 export default CartPage;
-
 
 // "use client";
 

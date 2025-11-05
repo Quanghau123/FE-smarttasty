@@ -61,4 +61,8 @@ export interface Promotion {
   // optional metadata
   createdAt?: string;
   updatedAt?: string;
+
+  // image fields from backend
+  image?: string | null; // public id/key stored in DB
+  imageUrl?: string | null; // full URL for display
 }

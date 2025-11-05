@@ -9,14 +9,35 @@
     "welcome_text": "Xin Chào",
     "register_btn_title": "Đăng Ký",
     "login_btn_title": "Đăng Nhập",
-    "my_purchase_btn_title": "Đơn Mua"
+    "my_purchase_btn_title": "Đơn Mua",
+    "my_booking_btn_title": "Đặt Bàn",
+    "logo_alt": "Logo SmartTasty",
+    "search_placeholder": "Địa điểm, món ăn, loại hình...",
+    "category_all": "Ăn uống",
+    "category_buffet": "Buffet",
+    "category_nhahang": "Nhà Hàng",
+    "category_anvatviahe": "Ăn vặt/vỉa hè",
+    "category_anchay": "Ăn chay",
+    "category_cafenuocuong": "Cafe/Nước uống",
+    "category_quanan": "Quán ăn",
+    "category_bar": "Bar",
+    "category_quannhau": "Quán nhậu"
   },
   "footer": { 
     "contactus_btn_title": "Liên Hệ",
     "aboutus_btn_title": "Về Chúng Tôi",
     "followme_btn_title": "Theo Dõi",
     "openinghours_btn_title": "Giờ Mở Cửa",
-    "daily_btn_title": "Hàng Ngày"
+    "daily_btn_title": "Hàng Ngày",
+    "tagline": "Ngon miệng, giao nhanh",
+    "description": "SmartTasty — nền tảng đặt món, giao hàng nhanh. Tìm nhà hàng gần bạn và đặt món yêu thích chỉ trong vài bước.",
+    "subscribe_text": "Đăng ký nhận ưu đãi và tin tức mới nhất",
+    "subscribe_placeholder": "Email của bạn",
+    "subscribe_button": "Đăng ký",
+    "privacy_policy": "Chính sách bảo mật",
+    "link_intro": "Giới thiệu",
+    "link_careers": "Tuyển dụng",
+    "link_contact": "Liên hệ"
   },
   "account": {
     "accountinformation_btn_title": "Thông Tin Tài Khoản",
@@ -168,6 +189,11 @@
     "list_title": "Đánh giá của khách hàng",
     "no_reviews": "Chưa có đánh giá nào.",
     "loading": "Đang tải..."
+    ,
+    "filter_by_rating": "Lọc theo số sao",
+    "clear": "Bỏ lọc",
+    "reviews_count_text": "đánh giá hiển thị",
+    "star": "sao"
   }
   ,
   "reservation": {

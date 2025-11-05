@@ -12,6 +12,7 @@ import {
 const initialState: RestaurantState = {
   restaurants: [],
   current: null,
+  currentTotalReviews: null,
   nearby: [],
   loading: false,
   loadingNearby: false,
@@ -124,13 +125,24 @@ export const fetchNearbyRestaurants = createAsyncThunk<
 
 // Fetch by id
 export const fetchRestaurantById = createAsyncThunk<
-  Restaurant | null,
+  { restaurant: Restaurant | null; totalReviews?: number },
   number,
   { rejectValue: string }
 >("restaurant/fetchById", async (id, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get(`/api/Restaurant/${id}`);
-    return response.data?.data ?? null;
+    const data = response.data?.data as
+      | { restaurant?: Restaurant; totalReviews?: number; [k: string]: unknown }
+      | Restaurant
+      | null
+      | undefined;
+    // BE mới: data = { restaurant: {...}, totalReviews }
+    // Cũ: data = Restaurant
+    if (data && typeof data === "object" && "restaurant" in data) {
+      const obj = data as { restaurant?: Restaurant; totalReviews?: number };
+      return { restaurant: obj.restaurant ?? null, totalReviews: obj.totalReviews };
+    }
+    return { restaurant: (data as Restaurant | null | undefined) ?? null };
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err, "Không tìm thấy nhà hàng"));
   }
@@ -274,12 +286,14 @@ const restaurantSlice = createSlice({
       })
       .addCase(fetchRestaurantById.fulfilled, (state, action) => {
         state.loading = false;
-        state.current = action.payload;
+        state.current = action.payload.restaurant;
+        state.currentTotalReviews = action.payload.totalReviews ?? null;
       })
       .addCase(fetchRestaurantById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Lỗi không xác định";
         state.current = null;
+        state.currentTotalReviews = null;
       })
 
       // update
@@ -312,7 +326,10 @@ const restaurantSlice = createSlice({
         state.restaurants = state.restaurants.filter(
           (r) => r.id !== action.payload
         );
-        if (state.current?.id === action.payload) state.current = null;
+        if (state.current?.id === action.payload) {
+          state.current = null;
+          state.currentTotalReviews = null;
+        }
       })
       .addCase(deleteRestaurant.rejected, (state, action) => {
         state.loading = false;

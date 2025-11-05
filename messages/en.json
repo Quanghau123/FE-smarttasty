@@ -9,14 +9,35 @@
     "welcome_text": "Hello",
     "register_btn_title": "Register",
     "login_btn_title": "Login",
-    "my_purchase_btn_title": "My Purchase"
+    "my_purchase_btn_title": "My Purchase",
+    "my_booking_btn_title": "My Booking",
+    "logo_alt": "SmartTasty logo",
+    "search_placeholder": "Location, dish, category...",
+    "category_all": "Eat & Drink",
+    "category_buffet": "Buffet",
+    "category_nhahang": "Restaurant",
+    "category_anvatviahe": "Street Food",
+    "category_anchay": "Vegetarian",
+    "category_cafenuocuong": "Cafe / Drinks",
+    "category_quanan": "Eatery",
+    "category_bar": "Bar",
+    "category_quannhau": "Pub"
   },
   "footer": {
     "contactus_btn_title": "Contact us",
     "aboutus_btn_title": "About us",
     "followme_btn_title": "Follow me",
     "openinghours_btn_title": "Opening hours",
-    "daily_btn_title": "Daily"
+    "daily_btn_title": "Daily",
+    "tagline": "Delicious, fast delivery",
+    "description": "SmartTasty — order food and get it delivered fast. Find nearby restaurants and order your favorite dishes in a few steps.",
+    "subscribe_text": "Subscribe for offers and the latest news",
+    "subscribe_placeholder": "Your email",
+    "subscribe_button": "Subscribe",
+    "privacy_policy": "Privacy Policy",
+    "link_intro": "About",
+    "link_careers": "Careers",
+    "link_contact": "Contact"
   },
   "account": {
     "accountinformation_btn_title": "Account Information",
@@ -169,6 +190,11 @@
     "list_title": "Customer reviews",
     "no_reviews": "No reviews yet.",
     "loading": "Loading..."
+    ,
+    "filter_by_rating": "Filter by rating",
+    "clear": "Clear",
+    "reviews_count_text": "reviews shown",
+    "star": "star"
   }
   ,
   "reservation": {

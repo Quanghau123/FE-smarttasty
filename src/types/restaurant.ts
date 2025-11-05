@@ -29,7 +29,10 @@ export interface Restaurant {
   imagePublicId?: string;
   ownerId: number;
   distanceKm?: number; // để hiển thị khoảng cách
-  rating: number;
+  // BE hiện trả về AverageRating (double). Một số nơi FE trước đây dùng "rating".
+  // Để tương thích ngược, giữ cả hai field và ưu tiên averageRating khi hiển thị.
+  averageRating?: number;
+  rating?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -38,6 +41,8 @@ export interface Restaurant {
 export interface RestaurantState {
   restaurants: Restaurant[];
   current: Restaurant | null;
+  // Lưu tổng số reviews từ API detail (data.totalReviews)
+  currentTotalReviews?: number | null;
   nearby: Restaurant[];
   loading: boolean;
   loadingNearby: boolean;

@@ -24,6 +24,7 @@ import { fetchNearbyRestaurants } from "@/redux/slices/restaurantSlice";
 import { Restaurant } from "@/types/restaurant";
 import StarIcon from "@mui/icons-material/Star";
 import styles from "./styles.module.scss";
+import nhahang from "@/assets/Image/MapView/nhahang.png";
 
 import {
   MapContainer,
@@ -57,7 +58,7 @@ const userIcon = new L.Icon({
 
 // Icon cho restaurant
 const restaurantIcon = new L.Icon({
-  iconUrl: "/marker-icon-blue.png",
+  iconUrl: (nhahang as { src: string }).src,
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   iconSize: [25, 41],
@@ -218,15 +219,21 @@ const NearbyRestaurantsPage = () => {
                       </Typography>
 
                       <Box display="flex" alignItems="center" mb={1}>
-                        {Array.from({ length: 5 }).map((_, idx) => (
-                          <StarIcon
-                            key={idx}
-                            fontSize="small"
-                            color={
-                              idx < restaurant.rating ? "warning" : "disabled"
-                            }
-                          />
-                        ))}
+                        {(() => {
+                          const avg =
+                            restaurant.averageRating ?? restaurant.rating ?? 0;
+                          return (
+                            <>
+                              {Array.from({ length: 5 }).map((_, idx) => (
+                                <StarIcon
+                                  key={idx}
+                                  fontSize="small"
+                                  color={idx < avg ? "warning" : "disabled"}
+                                />
+                              ))}
+                            </>
+                          );
+                        })()}
                       </Box>
 
                       <Typography

@@ -368,8 +368,8 @@ export const updateOrderStatus = createAsyncThunk<
   { rejectValue: string }
 >("order/updateStatus", async ({ id, status }, { rejectWithValue }) => {
   try {
-    const res = await axiosInstance.patch(`/api/Order/${id}/status`, {
-      status,
+    const res = await axiosInstance.patch(`/api/Order/${id}/status`, undefined, {
+      params: { newStatus: status },
     });
 
     const envelope = resolveApiData(res.data);
@@ -397,7 +397,8 @@ export const updateDeliveryStatus = createAsyncThunk<
     try {
       const res = await axiosInstance.patch(
         `/api/Order/${id}/delivery-status`,
-        { deliveryStatus }
+        undefined,
+        { params: { newStatus: deliveryStatus } }
       );
 
       const envelope = resolveApiData(res.data);

@@ -114,6 +114,26 @@ export const loginUser = createAsyncThunk<
   }
 });
 
+// Forgot password
+export const forgotPassword = createAsyncThunk<
+  { success: boolean; message?: string },
+  string,
+  { rejectValue: string }
+>("user/forgotPassword", async (email, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.post("/api/User/forgot-password", { email });
+    const body = res.data ?? {};
+    const ok = body?.errCode === 0 || body?.errCode === "success" || body?.status === "success";
+    if (ok) {
+      return { success: true, message: body?.message || body?.errMessage };
+    }
+    return rejectWithValue(body?.errMessage || "Email không tồn tại trong hệ thống.");
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Đã có lỗi xảy ra. Vui lòng thử lại.");
+  }
+});
+
 // Fetch users
 export const fetchUsers = createAsyncThunk<
   User[],
@@ -126,6 +146,27 @@ export const fetchUsers = createAsyncThunk<
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Lỗi lấy danh sách người dùng");
+  }
+});
+
+// Fetch user detail by id (server source of truth)
+export const fetchUserById = createAsyncThunk<
+  User,
+  number,
+  { rejectValue: string }
+>("user/fetchUserById", async (userId, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.get(`/api/User/${userId}`);
+    const body = res.data ?? {};
+    // Support both wrapped and raw responses
+    const data = (body.data ?? body) as User;
+    if (!data || typeof data !== "object") {
+      return rejectWithValue("Không nhận được thông tin người dùng");
+    }
+    return data as User;
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Lỗi lấy thông tin người dùng");
   }
 });
 
@@ -295,6 +336,20 @@ const userSlice = createSlice({
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Lỗi lấy danh sách người dùng";
+      })
+
+      // Fetch user detail
+      .addCase(fetchUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<User>) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Lỗi lấy thông tin người dùng";
       })
 
       // Create user

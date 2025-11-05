@@ -9,8 +9,8 @@ const Menu = () => {
   return (
     <Box
       display="flex"
-      gap={2}
-      p={2}
+      gap={4}
+      p={3}
       sx={{
         bgcolor: "background.default",
         color: "text.primary",

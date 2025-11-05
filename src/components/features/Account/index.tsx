@@ -19,8 +19,12 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { updateUser, setUser } from "@/redux/slices/userSlice";
-import { clearTokens, getAccessToken } from "@/lib/utils/tokenHelper";
+import { updateUser, setUser, fetchUserById } from "@/redux/slices/userSlice";
+import {
+  clearTokens,
+  getAccessToken,
+  getUser as getUserLocal,
+} from "@/lib/utils/tokenHelper";
 import ChangePasswordForm from "@/components/features/ChangePassword";
 import { toast } from "react-toastify";
 import styles from "./styles.module.scss";
@@ -40,18 +44,32 @@ const AccountPage = () => {
   const isMobile = useMediaQuery("(max-width:768px)");
   const router = useRouter();
 
-  // ✅ Load user from localStorage if not in Redux (fixes login redirect issue)
+  // ✅ Nếu thiếu thông tin chi tiết, gọi API để lấy user từ server (source of truth)
   useEffect(() => {
-    if (!user) {
-      const token = getAccessToken();
-      const storedUser = localStorage.getItem("user");
+    const token = getAccessToken();
 
-      if (token && storedUser) {
+    // Ưu tiên id từ Redux, fallback sang localStorage (đã lưu tối thiểu userId)
+    const local = getUserLocal();
+    const userId = user?.userId ?? local?.userId;
+
+    if (token && userId) {
+      // Nếu Redux chưa có user hoặc cần làm mới, gọi API detail
+      if (!user || !user.email || !user.phone || !user.address) {
+        dispatch(fetchUserById(userId));
+      }
+    } else if (!user && token) {
+      // Không có userId -> thử khôi phục từ localStorage nguyên bản
+      const storedUser =
+        typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          dispatch(setUser(parsedUser));
+          if (parsedUser?.userId) {
+            dispatch(setUser(parsedUser));
+            dispatch(fetchUserById(parsedUser.userId));
+          }
         } catch (e) {
-          console.error("Error parsing stored user:", e);
+          // ignore
         }
       }
     }
@@ -69,7 +87,14 @@ const AccountPage = () => {
     if (!user) return;
 
     // updateUser cần ít nhất userId
-    const payload = { ...editableUser, userId: user.userId };
+    // Không cho phép cập nhật email từ đây
+     const payload = {
+    userId: user.userId,
+    userName: editableUser.userName ?? user.userName,
+    email: user.email, // 🟢 giữ nguyên email cũ để không thiếu field
+    phone: editableUser.phone ?? user.phone,
+    address: editableUser.address ?? user.address,
+  };
 
     try {
       await dispatch(updateUser(payload)).unwrap();
@@ -86,6 +111,7 @@ const AccountPage = () => {
 
   const handleChange =
     (field: keyof User) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (field === "email") return; // chặn sửa email
       setEditableUser({ ...editableUser, [field]: e.target.value });
     };
 
@@ -214,6 +240,9 @@ const AccountPage = () => {
                   onChange={handleChange("email")}
                   required
                   fullWidth
+                  disabled
+                  InputProps={{ readOnly: true }}
+                  helperText="Email không thể thay đổi"
                 />
                 <TextField
                   label="Số điện thoại"

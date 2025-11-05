@@ -24,11 +24,14 @@
   --primary-light: #e80000;
   --secondary-light: #ffa500;
   --star-color: #ED710A; /* color for review stars (same in light/dark) */
+  --footer-bg-light: #fbfbfb; /* slightly off-white for footer in light theme */
+  --footer-bg-dark: #0f1720; /* slightly different dark for footer in dark theme */
 }
 
 [data-theme="light"] {
   --background: var(--background-light);
   --background-phs: var(--background-light-phs);
+  --footer-bg: var(--footer-bg-light);
   --text-color: var(--text-light);
   --text-title-color: var(--text-title-light);
   --button-bg: var(--button-light);
@@ -43,6 +46,7 @@
 [data-theme="dark"] {
   --background: var(--background-dark);
   --background-phs: var(--background-dark-phs);
+  --footer-bg: var(--footer-bg-dark);
   --text-color: var(--text-dark);
   --text-title-color: var(--text-title-dark);
   --button-bg: var(--button-dark);

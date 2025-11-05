@@ -11,11 +11,16 @@ import {
   Stack,
   IconButton,
   Button,
+  Grid,
+  Card,
+  CardContent,
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import type { RootState } from "@/redux/store";
@@ -36,6 +41,8 @@ import ReservationForm from "@/components/features/Reservation";
 import MapView from "@/components/layouts/MapView";
 import StarIcon from "@mui/icons-material/Star";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
 
 // Toast
 import { toast, ToastContainer } from "react-toastify";
@@ -55,12 +62,26 @@ const RestaurantDetailPage = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
   const reserveRef = useRef<HTMLDivElement>(null);
+  const suggestedRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollSuggested = (direction: "left" | "right") => {
+    const el = suggestedRef.current;
+    if (!el) return;
+    const amount = Math.floor(el.clientWidth * 0.85);
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
 
   const {
     current: restaurant,
     loading: restaurantLoading,
     error: restaurantError,
   } = useAppSelector((state) => state.restaurant);
+  const { restaurants: allRestaurants = [] } = useAppSelector(
+    (state) => state.restaurant
+  );
   const { items: dishes, loading: dishesLoading } = useAppSelector(
     (state) => state.dishes
   );
@@ -75,17 +96,13 @@ const RestaurantDetailPage = () => {
     error: reviewError,
   } = useAppSelector((state) => state.review);
 
-  const authUserId = useAppSelector((s: unknown) => {
-    try {
-      const ss = s as unknown as Record<string, unknown>;
-      const auth = ss["auth"] as Record<string, unknown> | undefined;
-      const user = auth?.["user"] as Record<string, unknown> | undefined;
-      const id = user?.["id"] as number | undefined;
-      return id ?? null;
-    } catch {
-      return null;
-    }
-  });
+  // Lấy thông tin user từ Redux store thay vì localStorage
+  const currentUser = useAppSelector((state) => state.user.user);
+
+  // Tổng số review từ BE (lưu trong slice restaurant)
+  const totalReviewsFromState = useAppSelector(
+    (state: RootState) => state.restaurant.currentTotalReviews ?? 0
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -96,6 +113,15 @@ const RestaurantDetailPage = () => {
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
   }, [dispatch, id]);
+
+  // Ensure we have restaurants list to show suggestions
+  useEffect(() => {
+    if (!allRestaurants || allRestaurants.length === 0) {
+      dispatch(fetchRestaurants());
+    }
+  }, [allRestaurants, dispatch]);
+
+  const router = useRouter();
 
   // ================== GIẢM GIÁ ==================
   const computeDiscountedPrice = (
@@ -161,27 +187,34 @@ const RestaurantDetailPage = () => {
     const quantity = qtyMap[dishId] || 0;
     if (quantity <= 0) return;
 
-    // Lấy thông tin user
-    let userId = authUserId;
-    let address = "";
-    let name = "";
-    let phone = "";
+    // Lấy thông tin user từ Redux store
+    const userId = currentUser?.userId;
+    const address = currentUser?.address?.trim() || "";
+    const name = currentUser?.userName?.trim() || "";
+    const phone = currentUser?.phone?.trim() || "";
 
-    if (typeof window !== "undefined") {
-      const savedUser = localStorage.getItem("user");
-      if (savedUser) {
-        try {
-          const parsed = JSON.parse(savedUser);
-          userId = parsed.userId ?? userId;
-          address = parsed.address?.trim() || "";
-          name = parsed.userName?.trim() || "";
-          phone = parsed.phone?.trim() || "";
-        } catch {}
-      }
-    }
+    // Debug log để kiểm tra dữ liệu
+    console.log("User data from Redux:", {
+      userId,
+      address,
+      name,
+      phone,
+      currentUser,
+    });
 
-    if (!userId || !address || !name || !phone) {
-      toast.error(t("error_missing_info"));
+    // Kiểm tra từng trường và hiển thị thông báo cụ thể
+    const missingFields: string[] = [];
+    if (!userId) missingFields.push("User ID");
+    if (!address) missingFields.push("Địa chỉ giao hàng");
+    if (!name) missingFields.push("Tên người nhận");
+    if (!phone) missingFields.push("Số điện thoại");
+
+    if (missingFields.length > 0) {
+      const fieldsList = missingFields.join(", ");
+      toast.error(
+        `Thiếu thông tin: ${fieldsList}. Vui lòng cập nhật thông tin cá nhân.`
+      );
+      console.warn("Missing fields:", missingFields);
       return;
     }
 
@@ -215,6 +248,15 @@ const RestaurantDetailPage = () => {
 
       if (!activeOrder) {
         // Nếu chưa có đơn hàng → tạo mới cùng với món đã chọn
+        console.log("Creating new order with data:", {
+          userId: Number(userId),
+          restaurantId: Number(restaurant.id),
+          deliveryAddress: address,
+          recipientName: name,
+          recipientPhone: phone,
+          items: [{ dishId, quantity }],
+        });
+
         const createRes = await dispatch(
           createOrder({
             userId: Number(userId),
@@ -230,6 +272,8 @@ const RestaurantDetailPage = () => {
             ],
           })
         ).unwrap();
+
+        console.log("Order created successfully:", createRes);
         orderId = createRes.id;
         ok = Boolean(createRes?.id);
       } else {
@@ -255,9 +299,24 @@ const RestaurantDetailPage = () => {
       } else {
         toast.error(t("error_add_to_cart"));
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(t("error_occurred"));
+    } catch (error: unknown) {
+      console.error("Error adding to cart:", error);
+
+      // Hiển thị thông báo lỗi chi tiết
+      let errorMessage = t("error_occurred");
+
+      if (error && typeof error === "object") {
+        if ("message" in error && typeof error.message === "string") {
+          errorMessage = error.message;
+        } else if (
+          "errMessage" in error &&
+          typeof error.errMessage === "string"
+        ) {
+          errorMessage = error.errMessage;
+        }
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -281,11 +340,9 @@ const RestaurantDetailPage = () => {
   }
 
   // ================== PHẦN CÒN LẠI ==================
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
-  const totalReviews = reviews.length;
+  // Lấy rating và tổng số review trực tiếp từ BE
+  const avgRating = Number(restaurant.averageRating ?? 0) || 0;
+  const totalReviews = totalReviewsFromState;
 
   return (
     <Box className={styles.container}>
@@ -376,13 +433,46 @@ const RestaurantDetailPage = () => {
               <Typography sx={{ mt: 1 }}>
                 <strong>{t("status")}:</strong>{" "}
                 {(() => {
+                  const parseHHMM = (v?: unknown): [number, number] | null => {
+                    if (typeof v === "string" && v.includes(":")) {
+                      const [h, m] = v.split(":");
+                      const hh = Number(h);
+                      const mm = Number(m);
+                      if (Number.isFinite(hh) && Number.isFinite(mm)) {
+                        return [hh, mm];
+                      }
+                    }
+                    return null;
+                  };
+                  const getTimeField = (
+                    obj: unknown,
+                    names: string[]
+                  ): string | undefined => {
+                    if (!obj || typeof obj !== "object") return undefined;
+                    const rec = obj as Record<string, unknown>;
+                    for (const n of names) {
+                      const v = rec[n];
+                      if (typeof v === "string" && v.length > 0) return v;
+                    }
+                    return undefined;
+                  };
+
                   const now = new Date();
-                  const [openHour, openMinute] = restaurant.openTime
-                    .split(":")
-                    .map(Number);
-                  const [closeHour, closeMinute] = restaurant.closeTime
-                    .split(":")
-                    .map(Number);
+                  const open = parseHHMM(
+                    getTimeField(restaurant, ["openTime", "openingTime"])
+                  );
+                  const close = parseHHMM(
+                    getTimeField(restaurant, ["closeTime", "closingTime"])
+                  );
+
+                  if (!open || !close) {
+                    return (
+                      <span style={{ color: "#666" }}>{t("unknown")}</span>
+                    );
+                  }
+
+                  const [openHour, openMinute] = open;
+                  const [closeHour, closeMinute] = close;
                   const openDate = new Date(now);
                   openDate.setHours(openHour, openMinute, 0, 0);
                   const closeDate = new Date(now);
@@ -397,8 +487,28 @@ const RestaurantDetailPage = () => {
                 })()}
               </Typography>
               <Typography sx={{ mt: 1 }}>
-                <strong>{t("hours")}:</strong> {restaurant.openTime} -{" "}
-                {restaurant.closeTime}
+                <strong>{t("hours")}:</strong>{" "}
+                {(() => {
+                  const getTimeField = (
+                    obj: unknown,
+                    names: string[]
+                  ): string | undefined => {
+                    if (!obj || typeof obj !== "object") return undefined;
+                    const rec = obj as Record<string, unknown>;
+                    for (const n of names) {
+                      const v = rec[n];
+                      if (typeof v === "string" && v.length > 0) return v;
+                    }
+                    return undefined;
+                  };
+                  const o =
+                    getTimeField(restaurant, ["openTime", "openingTime"]) ??
+                    "?";
+                  const c =
+                    getTimeField(restaurant, ["closeTime", "closingTime"]) ??
+                    "?";
+                  return `${o} - ${c}`;
+                })()}
               </Typography>
               <Box display="flex" alignItems="center" gap={0.2} sx={{ mt: 1 }}>
                 <strong>{t("rating")}:</strong>
@@ -735,6 +845,168 @@ const RestaurantDetailPage = () => {
             <ReviewForm />
           </Box>
         </Box>
+        {/* --- Gợi ý: Có thể bạn quan tâm (nhà hàng > 4 sao, trừ nhà hàng hiện tại) --- */}
+        {(() => {
+          const suggested = (allRestaurants || []).filter((r) => {
+            const avg = r.averageRating ?? r.rating ?? 0;
+            return avg > 4 && r.id !== restaurant.id;
+          });
+
+          if (!suggested || suggested.length === 0) return null;
+
+          const renderCard = (r: (typeof allRestaurants)[number]) => (
+            <Card
+              key={r.id}
+              sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+            >
+              <Box
+                onClick={() => router.push(`/RestaurantDetails/${r.id}`)}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flexGrow: 1,
+                  cursor: "pointer",
+                }}
+              >
+                {r.imageUrl ? (
+                  <Box
+                    component="img"
+                    src={r.imageUrl}
+                    alt={r.name}
+                    sx={{ width: "100%", height: 160, objectFit: "cover" }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 160,
+                      backgroundColor: "#f5f5f5",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Chưa có ảnh
+                    </Typography>
+                  </Box>
+                )}
+
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                    noWrap
+                    title={r.name}
+                  >
+                    {r.name}
+                  </Typography>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <StarIcon
+                        key={idx}
+                        fontSize="small"
+                        color={
+                          idx < (r.averageRating ?? r.rating ?? 0)
+                            ? "warning"
+                            : "disabled"
+                        }
+                      />
+                    ))}
+                    <Typography variant="body2" color="text.secondary" ml={0.5}>
+                      {(r.averageRating ?? r.rating ?? 0).toFixed(1)}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                    title={r.address}
+                  >
+                    {r.address}
+                  </Typography>
+                </CardContent>
+              </Box>
+
+              <Box sx={{ p: 1, pt: 0 }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/RestaurantDetails/${r.id}`);
+                  }}
+                >
+                  Đặt chỗ ngay
+                </Button>
+              </Box>
+            </Card>
+          );
+
+          return (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h5" sx={{ mb: 1 }}>
+                Có thể bạn quan tâm
+              </Typography>
+              <Box position="relative">
+                <Grid
+                  container
+                  ref={suggestedRef}
+                  spacing={2}
+                  sx={{
+                    flexWrap: "nowrap",
+                    overflowX: "auto",
+                    px: 1,
+                    py: 0,
+                    scrollbarWidth: "none",
+                    "&::-webkit-scrollbar": { display: "none" },
+                  }}
+                >
+                  {suggested.map((r) => (
+                    <Grid
+                      item
+                      key={r.id}
+                      sx={{ flex: "0 0 280px", width: 280 }}
+                      component={"div" as React.ElementType}
+                    >
+                      {renderCard(r)}
+                    </Grid>
+                  ))}
+                </Grid>
+                <IconButton
+                  onClick={() => scrollSuggested("left")}
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: 8,
+                    transform: "translateY(-50%)",
+                    bgcolor: "background.paper",
+                    boxShadow: 2,
+                  }}
+                  size="small"
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => scrollSuggested("right")}
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    right: 8,
+                    transform: "translateY(-50%)",
+                    bgcolor: "background.paper",
+                    boxShadow: 2,
+                  }}
+                  size="small"
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          );
+        })()}
       </Box>
 
       {/* Bên phải: Form đặt bàn */}

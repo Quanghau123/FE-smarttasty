@@ -111,4 +111,6 @@ export interface InfoPayment {
   amount: number;
   status: string; // BE returns string status in InfoPaymentDto
   order: OrderResponse;
+  // Optional COD info when method is COD (present in BE InfoPaymentDto)
+  codPayment?: CODPayment | null;
 }

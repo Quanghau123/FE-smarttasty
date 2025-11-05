@@ -10,6 +10,7 @@ import reviewReducer from "./slices/reviewSlice";
 import orderRenducer from "./slices/orderSlice";
 import paymentRenducer from "./slices/paymentSlice";
 import orderPromtionRenducer from "./slices/orderPromotionsSlice";
+import recipeReducer from "./slices/recipesSlice";
 import { subscribeAccessTokenChange } from "@/lib/utils/tokenHelper";
 
 export const store = configureStore({
@@ -22,6 +23,7 @@ export const store = configureStore({
     dishpromotion: dishpromotionReducer,
     reservation: reservationReducer,
     review: reviewReducer,
+    recipes: recipeReducer,
     order: orderRenducer,
     payment: paymentRenducer,
     orderPromotion: orderPromtionRenducer,

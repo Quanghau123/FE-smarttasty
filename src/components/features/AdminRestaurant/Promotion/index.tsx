@@ -82,6 +82,8 @@ const PromotionPage = () => {
     discountValue: 0,
     targetType: "dish" as TargetType,
   });
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // ===== INIT =====
   useEffect(() => {
@@ -106,8 +108,10 @@ const PromotionPage = () => {
   }, [restaurant, dispatch, promotionError]);
 
   // ===== HANDLERS =====
-  const handleOpenModal = (promo: Promotion | null = null) => {
-    if (promo) {
+const handleOpenModal = (promo: Promotion | null = null) => {
+  if (promo) {
+    // Nếu đang chỉnh sửa cùng 1 khuyến mãi, không cần reset lại form
+    if (!editingPromo || editingPromo.id !== promo.id) {
       setEditingPromo(promo);
       setFormData({
         title: promo.title,
@@ -118,23 +122,10 @@ const PromotionPage = () => {
         discountValue: promo.discountValue ?? 0,
         targetType: promo.targetType as TargetType,
       });
-    } else {
-      setEditingPromo(null);
-      setFormData({
-        title: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-        discountType: "percent",
-        discountValue: 0,
-        targetType: "dish",
-      });
+      setPreviewUrl(promo.imageUrl ?? null);
+      setFile(null);
     }
-    setOpenModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
+  } else {
     setEditingPromo(null);
     setFormData({
       title: "",
@@ -145,6 +136,32 @@ const PromotionPage = () => {
       discountValue: 0,
       targetType: "dish",
     });
+    setFile(null);
+    setPreviewUrl(null);
+  }
+  setOpenModal(true);
+};
+
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+
+    // Nếu đang tạo mới thì reset form
+    if (!editingPromo) {
+      setFormData({
+        title: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        discountType: "percent",
+        discountValue: 0,
+        targetType: "dish",
+      });
+      setFile(null);
+      setPreviewUrl(null);
+    }
+
+    // Giữ editingPromo để modal mở lại vẫn giữ data
   };
 
   const handleSubmit = async () => {
@@ -167,11 +184,11 @@ const PromotionPage = () => {
     try {
       if (editingPromo) {
         await dispatch(
-          updatePromotion({ id: editingPromo.id, data: payload })
+          updatePromotion({ id: editingPromo.id, data: payload, file })
         ).unwrap();
         toast.success("Cập nhật khuyến mãi thành công ✅");
       } else {
-        await dispatch(addPromotion(payload)).unwrap();
+        await dispatch(addPromotion({ data: payload, file })).unwrap();
         toast.success("Thêm khuyến mãi thành công ✅");
       }
       handleCloseModal();
@@ -313,6 +330,21 @@ const PromotionPage = () => {
                   },
                 }}
               >
+                {/* Image preview */}
+                {promo.imageUrl && (
+                  <Box sx={{ width: "100%", height: 160, overflow: "hidden" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={promo.imageUrl}
+                      alt={promo.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Box>
+                )}
                 {/* Status Badge */}
                 <Box
                   sx={{
@@ -536,6 +568,50 @@ const PromotionPage = () => {
                   }
                   variant="outlined"
                 />
+
+                {/* Upload ảnh khuyến mãi (tùy chọn) */}
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                    Ảnh khuyến mãi (tùy chọn)
+                  </Typography>
+                  {previewUrl && (
+                    <Box mb={1}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={previewUrl}
+                        alt="promotion-preview"
+                        style={{
+                          width: "100%",
+                          maxHeight: 200,
+                          objectFit: "cover",
+                          borderRadius: 8,
+                        }}
+                      />
+                    </Box>
+                  )}
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    sx={{ textTransform: "none" }}
+                  >
+                    Chọn ảnh
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] || null;
+                        setFile(f);
+                        if (f) {
+                          const url = URL.createObjectURL(f);
+                          setPreviewUrl(url);
+                        } else {
+                          setPreviewUrl(null);
+                        }
+                      }}
+                    />
+                  </Button>
+                </Box>
               </Stack>
             </Box>
 

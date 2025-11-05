@@ -25,6 +25,7 @@ interface PaymentState {
   payments: Payment[];
   selectedPayment: Payment | null;
   history: InfoPayment[];
+  restaurantPayments: InfoPayment[];
   loading: boolean;
   error: string | null;
 }
@@ -33,6 +34,7 @@ const initialState: PaymentState = {
   payments: [],
   selectedPayment: null,
   history: [],
+  restaurantPayments: [],
   loading: false,
   error: null,
 };
@@ -138,6 +140,59 @@ export const confirmCODPayment = createAsyncThunk<
   }
 });
 
+// 3️⃣b POST /api/Payment/cod/confirm (by paymentId)
+// BE endpoint: POST /api/Payment/cod/confirm?codPaymentId={codPaymentId}
+// Need to lookup CODPayment from pending payments list
+export const confirmCODPaymentByPaymentId = createAsyncThunk<
+  CODPayment,
+  { paymentId: number; restaurantId: number },
+  { rejectValue: string }
+>(
+  "payment/confirmCODPaymentByPaymentId",
+  async ({ paymentId, restaurantId }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+
+      // Step 1: Fetch pending payments of this restaurant to find the CODPayment.Id
+      const pendingRes = await axiosInstance.get(
+        `/api/Payment/restaurant/pending/${restaurantId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      const pendingEnvelope = resolveApiData<InfoPayment[]>(pendingRes.data);
+      const matching = pendingEnvelope?.data?.find((p) => p.id === paymentId);
+
+      const codPaymentId = matching?.codPayment?.id;
+      if (!codPaymentId) {
+        return rejectWithValue(
+          "Không tìm thấy COD payment đang chờ hoặc không phải đơn COD"
+        );
+      }
+
+      // Step 2: Call BE endpoint with codPaymentId
+      const url = `/api/Payment/cod/confirm?codPaymentId=${codPaymentId}`;
+      const res = await axiosInstance.post(url, null, {
+        headers: token
+          ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+          : { "Content-Type": "application/json" },
+      });
+
+      const envelope = resolveApiData<CODPayment>(res.data);
+      if (envelope && envelope.data) {
+        return envelope.data as CODPayment;
+      }
+      return rejectWithValue(
+        (envelope as unknown as { errMessage?: string })?.errMessage ??
+          "Không thể xác nhận thanh toán COD"
+      );
+    } catch (e: unknown) {
+      return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
+    }
+  }
+);
+
 // 4️⃣ GET /api/Payment/vnpay-return
 export const handleVNPayReturn = createAsyncThunk<
   Payment,
@@ -212,6 +267,59 @@ export const fetchPaymentHistoryByUser = createAsyncThunk<
   }
 });
 
+// 8️⃣ DELETE /api/Payment/cancel/{orderId}
+export const cancelOrder = createAsyncThunk<
+  { success: boolean; orderId: number },
+  { orderId: number; userId?: number },
+  { rejectValue: string; dispatch: AppDispatch }
+>("payment/cancelOrder", async ({ orderId, userId }, { rejectWithValue, dispatch }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.delete(`/api/Payment/cancel/${orderId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    const envelope = resolveApiData<Record<string, unknown>>(res.data);
+    // If envelope exists and backend indicates success, refresh lists
+    if (envelope && envelope.data) {
+      // Prefer to refresh the user's history if we have the userId, otherwise refresh pending
+      if (typeof userId === "number") {
+        dispatch(fetchPaymentHistoryByUser({ userId }));
+      } else {
+        dispatch(fetchPendingPayments());
+      }
+      return { success: true, orderId };
+    }
+    // Extract error message from envelope
+    const errObj = envelope as unknown as { errMessage?: string };
+    return rejectWithValue(errObj?.errMessage ?? "Không thể hủy đơn");
+  } catch (e: unknown) {
+    return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
+  }
+});
+
+// 8️⃣ GET /api/Payment/restaurant/{restaurantId}
+export const fetchPaymentsByRestaurant = createAsyncThunk<
+  InfoPayment[],
+  { restaurantId: number },
+  { rejectValue: string }
+>("payment/fetchPaymentsByRestaurant", async ({ restaurantId }, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.get(`/api/Payment/restaurant/${restaurantId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    const envelope = resolveApiData<InfoPayment[]>(res.data);
+    if (envelope && envelope.data && Array.isArray(envelope.data)) {
+      return envelope.data as InfoPayment[];
+    }
+    // Try to read error message in a type-safe way
+    const errObj = (envelope as unknown) as { errMessage?: string };
+    return rejectWithValue(errObj?.errMessage ?? "Không thể lấy danh sách thanh toán theo nhà hàng");
+  } catch (e: unknown) {
+    return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
+  }
+});
+
 /* -------------------------------------------------------------------------- */
 /*                                   SLICE                                    */
 /* -------------------------------------------------------------------------- */
@@ -245,6 +353,9 @@ const paymentSlice = createSlice({
       .addCase(confirmCODPayment.fulfilled, () => {
         // confirmCODPayment dispatches fetchPendingPayments internally
       })
+      .addCase(confirmCODPaymentByPaymentId.fulfilled, () => {
+        // Admin view should refresh restaurant payments in component after calling this
+      })
       .addCase(handleVNPayReturn.fulfilled, (state, action) => {
         state.selectedPayment = action.payload;
       })
@@ -253,6 +364,9 @@ const paymentSlice = createSlice({
       })
       .addCase(fetchPaymentHistoryByUser.fulfilled, (state, action) => {
         state.history = action.payload;
+      })
+      .addCase(fetchPaymentsByRestaurant.fulfilled, (state, action) => {
+        state.restaurantPayments = action.payload;
       })
       .addMatcher(
         (a) => a.type.startsWith("payment/") && a.type.endsWith("/pending"),

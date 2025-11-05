@@ -31,7 +31,6 @@ import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 
-
 const Header = () => {
   const [localUserName, setLocalUserName] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -181,7 +180,7 @@ const Header = () => {
         <Link href="/">
           <Image
             src={getImageUrl("Logo/anhdaidienmoi.png")}
-            alt="Logo"
+            alt={t("logo_alt")}
             width={70}
             height={50}
             priority
@@ -209,23 +208,24 @@ const Header = () => {
             size="small"
             variant="standard"
             className={styles.categorySelect}
-            defaultValue="Ăn uống"
           >
-            <MenuItem value="All">Ăn uống</MenuItem>
-            <MenuItem value="Buffet">Buffet</MenuItem>
-            <MenuItem value="NhaHang">Nhà Hàng</MenuItem>
-            <MenuItem value="AnVatViaHe">Ăn vặt/vỉa hè</MenuItem>
-            <MenuItem value="AnChay">Ăn chay</MenuItem>
-            <MenuItem value="CafeNuocuong">Cafe/Nước uống</MenuItem>
-            <MenuItem value="QuanAn">Quán ăn</MenuItem>
-            <MenuItem value="Bar">Bar</MenuItem>
-            <MenuItem value="QuanNhau">Quán nhậu</MenuItem>
+            <MenuItem value="All">{t("category_all")}</MenuItem>
+            <MenuItem value="Buffet">{t("category_buffet")}</MenuItem>
+            <MenuItem value="NhaHang">{t("category_nhahang")}</MenuItem>
+            <MenuItem value="AnVatViaHe">{t("category_anvatviahe")}</MenuItem>
+            <MenuItem value="AnChay">{t("category_anchay")}</MenuItem>
+            <MenuItem value="CafeNuocuong">
+              {t("category_cafenuocuong")}
+            </MenuItem>
+            <MenuItem value="QuanAn">{t("category_quanan")}</MenuItem>
+            <MenuItem value="Bar">{t("category_bar")}</MenuItem>
+            <MenuItem value="QuanNhau">{t("category_quannhau")}</MenuItem>
           </TextField>
 
           <TextField
             size="small"
             variant="outlined"
-            placeholder="Địa điểm, món ăn, loại hình..."
+            placeholder={t("search_placeholder")}
             InputProps={{
               endAdornment: <SearchIcon />,
             }}
@@ -269,6 +269,11 @@ const Header = () => {
                   <Link href="/purchase">
                     <Button fullWidth size="small" variant="text">
                       {t("my_purchase_btn_title")}
+                    </Button>
+                  </Link>
+                  <Link href="/bookingtable">
+                    <Button fullWidth size="small" variant="text">
+                      {t("my_booking_btn_title")}
                     </Button>
                   </Link>
                   <Button

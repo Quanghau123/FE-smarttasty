@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import styles from "./styles.module.scss";
 
-import anh4 from "@/assets/Image/SlideHeader/anh5.jpg";
+import anh4 from "@/assets/Image/SlideHeader/banner5.png";
 
 const images = [anh4, anh4, anh4, anh4];
 

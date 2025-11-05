@@ -1,12 +1,20 @@
 // types/reservation.ts
 
-// Trạng thái đặt chỗ
+// Trạng thái đặt chỗ (lowercase - legacy in some places)
 export type ReservationStatus =
   | "pending"
   | "confirmed"
   | "checkedIn"
   | "completed"
   | "cancelled";
+
+// Trạng thái đặt chỗ (BE enum names)
+export type ReservationStatusName =
+  | "Pending"
+  | "Confirmed"
+  | "CheckedIn"
+  | "Completed"
+  | "Cancelled";
 
 // Request khi tạo đặt chỗ
 export interface ReservationRequest {
@@ -35,14 +43,14 @@ export interface ReservationEntity {
   phone: string;
   email: string;
   note?: string;
-  status: ReservationStatus;
+  status: ReservationStatus | ReservationStatusName;
   createdAt: string;
   updatedAt: string;
 }
 
 // Request update status
-export interface UpdateReservationStatusRequest {
-  status: ReservationStatus;
+export interface UpdateReservationStatusParams {
+  status: ReservationStatusName; // must match BE enum name
   changedBy: number;
   note?: string;
 }
@@ -50,8 +58,22 @@ export interface UpdateReservationStatusRequest {
 // Response update status
 export interface UpdateReservationStatusResponse {
   id: number;
-  status: ReservationStatus;
-  changedBy: number;
-  note?: string;
-  updatedAt: string;
+  status: ReservationStatusName;
+}
+
+// Row shape returned by GET /api/Reservation/restaurant/{restaurantId}
+export interface RestaurantReservationRow {
+  id: number;
+  userId: number;
+  userName?: string | null;
+  restaurantId: number;
+  adultCount: number;
+  childCount: number;
+  arrivalDate: string;
+  reservationTime: string; // HH:mm:ss
+  note?: string | null;
+  status: ReservationStatusName | string | number;
+  createdAt: string;
+  customers?: { contactName?: string | null; phone?: string | null; email?: string | null }[];
+  latestHistory?: { status: string; note?: string | null; changedAt: string } | null;
 }
