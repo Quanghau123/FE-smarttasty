@@ -2,14 +2,18 @@ import SlideHeader from "@/components/layouts/SlideHeader";
 //import Test from "@/components/Test";
 import Body from "@/components/layouts/Body";
 import Menu from "@/components/layouts/Menu";
-import Test from "@/components/Test";
+import RestaurantRating from "@/components/Test/RestaurantRating";
+import Chatbot from "@/components/features/Chatbot/ChatBot";
+import Notification from "@/components/Test/Notification";
 
 const index = () => {
   return (
     <>
       <SlideHeader />
       <Menu />
-      <Test restaurantId="2" />
+      <Notification />
+      <RestaurantRating restaurantId="2" />
+      <Chatbot />
       <Body />
     </>
   );
