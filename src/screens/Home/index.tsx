@@ -1,8 +1,7 @@
 import SlideHeader from "@/components/layouts/SlideHeader";
-//import Test from "@/components/Test";
 import Body from "@/components/layouts/Body";
 import Menu from "@/components/layouts/Menu";
-import RestaurantRating from "@/components/Test/RestaurantRating";
+// import RestaurantRating from "@/components/Test/RestaurantRating";
 import Chatbot from "@/components/features/Chatbot/ChatBot";
 import Notification from "@/components/Test/Notification";
 
@@ -12,7 +11,7 @@ const index = () => {
       <SlideHeader />
       <Menu />
       <Notification />
-      <RestaurantRating restaurantId="2" />
+      {/* <RestaurantRating restaurantId="2" /> */}
       <Chatbot />
       <Body />
     </>

@@ -32,7 +32,7 @@ export default function NotificationTest() {
 
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5275/hubs/notification", {
+      .withUrl("https://socket.smart-tasty.io.vn/hubs/notification", {
         accessTokenFactory: () => getAccessToken() ?? "",
       })
       .withAutomaticReconnect()
