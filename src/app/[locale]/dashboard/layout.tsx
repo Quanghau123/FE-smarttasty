@@ -21,7 +21,7 @@ export default function RestaurantLayout({
           <Sidebar />
         </div>
       )}
-      <div style={{ width: "100%" }}>
+  <Box style={{ flex: 1, minWidth: 0 }}>
         {isMobile && (
           <Box sx={{ px: 2, mb: 1, display: "flex", alignItems: "center" }}>
             <IconButton
@@ -36,7 +36,7 @@ export default function RestaurantLayout({
           </Box>
         )}
         {children}
-      </div>
+      </Box>
 
       <Drawer
         anchor="left"

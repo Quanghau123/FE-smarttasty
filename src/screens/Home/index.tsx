@@ -6,8 +6,10 @@ const index = () => {
   return (
     <>
       <SlideHeader />
+   {/*   <Test /> */}
       <Menu />
       <Body />
+    
     </>
   );
 };

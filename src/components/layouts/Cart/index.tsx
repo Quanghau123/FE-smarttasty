@@ -157,14 +157,14 @@ const CartPage = () => {
           await dispatch(deleteOrder(orderId));
           setSnackbar({
             open: true,
-            message: "✅ Đã xóa đơn hàng thành công",
+            message: "Đã xóa đơn hàng thành công",
             severity: "success",
           });
         } catch (error) {
           console.error("Lỗi xóa đơn:", error);
           setSnackbar({
             open: true,
-            message: "❌ Không thể xóa đơn hàng",
+            message: "Không thể xóa đơn hàng",
             severity: "error",
           });
         }
@@ -186,7 +186,7 @@ const CartPage = () => {
 
           setSnackbar({
             open: true,
-            message: "✅ Đã xóa món ăn thành công",
+            message: "Đã xóa món ăn thành công",
             severity: "success",
           });
         } catch (error) {
@@ -420,7 +420,9 @@ const CartPage = () => {
                     order.items.map((item) => {
                       const qty = Number(item.quantity ?? 0);
                       const unitPrice =
-                        typeof item.totalPrice === "number" && qty > 0
+                        typeof item.unitPrice === "number"
+                          ? Number(item.unitPrice)
+                          : typeof item.totalPrice === "number" && qty > 0
                           ? Math.round(item.totalPrice / qty)
                           : 0;
                       const total =
@@ -503,9 +505,24 @@ const CartPage = () => {
                             <Typography fontWeight="500" mb={0.5}>
                               {item.dishName}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {unitPrice.toLocaleString()}đ
-                            </Typography>
+                            <Box>
+                              {typeof item.originalPrice === "number" &&
+                              item.originalPrice > unitPrice ? (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ textDecoration: "line-through", mr: 1 }}
+                                >
+                                  {Number(item.originalPrice).toLocaleString()}đ
+                                </Typography>
+                              ) : null}
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {unitPrice.toLocaleString()}đ
+                              </Typography>
+                            </Box>
                           </Box>
 
                           {/* Quantity Controls */}

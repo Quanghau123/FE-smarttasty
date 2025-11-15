@@ -188,7 +188,7 @@ const Chatbot: React.FC = () => {
         aria-label="chat"
         sx={{
           position: "fixed",
-          bottom: 24,
+          bottom: 96,
           right: 24,
           zIndex: 1000,
         }}

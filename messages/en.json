@@ -21,7 +21,9 @@
     "category_cafenuocuong": "Cafe / Drinks",
     "category_quanan": "Eatery",
     "category_bar": "Bar",
-    "category_quannhau": "Pub"
+    "category_quannhau": "Pub",
+    "no_notifications": "No notifications",
+    "notifications_title": "Notifications"
   },
   "footer": {
     "contactus_btn_title": "Contact us",
@@ -179,6 +181,10 @@
     "success_added": "Item added to cart!",
     "loading": "Loading...",
     "restaurant_not_found": "Restaurant not found"
+    ,
+    "follow_label": "Follow",
+    "following_label": "Following",
+    "followers_label": "Followers"
   },
   "review": {
     "form_title": "Rate this restaurant",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -12,7 +12,9 @@ import {
   Typography,
   IconButton,
   Badge,
+  Autocomplete,
 } from "@mui/material";
+import { useSignalR } from "@/lib/signalr";
 import { fetchOrdersByUser } from "@/redux/slices/orderSlice";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -22,7 +24,9 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchRestaurants,
   fetchRestaurantsByCategory,
+  fetchRestaurantSearchSuggestions,
 } from "@/redux/slices/restaurantSlice";
+import { useRouter } from "next/navigation";
 import { clearUser, logoutUser } from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
@@ -36,10 +40,24 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [query, setQuery] = useState<string>("");
+  const suggTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (suggTimer.current) window.clearTimeout(suggTimer.current);
+    };
+  }, []);
 
   const dispatch = useAppDispatch();
   const t = useTranslations("header");
+  const router = useRouter();
+
+  // suggestions from redux
+  const { suggestions: searchSuggestions = [], loadingSuggestions } =
+    useAppSelector((s) => s.restaurant);
 
   // Lấy user từ Redux để detect khi login thành công
   const currentUser = useAppSelector((state) => state.user.user);
@@ -133,6 +151,18 @@ const Header = () => {
     }
   }, [selectedCategory, dispatch]);
 
+  const handleSearchSubmit = (q?: string) => {
+    const finalQ = (q ?? query).trim();
+    if (!finalQ) {
+      // empty -> go home and show all
+      dispatch(fetchRestaurants());
+      router.push("/");
+      return;
+    }
+    // Navigate to dedicated search results page
+    router.push(`/search?q=${encodeURIComponent(finalQ)}`);
+  };
+
   const handleLogout = () => {
     // ✅ Gọi API logout để revoke refresh tokens ở BE
     const userId = currentUser?.userId;
@@ -158,11 +188,61 @@ const Header = () => {
     setAnchorEl(event.currentTarget);
   };
 
+  const handleNotifOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotifAnchorEl(event.currentTarget);
+  };
+
   const handlePopoverClose = () => {
     setAnchorEl(null);
   };
 
+  const handleNotifClose = () => {
+    setNotifAnchorEl(null);
+  };
+
   const open = Boolean(anchorEl);
+  const notifOpen = Boolean(notifAnchorEl);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState<
+    {
+      id: string;
+      title: string;
+      message: string;
+      createdAt: number;
+      read?: boolean;
+    }[]
+  >([]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Register SignalR for realtime notifications when logged in
+  useSignalR({
+    enabled: isLoggedIn,
+    onNotification: (title?: string, message?: string) => {
+      console.log("🔔 [Header] onNotification callback triggered!");
+      console.log("   Title:", title);
+      console.log("   Message:", message);
+      try {
+        const id = String(Date.now()) + Math.random().toString(36).slice(2, 8);
+        const newNotif = {
+          id,
+          title: title || "",
+          message: message || "",
+          createdAt: Date.now(),
+          read: false,
+        };
+        console.log("   Created notification object:", newNotif);
+        setNotifications((prev) => {
+          const updated = [newNotif, ...prev];
+          console.log("   Updated notifications array:", updated);
+          return updated;
+        });
+      } catch (e) {
+        console.error("❌ Error handling realtime notification:", e);
+      }
+    },
+  });
 
   if (!hydrated) return null;
 
@@ -222,17 +302,57 @@ const Header = () => {
             <MenuItem value="QuanNhau">{t("category_quannhau")}</MenuItem>
           </TextField>
 
-          <TextField
-            size="small"
-            variant="outlined"
-            placeholder={t("search_placeholder")}
-            InputProps={{
-              endAdornment: <SearchIcon />,
+          <Autocomplete
+            freeSolo
+            options={searchSuggestions}
+            loading={loadingSuggestions}
+            inputValue={query}
+            onInputChange={(e, value) => {
+              setQuery(value);
+              if (suggTimer.current) {
+                window.clearTimeout(suggTimer.current);
+              }
+              if ((value ?? "").trim().length >= 2) {
+                suggTimer.current = window.setTimeout(() => {
+                  dispatch(
+                    fetchRestaurantSearchSuggestions((value ?? "").trim())
+                  );
+                }, 300);
+              }
             }}
-            className={styles.searchInput}
+            onChange={(_, value) => {
+              const val = typeof value === "string" ? value : value ?? "";
+              setQuery(val as string);
+              handleSearchSubmit(val as string);
+            }}
+            sx={{ flex: "1 1 0" }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                fullWidth
+                size="small"
+                variant="outlined"
+                placeholder={t("search_placeholder")}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <SearchIcon
+                      onClick={() => handleSearchSubmit()}
+                      style={{ cursor: "pointer" }}
+                    />
+                  ),
+                }}
+                className={styles.searchInput}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSearchSubmit();
+                  }
+                }}
+              />
+            )}
           />
         </Box>
-
         {/* Right: Auth, Notification, Language, Theme */}
         <Box className={styles.rightSection}>
           {isLoggedIn ? (
@@ -312,9 +432,50 @@ const Header = () => {
             </IconButton>
           </Link>
 
-          <IconButton>
-            <NotificationsNoneIcon />
+          <IconButton onClick={handleNotifOpen} aria-label="notifications">
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationsNoneIcon />
+            </Badge>
           </IconButton>
+
+          <Popover
+            open={notifOpen}
+            anchorEl={notifAnchorEl}
+            onClose={handleNotifClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Box sx={{ width: 320, maxHeight: 360, overflow: "auto", p: 1 }}>
+              <Typography fontWeight={600} mb={1} px={1}>
+                {t("notifications_title") || "Notifications"}
+              </Typography>
+              {notifications.length === 0 ? (
+                <Box px={1} py={2}>
+                  <Typography variant="body2">
+                    {t("no_notifications") || "No notifications"}
+                  </Typography>
+                </Box>
+              ) : (
+                notifications.map((n) => (
+                  <Box
+                    key={n.id}
+                    sx={{
+                      p: 1,
+                      borderBottom: "1px solid rgba(0,0,0,0.04)",
+                      background: n.read ? "transparent" : "rgba(0,0,0,0.02)",
+                    }}
+                  >
+                    <Typography variant="subtitle2">{n.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {n.message}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </Typography>
+                  </Box>
+                ))
+              )}
+            </Box>
+          </Popover>
 
           <LanguageSelector />
           <ThemeToggleButton />

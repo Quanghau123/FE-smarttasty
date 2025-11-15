@@ -88,9 +88,10 @@
   }
 
   .searchInput {
-    flex: 1 1 auto;
-    min-width: 100px;
-    max-width: 100%;
+    /* make the search input take more space and have a larger min width */
+    flex: 2 1 0;
+    min-width: 280px;
+    max-width: 720px;
   }
   
   @media (max-width: 768px) {
@@ -109,8 +110,10 @@
     }
 
     .searchInput {
-      min-width: 80px;
-      font-size: 0.85rem;
+      /* smaller on tablet/mobile but still usable */
+      min-width: 140px;
+      font-size: 0.9rem;
+      flex: 1 1 0;
     }
   }
   
@@ -126,7 +129,8 @@
     }
 
     .searchInput {
-      min-width: 60px;
+      min-width: 80px;
+      flex: 1 1 0;
     }
   }
 }
@@ -186,8 +190,9 @@
     }
 
     .searchInput {
-      min-width: 50px;
+      min-width: 60px;
       font-size: 0.75rem;
+      flex: 1 1 0;
     }
   }
 

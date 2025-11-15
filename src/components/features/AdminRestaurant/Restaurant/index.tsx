@@ -26,7 +26,6 @@ import {
 } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
-import type { DishPromotion } from "@/types/dishpromotion";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 // import { Description } from "@mui/icons-material";
 
@@ -137,51 +136,32 @@ const RestaurantPage = () => {
     setIsEditing(false);
   };
 
-  // helper: tính giá sau giảm theo 1 record KM
-  const computeDiscountedPrice = (
-    orig: number,
-    discountType?: string,
-    discountValue?: number
-  ) => {
-    if (!discountType) return orig;
-    if (discountType === "percent") {
-      const pct = Number(discountValue) || 0;
-      const safePct = Math.max(0, Math.min(100, pct)); // đề phòng dữ liệu sai
-      return Math.max(0, Math.round(orig * (1 - safePct / 100)));
-    }
-    if (discountType === "fixed_amount") {
-      const amt = Number(discountValue) || 0;
-      return Math.max(0, orig - amt);
-    }
-    return orig;
-  };
-
-  // memo: map dishId -> best discounted price (chọn giá thấp nhất nếu có nhiều KM)
+  /**
+   * ✅ Lấy giá tốt nhất từ BE - KHÔNG tự tính toán!
+   * BE đã tính sẵn giá giảm trong discountedPrice
+   * FE chỉ cần lấy giá thấp nhất từ các promotion
+   */
   const bestDiscountByDishId = useMemo(() => {
-    type DishPromotionFlat = DishPromotion & {
-      discountType?: "percent" | "fixed_amount";
-      discountValue?: number;
-    };
-
-    const getDiscount = (dp: DishPromotionFlat) => ({
-      type: dp.promotion?.discountType ?? dp.discountType,
-      value: dp.promotion?.discountValue ?? dp.discountValue,
-    });
-
     const map = new Map<number, number>();
-    for (const dish of dishes) {
-      const orig = dish.price;
-      const related = dishPromotions.filter((p) => p.dishId === dish.id);
-      if (related.length === 0) continue;
 
-      let best = orig;
-      for (const p of related) {
-        const { type, value } = getDiscount(p as DishPromotionFlat);
-        const after = computeDiscountedPrice(orig, type, Number(value));
-        if (after < best) best = after;
+    for (const dish of dishes) {
+      const originalPrice = dish.price;
+      const relatedPromotions = dishPromotions.filter(
+        (p) => p.dishId === dish.id
+      );
+
+      if (relatedPromotions.length === 0) continue;
+
+      // ✅ Tìm giá thấp nhất từ discountedPrice mà BE đã tính sẵn
+      const bestPrice = Math.min(
+        ...relatedPromotions.map((p) => p.discountedPrice || originalPrice)
+      );
+
+      if (bestPrice < originalPrice) {
+        map.set(dish.id, bestPrice);
       }
-      if (best < orig) map.set(dish.id, best);
     }
+
     return map;
   }, [dishes, dishPromotions]);
 
@@ -405,32 +385,54 @@ const RestaurantPage = () => {
       </Card>
 
       {/* Thực đơn */}
-      <Box>
+      <Box display="flex" justifyContent="center">
         {dishLoading ? (
           <CircularProgress />
         ) : dishes.length === 0 ? (
           <Typography>Chưa có món ăn nào.</Typography>
         ) : (
-          <Grid container spacing={{ xs: 1.5, md: 2 }} justifyContent="center">
-            {dishes.map((dish) => {
-              const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+          (() => {
+            // Xác định số món tối đa trên 1 hàng dựa vào màn hình
+            //const isMobile = useMediaQuery("(max-width:600px)");
+            const itemsPerRow = isMobile ? 2 : 4;
 
-              return (
-                <Grid
-                  item
-                  xs={12}
-                  sm={6}
-                  md={3}
-                  lg={3}
-                  key={dish.id}
-                  component={"div" as React.ElementType}
-                  sx={{ display: "flex", justifyContent: "center" }}
-                >
-                  <DishCard dish={dish} discountedPrice={discounted ?? null} />
-                </Grid>
-              );
-            })}
-          </Grid>
+            // Số món còn lại ở hàng cuối
+            const remainder = dishes.length % itemsPerRow;
+
+            // Nếu hàng cuối còn lẻ, căn trái, các hàng đầy căn giữa
+            return (
+              <Grid
+                container
+                spacing={{ xs: 1.5, md: 2 }}
+                justifyContent={remainder === 0 ? "center" : "flex-start"}
+              >
+                {dishes.map((dish) => {
+                  const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+
+                  return (
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={3}
+                      lg={3}
+                      key={dish.id}
+                      component={"div" as React.ElementType}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center", // card luôn căn giữa trong cột
+                      }}
+                    >
+                      <DishCard
+                        dish={dish}
+                        discountedPrice={discounted ?? null}
+                      />
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            );
+          })()
         )}
       </Box>
     </Box>

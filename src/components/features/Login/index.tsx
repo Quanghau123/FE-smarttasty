@@ -21,7 +21,7 @@ import styles from "./styles.module.scss";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { loginUser } from "@/redux/slices/userSlice";
+import { loginUser, fetchUserById } from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import { useTranslations } from "next-intl"; // ✅ import i18n
 
@@ -30,6 +30,7 @@ const LoginPage = () => {
   const [userPassword, setUserPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [hasShownSuccessToast, setHasShownSuccessToast] = useState(false);
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -50,7 +51,8 @@ const LoginPage = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasShownSuccessToast) {
+      setHasShownSuccessToast(true);
       toast.success(t("login_success")); // ✅ thêm key login_success trong file dịch
       switch (user.role) {
         case "admin":
@@ -59,11 +61,14 @@ const LoginPage = () => {
         case "business":
           router.push("/restaurant");
           break;
+        case "staff":
+          router.push("/staff");
+          break;
         default:
           router.push("/");
       }
     }
-  }, [user, router, t]);
+  }, [user, router, t, hasShownSuccessToast]);
 
   useEffect(() => {
     if (error) {
@@ -71,9 +76,14 @@ const LoginPage = () => {
     }
   }, [error]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(loginUser({ email, userPassword, remember }));
+    const result = await dispatch(loginUser({ email, userPassword, remember }));
+
+    // Nếu login thành công, gọi fetchUserById để lấy đầy đủ thông tin user
+    if (loginUser.fulfilled.match(result) && result.payload.user.userId) {
+      await dispatch(fetchUserById(result.payload.user.userId));
+    }
   };
 
   return (

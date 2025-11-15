@@ -10,7 +10,7 @@ const Menu = () => {
     <Box
       display="flex"
       gap={4}
-      p={3}
+      p={2}
       sx={{
         bgcolor: "background.default",
         color: "text.primary",
@@ -32,6 +32,13 @@ const Menu = () => {
         onClick={() => router.push("/NearbyRestaurant")}
       >
         Nhà hàng gần bạn
+      </Button>
+       <Button
+        variant="outlined"
+        color="secondary"
+        onClick={() => router.push("/recipes")}
+      >
+        Công thức món ăn
       </Button>
     </Box>
   );

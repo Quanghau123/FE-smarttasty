@@ -25,6 +25,7 @@ import axiosInstance from "@/lib/axios/axiosInstance";
 import {
   fetchReservationsByRestaurant,
   updateReservationStatus,
+  deleteReservationForBusiness,
 } from "@/redux/slices/reservationSlice";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 import { toast } from "react-toastify";
@@ -112,16 +113,16 @@ const TableBooking: React.FC = () => {
     dispatch(fetchReservationsByRestaurant(restaurant.id));
   }, [restaurant?.id, dispatch]);
 
-  const refresh = async () => {
+  const refresh = React.useCallback(async () => {
     if (!restaurant?.id) return;
     await dispatch(fetchReservationsByRestaurant(restaurant.id));
-  };
+  }, [restaurant?.id, dispatch]);
 
-  const handleOpenUpdate = (id: number, current: string) => {
+  const handleOpenUpdate = React.useCallback((id: number, current: string) => {
     setSelectedStatus("");
     setNote("");
     setUpdateDialog({ open: true, id, current });
-  };
+  }, []);
 
   const handleUpdateStatus = async () => {
     if (!updateDialog.id) return;
@@ -147,6 +148,28 @@ const TableBooking: React.FC = () => {
       toast.error(err?.message || "Cập nhật thất bại");
     }
   };
+
+  const handleCancelByBusiness = React.useCallback(
+    async (reservationId: number) => {
+      const confirm = window.confirm(
+        "Bạn có chắc muốn hủy đặt bàn này (hủy bởi nhà hàng)?"
+      );
+      if (!confirm) return;
+      const { user } = getUserFromLocalStorage();
+      const userId = user.userId ?? 0;
+      try {
+        await dispatch(
+          deleteReservationForBusiness({ reservationId, userId })
+        ).unwrap();
+        toast.success("Đã hủy đặt bàn (bởi nhà hàng)");
+        await refresh();
+      } catch (e: unknown) {
+        const err = e as { message?: string };
+        toast.error(err?.message || "Hủy thất bại");
+      }
+    },
+    [dispatch, refresh]
+  );
 
   const content = useMemo(() => {
     if (loading)
@@ -241,6 +264,14 @@ const TableBooking: React.FC = () => {
                   ) : (
                     <Chip size="small" label="Không có hành động" />
                   )}
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    onClick={() => handleCancelByBusiness(r.id)}
+                  >
+                    Hủy (Nhà hàng)
+                  </Button>
                   <Chip
                     size="small"
                     variant="outlined"
@@ -253,7 +284,7 @@ const TableBooking: React.FC = () => {
         })}
       </Grid>
     );
-  }, [rows, loading, error]);
+  }, [rows, loading, error, handleCancelByBusiness, handleOpenUpdate]);
 
   return (
     <Box p={2}>

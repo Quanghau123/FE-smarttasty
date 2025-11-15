@@ -29,6 +29,7 @@ import { fetchDishes } from "@/redux/slices/dishSlide";
 import { getReviewsByRestaurant } from "@/redux/slices/reviewSlice";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice";
 import { fetchPromotions } from "@/redux/slices/promotionSlice";
+import { fetchUserById } from "@/redux/slices/userSlice";
 import {
   fetchOrdersByUser,
   createOrder,
@@ -43,6 +44,19 @@ import StarIcon from "@mui/icons-material/Star";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
+import { useSignalR, RatingUpdateData } from "@/lib/signalr";
+import { applyRealtimeRating } from "@/redux/slices/restaurantSlice";
+import {
+  fetchFavoritesByRestaurant,
+  addFavorite,
+  removeFavorite,
+} from "@/redux/slices/favoritesSlice";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Favorite as FavoriteType } from "@/types/favorite";
+// Ensure axios has the latest Authorization and refresh-token behavior like other pages
+import axiosInstance from "@/lib/axios/axiosInstance";
+import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 // Toast
 import { toast, ToastContainer } from "react-toastify";
@@ -96,13 +110,98 @@ const RestaurantDetailPage = () => {
     error: reviewError,
   } = useAppSelector((state) => state.review);
 
+  // Favorites for this restaurant (yêu thích)
+  const { favorites: restaurantFavorites = [] } = useAppSelector(
+    (state) => state.favorites
+  );
+
   // Lấy thông tin user từ Redux store thay vì localStorage
   const currentUser = useAppSelector((state) => state.user.user);
+
+  const isFavorite = useMemo(() => {
+    if (!currentUser || !restaurant) return false;
+    return restaurantFavorites.some(
+      (f: FavoriteType) =>
+        f.restaurantId === restaurant.id && f.userId === currentUser.userId
+    );
+  }, [restaurantFavorites, restaurant, currentUser]);
 
   // Tổng số review từ BE (lưu trong slice restaurant)
   const totalReviewsFromState = useAppSelector(
     (state: RootState) => state.restaurant.currentTotalReviews ?? 0
   );
+
+  // ================== REALTIME RATING WITH SIGNALR ==================
+  // Callback xử lý khi nhận rating update từ SignalR
+  // Đúng chuẩn BE: nhận event 'ReceiveRestaurantUpdate' với property PascalCase
+  const handleRatingUpdate = (data: RatingUpdateData) => {
+    console.log("handleRatingUpdate invoked with:", data);
+    if (data.type === "restaurant_rating_update" && data.data) {
+      // Chuẩn hóa property PascalCase từ BE
+      const payload = data.data as Record<string, unknown>;
+      const restaurantIdNum = Number(
+        payload.RestaurantId ?? payload.restaurantId
+      );
+      const avg = Number(payload.AverageRating ?? payload.averageRating) || 0;
+      const tot = Number(payload.TotalReviews ?? payload.totalReviews) || 0;
+      if (!Number.isFinite(restaurantIdNum)) return;
+      // Chỉ cập nhật nếu đúng restaurant hiện tại
+      if (restaurantIdNum === Number(id)) {
+        dispatch(
+          applyRealtimeRating({
+            restaurantId: restaurantIdNum,
+            averageRating: avg,
+            totalReviews: tot,
+          })
+        );
+        console.log("Dispatched applyRealtimeRating:", {
+          restaurantId: restaurantIdNum,
+          averageRating: avg,
+          totalReviews: tot,
+        });
+        dispatch(getReviewsByRestaurant(restaurantIdNum));
+      }
+    }
+  };
+
+  // Kết nối SignalR và join restaurant room
+  useSignalR({
+    restaurantId: id ? String(id) : undefined,
+    onRatingUpdate: handleRatingUpdate,
+    enabled: !!id,
+  });
+
+  // ===== INIT - Set token and fetch user like Promotion page =====
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token) {
+      // Set Authorization header for axiosInstance
+      axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+      // Fetch current user if not in Redux yet (after reload/token refresh)
+      if (!currentUser?.userId) {
+        try {
+          // Try to decode token to get userId
+          const parts = token.split(".");
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            const userId =
+              payload?.userId ?? payload?.UserId ?? payload?.sub ?? payload?.id;
+            if (userId) {
+              // Fetch full user info to populate Redux state
+              dispatch(fetchUserById(Number(userId)));
+            }
+          }
+        } catch (e) {
+          console.warn("Could not decode token or fetch user:", e);
+        }
+      }
+    }
+  }, [dispatch, currentUser?.userId]);
+
+  // Luôn lấy rating từ Redux state để đảm bảo realtime
+  const displayAverageRating = restaurant?.averageRating ?? 0;
+  const displayTotalReviews = totalReviewsFromState;
 
   useEffect(() => {
     if (!id) return;
@@ -112,6 +211,8 @@ const RestaurantDetailPage = () => {
     dispatch(getReviewsByRestaurant(rid));
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
+    // Load favorites for this restaurant (refresh-token handled by axiosInstance)
+    dispatch(fetchFavoritesByRestaurant(rid));
   }, [dispatch, id]);
 
   // Ensure we have restaurants list to show suggestions
@@ -124,47 +225,30 @@ const RestaurantDetailPage = () => {
   const router = useRouter();
 
   // ================== GIẢM GIÁ ==================
-  const computeDiscountedPrice = (
-    orig: number,
-    discountType?: string,
-    discountValue?: number
-  ) => {
-    if (!discountType) return orig;
-    if (discountType === "percent")
-      return Math.max(
-        0,
-        Math.round(
-          orig * (1 - Math.max(0, Math.min(100, Number(discountValue))) / 100)
-        )
-      );
-    if (discountType === "fixed_amount")
-      return Math.max(0, orig - (Number(discountValue) || 0));
-    return orig;
-  };
-
+  /**
+   * ✅ Lấy giá tốt nhất (đã giảm) từ BE - KHÔNG tự tính toán!
+   * BE đã tính sẵn giá giảm trong discountedPrice
+   * FE chỉ cần lấy giá thấp nhất từ các promotion
+   */
   const bestDiscountByDishId = useMemo(() => {
     const map = new Map<number, number>();
-    for (const d of dishes) {
-      const orig = d.price;
-      const related = dishPromotions.filter((p) => p.dishId === d.id);
-      if (related.length === 0) continue;
 
-      let best = orig;
-      for (const p of related) {
-        const pr = p as unknown as Record<string, unknown>;
-        const after = computeDiscountedPrice(
-          orig,
-          typeof pr["discountType"] === "string"
-            ? (pr["discountType"] as string)
-            : undefined,
-          pr["discountValue"] !== undefined
-            ? Number(pr["discountValue"])
-            : undefined
-        );
-        if (after < best) best = after;
+    for (const d of dishes) {
+      const originalPrice = d.price;
+      const relatedPromotions = dishPromotions.filter((p) => p.dishId === d.id);
+
+      if (relatedPromotions.length === 0) continue;
+
+      // ✅ Tìm giá thấp nhất từ discountedPrice mà BE đã tính sẵn
+      const bestPrice = Math.min(
+        ...relatedPromotions.map((p) => p.discountedPrice || originalPrice)
+      );
+
+      if (bestPrice < originalPrice) {
+        map.set(d.id, bestPrice);
       }
-      if (best < orig) map.set(d.id, best);
     }
+
     return map;
   }, [dishes, dishPromotions]);
 
@@ -187,14 +271,60 @@ const RestaurantDetailPage = () => {
     const quantity = qtyMap[dishId] || 0;
     if (quantity <= 0) return;
 
-    // Lấy thông tin user từ Redux store
-    const userId = currentUser?.userId;
-    const address = currentUser?.address?.trim() || "";
-    const name = currentUser?.userName?.trim() || "";
-    const phone = currentUser?.phone?.trim() || "";
+    // Lấy thông tin user từ Redux store (có thể là partial)
+    let userId = currentUser?.userId;
+    let address = currentUser?.address?.trim() || "";
+    let name = currentUser?.userName?.trim() || "";
+    let phone = currentUser?.phone?.trim() || "";
+
+    // Nếu có access token nhưng Redux user thiếu thông tin, thử fetch chi tiết từ server
+    try {
+      const { getAccessToken } = await import("@/lib/utils/tokenHelper");
+      const token = getAccessToken();
+      if (token && (!userId || !address || !name || !phone)) {
+        // Cố gắng lấy userId từ token nếu chưa có
+        let resolvedId = userId;
+        if (!resolvedId) {
+          try {
+            const parts = token.split(".");
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1]));
+              resolvedId =
+                payload?.userId ??
+                payload?.UserId ??
+                payload?.sub ??
+                payload?.id;
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        if (resolvedId) {
+          try {
+            const fetched = await dispatch(
+              fetchUserById(Number(resolvedId))
+            ).unwrap();
+            userId = fetched?.userId ?? userId;
+            address =
+              (fetched?.address?.trim && fetched.address.trim()) || address;
+            name = (fetched?.userName?.trim && fetched.userName.trim()) || name;
+            phone = (fetched?.phone?.trim && fetched.phone.trim()) || phone;
+            console.log(
+              "Fetched full user from server for add-to-cart:",
+              fetched
+            );
+          } catch {
+            console.warn("Could not fetch full user before add-to-cart");
+          }
+        }
+      }
+    } catch {
+      // dynamic import or getAccessToken might fail in SSR; ignore
+    }
 
     // Debug log để kiểm tra dữ liệu
-    console.log("User data from Redux:", {
+    console.log("User data used for order:", {
       userId,
       address,
       name,
@@ -202,18 +332,13 @@ const RestaurantDetailPage = () => {
       currentUser,
     });
 
-    // Kiểm tra từng trường và hiển thị thông báo cụ thể
+    // Chỉ yêu cầu user đã đăng nhập để thêm vào giỏ; thông tin bổ sung sẽ được yêu cầu khi checkout
     const missingFields: string[] = [];
     if (!userId) missingFields.push("User ID");
-    if (!address) missingFields.push("Địa chỉ giao hàng");
-    if (!name) missingFields.push("Tên người nhận");
-    if (!phone) missingFields.push("Số điện thoại");
 
     if (missingFields.length > 0) {
       const fieldsList = missingFields.join(", ");
-      toast.error(
-        `Thiếu thông tin: ${fieldsList}. Vui lòng cập nhật thông tin cá nhân.`
-      );
+      toast.error(`Thiếu thông tin: ${fieldsList}. Vui lòng đăng nhập.`);
       console.warn("Missing fields:", missingFields);
       return;
     }
@@ -230,12 +355,16 @@ const RestaurantDetailPage = () => {
       ).unwrap();
 
       // Tìm đơn hàng đang mở với nhà hàng này
-      const activeOrder = userOrders.find(
-        (o) =>
+      const activeOrder = userOrders.find((o) => {
+        // Normalize status to string and compare case-insensitively because
+        // backend may return different casings (eg. "pending" vs "Pending").
+        const status = String(o.status ?? "").toLowerCase();
+        return (
           o.restaurantId === Number(restaurant.id) &&
           o.userId === Number(userId) &&
-          o.status === "Pending"
-      );
+          status === "pending"
+        );
+      });
 
       const discounted =
         bestDiscountByDishId.get(dishId) ??
@@ -320,6 +449,72 @@ const RestaurantDetailPage = () => {
     }
   };
 
+  // Favorite (theo dõi) - toggle handlers
+  const handleToggleFavorite = async () => {
+    // Kiểm tra token trước - nếu có token thì try fetch user
+    const token = getAccessToken();
+    let userId = currentUser?.userId;
+
+    if (!userId && token) {
+      // Token có nhưng Redux user chưa load -> thử decode token và fetch user
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          const uid =
+            payload?.userId ?? payload?.UserId ?? payload?.sub ?? payload?.id;
+          if (uid) {
+            // Fetch user để có đầy đủ thông tin
+            const fetchedUser = await dispatch(
+              fetchUserById(Number(uid))
+            ).unwrap();
+            userId = fetchedUser?.userId;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch user before toggle favorite:", e);
+      }
+    }
+
+    if (!userId) {
+      toast.error(
+        t("please_login_to_favorite") ?? "Vui lòng đăng nhập để theo dõi"
+      );
+      router.push("/login");
+      return;
+    }
+
+    try {
+      if (!restaurant) return;
+      if (isFavorite) {
+        const fav = restaurantFavorites.find(
+          (f: FavoriteType) =>
+            f.restaurantId === restaurant.id && f.userId === userId
+        );
+        if (!fav) return;
+        await dispatch(removeFavorite(fav.id)).unwrap();
+        toast.success(t("removed_favorite") ?? "Đã bỏ theo dõi");
+      } else {
+        await dispatch(
+          addFavorite({
+            userId: userId,
+            restaurantId: Number(restaurant.id),
+          })
+        ).unwrap();
+        toast.success(t("added_favorite") ?? "Đã theo dõi");
+      }
+      // refresh list
+      dispatch(fetchFavoritesByRestaurant(Number(id)));
+    } catch (err: unknown) {
+      console.error("Favorite toggle error:", err);
+      const errMsg =
+        err && typeof err === "object" && "message" in err
+          ? (err as { message?: string }).message
+          : t("error_occurred");
+      toast.error(errMsg || t("error_occurred"));
+    }
+  };
+
   // ================== LOADING & ERROR ==================
   if (restaurantLoading || dishesLoading) {
     return (
@@ -340,9 +535,9 @@ const RestaurantDetailPage = () => {
   }
 
   // ================== PHẦN CÒN LẠI ==================
-  // Lấy rating và tổng số review trực tiếp từ BE
-  const avgRating = Number(restaurant.averageRating ?? 0) || 0;
-  const totalReviews = totalReviewsFromState;
+  // Sử dụng rating từ realtime nếu có, fallback về state
+  const avgRating = displayAverageRating;
+  const totalReviews = displayTotalReviews;
 
   return (
     <Box className={styles.container}>
@@ -424,7 +619,28 @@ const RestaurantDetailPage = () => {
               )}
             </Box>
             <Box className={styles.restaurantInfo} sx={{ mt: 2 }}>
-              <Typography variant="h4">{restaurant.name}</Typography>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                width="100%"
+              >
+                <Typography variant="h4">{restaurant.name}</Typography>
+                <Button
+                  aria-label={isFavorite ? "Đã theo dõi" : "Theo dõi"}
+                  onClick={handleToggleFavorite}
+                  variant={isFavorite ? "contained" : "outlined"}
+                  color={isFavorite ? "success" : "primary"}
+                  startIcon={
+                    isFavorite ? <CheckCircleIcon /> : <PersonAddIcon />
+                  }
+                  size="small"
+                >
+                  {isFavorite
+                    ? t("following_label") ?? "Đang theo dõi"
+                    : t("follow_label") ?? "Theo dõi"}
+                </Button>
+              </Box>
 
               <Typography sx={{ mt: 1 }}>
                 <strong>{t("address")}:</strong> {restaurant.address}
@@ -509,6 +725,10 @@ const RestaurantDetailPage = () => {
                     "?";
                   return `${o} - ${c}`;
                 })()}
+              </Typography>
+              <Typography sx={{ mt: 1 }}>
+                <strong>{t("followers_label") ?? "Followers"}:</strong>{" "}
+                {restaurantFavorites?.length ?? 0}
               </Typography>
               <Box display="flex" alignItems="center" gap={0.2} sx={{ mt: 1 }}>
                 <strong>{t("rating")}:</strong>

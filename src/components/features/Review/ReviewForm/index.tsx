@@ -1,7 +1,10 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { createReview } from "@/redux/slices/reviewSlice";
+import {
+  createReview,
+  getReviewsByRestaurant,
+} from "@/redux/slices/reviewSlice";
 import { Box, Button, TextField, Rating, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
@@ -49,6 +52,13 @@ const ReviewForm = () => {
       toast.success(t("success_message"));
       setRating(null);
       setComment("");
+
+      // 🔄 Reload reviews list để hiển thị review mới
+      await dispatch(getReviewsByRestaurant(restaurant.id));
+
+      // 🔄 KHÔNG reload restaurant info - để socket tự động update
+      // Backend sẽ gửi event qua Kafka → Socket broadcast →
+      // → Tất cả users (kể cả user vừa submit) nhận realtime update
     } catch (err) {
       console.error("❌ Lỗi khi gửi review:", err);
       toast.error(t("error_message"));

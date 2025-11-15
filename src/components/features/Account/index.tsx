@@ -68,7 +68,7 @@ const AccountPage = () => {
             dispatch(setUser(parsedUser));
             dispatch(fetchUserById(parsedUser.userId));
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -88,13 +88,13 @@ const AccountPage = () => {
 
     // updateUser cần ít nhất userId
     // Không cho phép cập nhật email từ đây
-     const payload = {
-    userId: user.userId,
-    userName: editableUser.userName ?? user.userName,
-    email: user.email, // 🟢 giữ nguyên email cũ để không thiếu field
-    phone: editableUser.phone ?? user.phone,
-    address: editableUser.address ?? user.address,
-  };
+    const payload = {
+      userId: user.userId,
+      userName: editableUser.userName ?? user.userName,
+      email: user.email, // 🟢 giữ nguyên email cũ để không thiếu field
+      phone: editableUser.phone ?? user.phone,
+      address: editableUser.address ?? user.address,
+    };
 
     try {
       await dispatch(updateUser(payload)).unwrap();
@@ -208,7 +208,7 @@ const AccountPage = () => {
           <Tabs
             orientation="vertical"
             value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
+            onChange={(_, newValue) => setActiveTab(newValue)}
           >
             {tabItems.map((item) => (
               <Tab key={item.value} label={item.label} value={item.value} />

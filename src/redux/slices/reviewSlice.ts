@@ -32,6 +32,23 @@ const getErrorMessage = (error: unknown): string => {
   );
 };
 
+// Utility: normalize backend response to an array of ReviewData
+const extractReviewItems = (payloadData: unknown): ReviewData[] => {
+  if (!payloadData) return [];
+
+  // Case 1: payloadData is already an array of ReviewData
+  if (Array.isArray(payloadData)) return payloadData as ReviewData[];
+
+  // Case 2: payloadData is a paginated wrapper with `.data` field (e.g. { data: [...], totalRecords, ... })
+  if (typeof payloadData === "object" && payloadData !== null) {
+    const wrapper = payloadData as { data?: unknown };
+    if (Array.isArray(wrapper.data)) return wrapper.data as ReviewData[];
+  }
+
+  // Case 3: payloadData is a single ReviewData object
+  return [payloadData as ReviewData];
+};
+
 // ✅ Async thunk: tạo review
 export const createReview = createAsyncThunk<
   ReviewResponse,
@@ -109,13 +126,9 @@ const reviewSlice = createSlice({
           state.success = true;
 
           const data = action.payload.data;
-          if (Array.isArray(data)) {
-            state.review = data[0] ?? null;
-            if (data.length) state.reviews.push(data[0]);
-          } else if (data) {
-            state.review = data;
-            state.reviews.push(data);
-          }
+          const items = extractReviewItems(data);
+          state.review = items[0] ?? null;
+          if (items.length) state.reviews.push(items[0]);
         }
       )
       .addCase(createReview.rejected, (state, action) => {
@@ -134,13 +147,7 @@ const reviewSlice = createSlice({
         (state, action: PayloadAction<ReviewResponse>) => {
           state.loading = false;
           const data = action.payload.data;
-          if (Array.isArray(data)) {
-            state.reviews = data;
-          } else if (data) {
-            state.reviews = [data];
-          } else {
-            state.reviews = [];
-          }
+          state.reviews = extractReviewItems(data);
         }
       )
       .addCase(getReviews.rejected, (state, action) => {
@@ -159,13 +166,7 @@ const reviewSlice = createSlice({
         (state, action: PayloadAction<ReviewResponse>) => {
           state.loading = false;
           const data = action.payload.data;
-          if (Array.isArray(data)) {
-            state.reviews = data;
-          } else if (data) {
-            state.reviews = [data];
-          } else {
-            state.reviews = [];
-          }
+          state.reviews = extractReviewItems(data);
         }
       )
       .addCase(getReviewsByRestaurant.rejected, (state, action) => {

@@ -151,6 +151,25 @@ export const deleteReservation = createAsyncThunk<
 });
 
 /* -------------------------------------------------------------------------- */
+/*                   DELETE RESERVATION FOR BUSINESS (ANY STATUS)            */
+/* -------------------------------------------------------------------------- */
+export const deleteReservationForBusiness = createAsyncThunk<
+  { id: number; status: ReservationEntity['status'] },
+  { reservationId: number; userId: number },
+  { rejectValue: string }
+>("reservation/deleteReservationForBusiness", async ({ reservationId, userId }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.delete<ApiResponse<{ id: number; status: ReservationEntity['status'] }>>(
+      `/api/Reservation/business/${reservationId}`,
+      { params: { userId } }
+    );
+    return response.data.data;
+  } catch (error: unknown) {
+    return rejectWithValue(handleAxiosError(error));
+  }
+});
+
+/* -------------------------------------------------------------------------- */
 /*                                 SLICE SETUP                                */
 /* -------------------------------------------------------------------------- */
 const reservationSlice = createSlice({
@@ -264,6 +283,29 @@ const reservationSlice = createSlice({
       .addCase(deleteReservation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Failed to delete reservation";
+      });
+    // business cancel (any status)
+    builder
+      .addCase(deleteReservationForBusiness.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        deleteReservationForBusiness.fulfilled,
+        (state, action: PayloadAction<{ id: number; status: ReservationEntity['status'] }>) => {
+          state.loading = false;
+          state.reservations = state.reservations.map((r) =>
+            r.id === action.payload.id ? { ...r, status: action.payload.status } : r
+          );
+          if (state.reservation && state.reservation.id === action.payload.id) {
+            state.reservation.status = action.payload.status;
+            state.reservation.updatedAt = new Date().toISOString();
+          }
+        }
+      )
+      .addCase(deleteReservationForBusiness.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to delete reservation by business";
       });
   },
 });

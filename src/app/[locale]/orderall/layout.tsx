@@ -38,7 +38,7 @@ export default function RestaurantLayout({
       const decoded = jwtDecode<JwtPayload>(token);
       //  console.log("✅ Token decode thành công:", decoded);
 
-      if (decoded.role !== "business") {
+      if (decoded.role !== "business" && decoded.role !== "staff") {
         console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");
       } else {

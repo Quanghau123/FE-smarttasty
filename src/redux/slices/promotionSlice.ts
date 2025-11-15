@@ -83,6 +83,7 @@ type CreatePromotionInput = {
   discountType: DiscountType;
   discountValue: number;
   targetType: TargetType;
+  voucherCode?: string;
 };
 
 export const addPromotion = createAsyncThunk<
@@ -100,6 +101,7 @@ export const addPromotion = createAsyncThunk<
     form.append("DiscountType", data.discountType);
     form.append("DiscountValue", String(data.discountValue));
     form.append("TargetType", data.targetType);
+    if (data.voucherCode) form.append("VoucherCode", data.voucherCode);
     if (file) form.append("file", file);
 
     const res = await axiosInstance.post("/api/Promotions", form);
@@ -132,6 +134,7 @@ export const updatePromotion = createAsyncThunk<
       form.append("DiscountType", data.discountType);
       form.append("DiscountValue", String(data.discountValue));
       form.append("TargetType", data.targetType);
+        if (data.voucherCode) form.append("VoucherCode", data.voucherCode);
       if (file) form.append("file", file);
 
       const res = await axiosInstance.put(`/api/Promotions/${id}`, form);

@@ -36,7 +36,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
       pathname?.startsWith("/products") ||
       pathname?.startsWith("/promotion") ||
       pathname?.startsWith("/restaurant") ||
-       pathname?.startsWith("/orderall")
+      pathname?.startsWith("/orderall")
     ) {
       setOpen(true);
     }
@@ -138,6 +138,15 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               onClick={onNavigate}
             >
               <ListItemText primary="Tất cả đơn hàng" />
+            </ListItemButton>
+            <ListItemButton
+              component={Link}
+              href="/staffs"
+              selected={pathname === "/staffs"}
+              sx={{ borderRadius: 1, mt: 0.5 }}
+              onClick={onNavigate}
+            >
+              <ListItemText primary="Tài khoản con" />
             </ListItemButton>
           </List>
         </Collapse>

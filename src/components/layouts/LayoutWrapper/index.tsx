@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
+import ScrollToTop from "@/components/layouts/ScrollToTop";
 
 export default function LocaleLayout({
   children,
@@ -23,6 +24,7 @@ export default function LocaleLayout({
     <>
       {!hideHeaderFooter && <Header />}
       <main>{children}</main>
+      {!hideHeaderFooter && <ScrollToTop />}
       {!hideHeaderFooter && <Footer />}
     </>
   );

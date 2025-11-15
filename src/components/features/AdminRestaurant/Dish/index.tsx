@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { Card, CardContent, Box, Stack, Typography, Chip } from "@mui/material";
-import { useRouter } from "next/navigation";
 import type { Dish } from "@/types/dish";
 
 type Props = {
@@ -11,7 +10,6 @@ type Props = {
 };
 
 export default function DishCard({ dish, discountedPrice }: Props) {
-  const router = useRouter();
   const showDiscount =
     discountedPrice !== null &&
     discountedPrice !== undefined &&

@@ -38,8 +38,14 @@ import {
   updatePromotion,
   deletePromotion,
 } from "@/redux/slices/promotionSlice";
+import {
+  createOrderPromotion,
+  getOrderPromotionsForUser,
+  deleteOrderPromotion,
+} from "@/redux/slices/orderPromotionsSlice";
 import { fetchRestaurantByOwner } from "@/redux/slices/restaurantSlice";
 import { Promotion, DiscountType, TargetType } from "@/types/promotion";
+import { OrderPromotion } from "@/types/orderpromotion";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
@@ -66,6 +72,9 @@ const PromotionPage = () => {
     error: promotionError,
   } = useAppSelector((state) => state.promotion);
   const { current: restaurant } = useAppSelector((state) => state.restaurant);
+  const { items: orderPromotions = [] } = useAppSelector(
+    (state) => state.orderPromotion
+  );
 
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [openModal, setOpenModal] = useState(false);
@@ -73,14 +82,30 @@ const PromotionPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
 
+  // State cho dialog gán số tiền tối thiểu
+  const [openMinOrderDialog, setOpenMinOrderDialog] = useState(false);
+  const [selectedPromoForMinOrder, setSelectedPromoForMinOrder] =
+    useState<Promotion | null>(null);
+  const [minOrderValue, setMinOrderValue] = useState("");
+
+  // filter: all | dish | order
+  const [filterTarget, setFilterTarget] = useState<"all" | TargetType>("all");
+  const filteredPromotions = React.useMemo(() => {
+    if (!promotions) return [] as Promotion[];
+    if (filterTarget === "all") return promotions;
+    return promotions.filter((p) => p.targetType === filterTarget);
+  }, [promotions, filterTarget]);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     startDate: "",
     endDate: "",
     discountType: "percent" as DiscountType,
-    discountValue: 0,
+    // keep as string to control formatting (leading zeros) in the input
+    discountValue: "0",
     targetType: "dish" as TargetType,
+    voucherCode: "",
   });
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -102,46 +127,63 @@ const PromotionPage = () => {
     if (restaurant?.id) {
       setRestaurantId(restaurant.id);
       dispatch(fetchPromotions(restaurant.id));
+      // Load order-promotions for this restaurant so we can show minOrderValue and allow cancel
+      dispatch(getOrderPromotionsForUser({ restaurantId: restaurant.id }));
     } else if (restaurant) {
       toast.warning("Tài khoản chưa có nhà hàng!");
     }
   }, [restaurant, dispatch, promotionError]);
 
   // ===== HANDLERS =====
-const handleOpenModal = (promo: Promotion | null = null) => {
-  if (promo) {
-    // Nếu đang chỉnh sửa cùng 1 khuyến mãi, không cần reset lại form
-    if (!editingPromo || editingPromo.id !== promo.id) {
-      setEditingPromo(promo);
+  const handleOpenModal = (promo: Promotion | null = null) => {
+    if (promo) {
+      // Nếu đang chỉnh sửa cùng 1 khuyến mãi, không cần reset lại form
+      if (!editingPromo || editingPromo.id !== promo.id) {
+        setEditingPromo(promo);
+        setFormData({
+          title: promo.title,
+          description: promo.description || "",
+          startDate: fromISO(promo.startDate),
+          endDate: fromISO(promo.endDate),
+          discountType: promo.discountType as DiscountType,
+          // store as string so input preserves user formatting until submit
+          discountValue: String(promo.discountValue ?? 0),
+          targetType: promo.targetType as TargetType,
+          // promotion may expose a top-level voucherCode or a vouchers array
+          voucherCode: (() => {
+            const p = promo as unknown as Record<string, unknown>;
+            if (
+              typeof p.voucherCode === "string" &&
+              p.voucherCode.trim() !== ""
+            ) {
+              return p.voucherCode as string;
+            }
+            if (promo.vouchers && promo.vouchers.length > 0) {
+              return String(promo.vouchers[0].code ?? "");
+            }
+            return "";
+          })(),
+        });
+        setPreviewUrl(promo.imageUrl ?? null);
+        setFile(null);
+      }
+    } else {
+      setEditingPromo(null);
       setFormData({
-        title: promo.title,
-        description: promo.description || "",
-        startDate: fromISO(promo.startDate),
-        endDate: fromISO(promo.endDate),
-        discountType: promo.discountType as DiscountType,
-        discountValue: promo.discountValue ?? 0,
-        targetType: promo.targetType as TargetType,
+        title: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        discountType: "percent",
+        discountValue: "0",
+        targetType: "dish",
+        voucherCode: "",
       });
-      setPreviewUrl(promo.imageUrl ?? null);
       setFile(null);
+      setPreviewUrl(null);
     }
-  } else {
-    setEditingPromo(null);
-    setFormData({
-      title: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      discountType: "percent",
-      discountValue: 0,
-      targetType: "dish",
-    });
-    setFile(null);
-    setPreviewUrl(null);
-  }
-  setOpenModal(true);
-};
-
+    setOpenModal(true);
+  };
 
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -154,8 +196,9 @@ const handleOpenModal = (promo: Promotion | null = null) => {
         startDate: "",
         endDate: "",
         discountType: "percent",
-        discountValue: 0,
+        discountValue: "0",
         targetType: "dish",
+        voucherCode: "",
       });
       setFile(null);
       setPreviewUrl(null);
@@ -178,6 +221,7 @@ const handleOpenModal = (promo: Promotion | null = null) => {
       endDate: toISO(formData.endDate),
       discountType: formData.discountType,
       discountValue: Number(formData.discountValue),
+      voucherCode: formData.voucherCode?.trim() || undefined,
       targetType: formData.targetType,
     };
 
@@ -186,10 +230,10 @@ const handleOpenModal = (promo: Promotion | null = null) => {
         await dispatch(
           updatePromotion({ id: editingPromo.id, data: payload, file })
         ).unwrap();
-        toast.success("Cập nhật khuyến mãi thành công ✅");
+        toast.success("Cập nhật khuyến mãi thành công");
       } else {
         await dispatch(addPromotion({ data: payload, file })).unwrap();
-        toast.success("Thêm khuyến mãi thành công ✅");
+        toast.success("Thêm khuyến mãi thành công");
       }
       handleCloseModal();
       dispatch(fetchPromotions(restaurantId));
@@ -207,13 +251,71 @@ const handleOpenModal = (promo: Promotion | null = null) => {
     if (!selectedPromoId) return;
     try {
       await dispatch(deletePromotion(selectedPromoId)).unwrap();
-      toast.success("Xoá khuyến mãi thành công ✅");
+      toast.success("Xoá khuyến mãi thành công");
       if (restaurantId) dispatch(fetchPromotions(restaurantId));
     } catch {
       toast.error("Không thể xoá. Vui lòng thử lại!");
     } finally {
       setOpenDeleteDialog(false);
       setSelectedPromoId(null);
+    }
+  };
+
+  // Mở dialog gán số tiền tối thiểu
+  const handleOpenMinOrderDialog = (promo: Promotion) => {
+    setSelectedPromoForMinOrder(promo);
+    setMinOrderValue("");
+    setOpenMinOrderDialog(true);
+  };
+
+  // Đóng dialog gán số tiền tối thiểu
+  const handleCloseMinOrderDialog = () => {
+    setOpenMinOrderDialog(false);
+    setSelectedPromoForMinOrder(null);
+    setMinOrderValue("");
+  };
+
+  // Gán số tiền tối thiểu để áp dụng khuyến mãi (Order Promotion)
+  const handleAssignMinOrderValue = async () => {
+    if (!selectedPromoForMinOrder) return;
+
+    const sanitized = minOrderValue.replace(/[^0-9.-]+/g, "");
+    const value = Number(sanitized);
+    if (!Number.isFinite(value) || value <= 0) {
+      toast.warning("Vui lòng nhập số tiền hợp lệ lớn hơn 0");
+      return;
+    }
+
+    try {
+      await dispatch(
+        createOrderPromotion({
+          promotionId: selectedPromoForMinOrder.id,
+          minOrderValue: value,
+          restaurantId: restaurantId ?? undefined,
+        })
+      ).unwrap();
+
+      toast.success("Gán số tiền tối thiểu cho khuyến mãi thành công");
+      handleCloseMinOrderDialog();
+      if (restaurantId) dispatch(fetchPromotions(restaurantId));
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể gán. Vui lòng thử lại sau");
+    }
+  };
+
+  // Huỷ gán số tiền tối thiểu (call delete API)
+  const handleCancelOrderPromotion = async (orderPromotionId: number) => {
+    try {
+      await dispatch(deleteOrderPromotion(orderPromotionId)).unwrap();
+      toast.success("Huỷ gán số tiền tối thiểu thành công");
+      if (restaurantId) {
+        dispatch(getOrderPromotionsForUser({ restaurantId }));
+        dispatch(fetchPromotions(restaurantId));
+      }
+    } catch (err) {
+      console.error("Error cancelling order promotion:", err);
+      toast.error("Không thể huỷ. Vui lòng thử lại");
     }
   };
 
@@ -254,6 +356,28 @@ const handleOpenModal = (promo: Promotion | null = null) => {
         </Stack>
       </Box>
 
+      {/* Filter bar */}
+      <Box mb={3} display="flex" gap={2} alignItems="center" flexWrap="wrap">
+        <TextField
+          select
+          size="small"
+          label="Lọc theo phạm vi"
+          value={filterTarget}
+          onChange={(e) =>
+            setFilterTarget(e.target.value as "all" | TargetType)
+          }
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="all">Tất cả</MenuItem>
+          <MenuItem value="dish">Món ăn </MenuItem>
+          <MenuItem value="order">Đơn hàng</MenuItem>
+        </TextField>
+
+        <Typography variant="body2" color="text.secondary">
+          Tổng khuyến mãi: {promotions ? promotions.length : 0}
+        </Typography>
+      </Box>
+
       {/* Content */}
       {loading ? (
         <Box display="flex" justifyContent="center" py={8}>
@@ -274,17 +398,13 @@ const handleOpenModal = (promo: Promotion | null = null) => {
           <Typography variant="body2" color="text.secondary" mb={3}>
             Hãy tạo chương trình khuyến mãi đầu tiên để thu hút khách hàng
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenModal()}
-          >
-            Tạo khuyến mãi đầu tiên
-          </Button>
         </Card>
       ) : (
         <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {promotions.map((promo) => {
+          {filteredPromotions.map((promo) => {
+            const orderPromotion = orderPromotions.find(
+              (o: OrderPromotion) => o.promotionId === promo.id
+            );
             const now = new Date();
             const start = new Date(promo.startDate);
             const end = new Date(promo.endDate);
@@ -301,12 +421,12 @@ const handleOpenModal = (promo: Promotion | null = null) => {
               ? "info"
               : "default";
 
-            const discount = Number(promo.discountValue ?? NaN);
-            const hasDiscount = Number.isFinite(discount) && discount > 0;
-            const discountLabel =
-              promo.discountType === "percent"
-                ? `${discount}%`
-                : `${discount.toLocaleString()}đ`;
+            // const discount = Number(promo.discountValue ?? NaN);
+            // const hasDiscount = Number.isFinite(discount) && discount > 0;
+            // const discountLabel =
+            //   promo.discountType === "percent"
+            //     ? `${discount}%`
+            //     : `${discount.toLocaleString()}đ`;
 
             const targetLabel =
               promo.targetType === "order"
@@ -364,7 +484,7 @@ const handleOpenModal = (promo: Promotion | null = null) => {
 
                 <CardContent sx={{ flexGrow: 1, pb: 2 }}>
                   {/* Discount Badge */}
-                  {hasDiscount && (
+                  {/* {hasDiscount && (
                     <Box
                       sx={{
                         display: "inline-flex",
@@ -388,7 +508,7 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                         {discountLabel}
                       </Typography>
                     </Box>
-                  )}
+                  )} */}
 
                   {/* Title */}
                   <Typography
@@ -434,12 +554,31 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                         {fromISO(promo.startDate)} - {fromISO(promo.endDate)}
                       </Typography>
                     </Stack>
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
                         label={targetLabel}
                         size="small"
                         variant="outlined"
                       />
+                      {orderPromotion && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Chip
+                            label={`Tối thiểu: ${orderPromotion.minOrderValue.toLocaleString()}đ`}
+                            size="small"
+                            color="info"
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              handleCancelOrderPromotion(orderPromotion.id)
+                            }
+                            aria-label="cancel-order-promotion"
+                            title="Huỷ gán số tiền tối thiểu"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      )}
                     </Stack>
                   </Stack>
                 </CardContent>
@@ -454,6 +593,26 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                     pt: 0,
                   }}
                 >
+                  {/* Gán số tiền tối thiểu áp dụng khuyến mãi (chỉ cho loại Đơn hàng) */}
+                  {promo.targetType === "order" && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenMinOrderDialog(promo)}
+                      sx={{
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.info.main, 0.06),
+                        color: "info.main",
+                        "&:hover": {
+                          backgroundColor: (theme) =>
+                            alpha(theme.palette.info.main, 0.12),
+                        },
+                      }}
+                      aria-label="assign-min-order"
+                      title="Gán số tiền tối thiểu"
+                    >
+                      <MoneyIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <IconButton
                     size="small"
                     onClick={() => handleOpenModal(promo)}
@@ -569,6 +728,23 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                   variant="outlined"
                 />
 
+                {/* Voucher code (optional) - useful for order-level promotions */}
+                <TextField
+                  fullWidth
+                  label="Mã voucher (tùy chọn)"
+                  placeholder="VD: WEEKEND10"
+                  value={formData.voucherCode}
+                  onChange={(e) =>
+                    setFormData((s) => ({ ...s, voucherCode: e.target.value }))
+                  }
+                  variant="outlined"
+                  helperText={
+                    formData.targetType === "order"
+                      ? "Nhập mã voucher để khách hàng nhập mã khi thanh toán"
+                      : "Mã chỉ có tác dụng khi phạm vi là 'Toàn bộ đơn hàng'"
+                  }
+                />
+
                 {/* Upload ảnh khuyến mãi (tùy chọn) */}
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" mb={1}>
@@ -654,21 +830,21 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                 >
                   <MenuItem value="percent">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <PercentIcon fontSize="small" />
-                      <span>Phần trăm (%)</span>
+                      {/* <PercentIcon fontSize="small" /> */}
+                      <span>Phần trăm</span>
                     </Stack>
                   </MenuItem>
                   <MenuItem value="fixed_amount">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <MoneyIcon fontSize="small" />
-                      <span>Số tiền cố định (VNĐ)</span>
+                      {/* <MoneyIcon fontSize="small" /> */}
+                      <span>Số tiền cố định</span>
                     </Stack>
                   </MenuItem>
                 </TextField>
 
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label={
                     formData.discountType === "percent"
                       ? "Giá trị giảm (%)"
@@ -678,14 +854,25 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                     formData.discountType === "percent" ? "10" : "50000"
                   }
                   value={formData.discountValue}
-                  onChange={(e) =>
-                    setFormData((s) => ({
-                      ...s,
-                      discountValue: Number(e.target.value),
-                    }))
-                  }
+                  onChange={(e) => {
+                    // allow only digits, remove non-digit chars
+                    let raw = e.target.value.replace(/\D/g, "");
+                    // remove leading zeros but keep single zero when value is 0
+                    raw = raw.replace(/^0+(?=\d)/, "");
+                    // enforce percent max
+                    if (formData.discountType === "percent") {
+                      if (raw === "") raw = "0";
+                      const num = Number(raw);
+                      if (!Number.isNaN(num) && num > 100) raw = "100";
+                    }
+                    // keep at least "0" so the field never becomes empty string
+                    if (raw === "") raw = "0";
+                    setFormData((s) => ({ ...s, discountValue: raw }));
+                  }}
                   required
                   inputProps={{
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
                     min: 0,
                     max: formData.discountType === "percent" ? 100 : undefined,
                   }}
@@ -743,7 +930,7 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                     <span>Toàn bộ đơn hàng</span>
                   </Stack>
                 </MenuItem>
-                <MenuItem value="category">
+                {/* <MenuItem value="category">
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Box
                       sx={{
@@ -755,7 +942,7 @@ const handleOpenModal = (promo: Promotion | null = null) => {
                     />
                     <span>Danh mục món ăn</span>
                   </Stack>
-                </MenuItem>
+                </MenuItem> */}
               </TextField>
             </Box>
 
@@ -858,6 +1045,65 @@ const handleOpenModal = (promo: Promotion | null = null) => {
             onClick={handleConfirmDelete}
           >
             Xoá
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog gán số tiền tối thiểu cho Order Promotion */}
+      <Dialog
+        open={openMinOrderDialog}
+        onClose={handleCloseMinOrderDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <MoneyIcon color="info" />
+            <Typography variant="h6" fontWeight="600">
+              Gán số tiền tối thiểu
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 3 }}>
+            Nhập số tiền tối thiểu để khách hàng có thể áp dụng khuyến mãi{" "}
+            <strong>{selectedPromoForMinOrder?.title}</strong> cho đơn hàng.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Số tiền tối thiểu (đ)"
+            type="text"
+            value={minOrderValue}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              setMinOrderValue(value);
+            }}
+            placeholder="Ví dụ: 100000"
+            helperText="Đơn hàng phải đạt tối thiểu số tiền này để được áp dụng khuyến mãi"
+            InputProps={{
+              startAdornment: (
+                <MoneyIcon sx={{ mr: 1, color: "action.active" }} />
+              ),
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={handleCloseMinOrderDialog}
+            size="large"
+            sx={{ textTransform: "none" }}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAssignMinOrderValue}
+            size="large"
+            sx={{ textTransform: "none", fontWeight: 600 }}
+            disabled={!minOrderValue || Number(minOrderValue) <= 0}
+          >
+            Xác nhận
           </Button>
         </DialogActions>
       </Dialog>

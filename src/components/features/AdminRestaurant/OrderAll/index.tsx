@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   Box,
   CircularProgress,
@@ -371,8 +371,8 @@ export default function AdminRestaurantOrdersPage() {
                 <Paper variant="outlined" sx={{ p: 0 }}>
                   <List dense disablePadding>
                     {(p.order?.items || []).map((it) => (
-                      <>
-                        <ListItem key={it.id} sx={{ py: 1, px: 1.5 }}>
+                      <Fragment key={it.id}>
+                        <ListItem sx={{ py: 1, px: 1.5 }}>
                           <ListItemAvatar>
                             <Avatar
                               variant="rounded"
@@ -407,7 +407,7 @@ export default function AdminRestaurantOrdersPage() {
                           />
                         </ListItem>
                         <Divider component="li" />
-                      </>
+                      </Fragment>
                     ))}
                     {(!p.order?.items || p.order.items.length === 0) && (
                       <ListItem sx={{ py: 1, px: 1.5 }}>

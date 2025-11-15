@@ -118,6 +118,7 @@ const BookingTablePage: React.FC = () => {
   const handleOpenEdit = useCallback(
     (row: UserReservationRow) => {
       if (!canUserEdit(row.status)) return;
+      
       setEditing({
         id: row.id,
         restaurantId: row.restaurantId,

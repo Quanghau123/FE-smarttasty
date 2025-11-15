@@ -14,6 +14,7 @@ import { createReservation } from "@/redux/slices/reservationSlice";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
+import { getAccessToken, getUser } from "@/lib/utils/tokenHelper";
 
 interface Props {
   restaurantId: number;
@@ -44,13 +45,23 @@ const ReservationForm = ({ restaurantId }: Props) => {
   };
 
   const handleReservation = () => {
-    if (!user) {
+    // Only block when there is no access token (user not logged in)
+    const token = getAccessToken();
+    if (!token) {
+      toast.error(t("login_required"));
+      return;
+    }
+
+    // Prefer Redux user, fall back to user stored in localStorage
+    const localUser = user ?? getUser();
+    if (!localUser?.userId) {
+      // If token exists but we can't determine userId, prompt to re-login
       toast.error(t("login_required"));
       return;
     }
 
     const payload = {
-      userId: user.userId,
+      userId: localUser.userId,
       restaurantId,
       adultCount,
       childCount,

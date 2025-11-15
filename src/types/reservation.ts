@@ -76,4 +76,5 @@ export interface RestaurantReservationRow {
   createdAt: string;
   customers?: { contactName?: string | null; phone?: string | null; email?: string | null }[];
   latestHistory?: { status: string; note?: string | null; changedAt: string } | null;
+  
 }

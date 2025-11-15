@@ -1,5 +1,5 @@
 // src/redux/slices/restaurantSlice.ts
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import {
@@ -14,6 +14,8 @@ const initialState: RestaurantState = {
   current: null,
   currentTotalReviews: null,
   nearby: [],
+  suggestions: [],
+  loadingSuggestions: false,
   loading: false,
   loadingNearby: false,
   error: null,
@@ -123,6 +125,35 @@ export const fetchNearbyRestaurants = createAsyncThunk<
   }
 });
 
+// Search restaurants (full search)
+export const searchRestaurants = createAsyncThunk<
+  Restaurant[],
+  string,
+  { rejectValue: string }
+>("restaurant/search", async (q, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.get(`/api/Restaurant/search?q=${encodeURIComponent(q)}`);
+    // BE may return data envelope or plain array
+    return res.data?.data ?? res.data ?? [];
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Tìm kiếm thất bại"));
+  }
+});
+
+// Search suggestions (autocomplete)
+export const fetchRestaurantSearchSuggestions = createAsyncThunk<
+  string[],
+  string,
+  { rejectValue: string }
+>("restaurant/searchSuggestions", async (q, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.get(`/api/Restaurant/search/suggestions?q=${encodeURIComponent(q)}`);
+    return res.data?.data ?? res.data ?? [];
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err, "Lấy gợi ý tìm kiếm thất bại"));
+  }
+});
+
 // Fetch by id
 export const fetchRestaurantById = createAsyncThunk<
   { restaurant: Restaurant | null; totalReviews?: number },
@@ -201,7 +232,28 @@ const restaurantSlice = createSlice({
   reducers: {
     clearCurrentRestaurant(state) {
       state.current = null;
+      state.currentTotalReviews = null;
     },
+  applyRealtimeRating(
+  state,
+  action: PayloadAction<{ restaurantId: number; averageRating: number; totalReviews: number }>
+) {
+  const { restaurantId, averageRating, totalReviews } = action.payload;
+
+  // Cập nhật restaurant đang xem
+  if (state.current && state.current.id === restaurantId) {
+    state.current.averageRating = averageRating;
+    state.currentTotalReviews = totalReviews;
+  }
+
+  // Cập nhật trong danh sách (nếu có)
+  const found = state.restaurants.find(r => r.id === restaurantId);
+  if (found) {
+    found.averageRating = averageRating;
+    // BE có thể không trả totalReviews trong object => cập nhật nếu có
+    found.totalReviews = totalReviews;
+  }
+},
   },
   extraReducers: (builder) => {
     builder
@@ -263,6 +315,35 @@ const restaurantSlice = createSlice({
       .addCase(fetchNearbyRestaurants.rejected, (state, action) => {
         state.loadingNearby = false;
         state.error = action.payload || "Không lấy được nhà hàng gần bạn";
+      })
+
+      // search
+      .addCase(searchRestaurants.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(searchRestaurants.fulfilled, (state, action) => {
+        state.loading = false;
+        // populate restaurants with search results (UI expects restaurants list)
+        state.restaurants = action.payload;
+      })
+      .addCase(searchRestaurants.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Lỗi tìm kiếm";
+      })
+
+      // search suggestions
+      .addCase(fetchRestaurantSearchSuggestions.pending, (state) => {
+        state.loadingSuggestions = true;
+        state.error = null;
+      })
+      .addCase(fetchRestaurantSearchSuggestions.fulfilled, (state, action) => {
+        state.loadingSuggestions = false;
+        state.suggestions = action.payload;
+      })
+      .addCase(fetchRestaurantSearchSuggestions.rejected, (state, action) => {
+        state.loadingSuggestions = false;
+        state.error = action.payload || "Lấy gợi ý thất bại";
       })
 
       // fetchByCategory
@@ -338,5 +419,5 @@ const restaurantSlice = createSlice({
   },
 });
 
-export const { clearCurrentRestaurant } = restaurantSlice.actions;
+export const { clearCurrentRestaurant, applyRealtimeRating } = restaurantSlice.actions;
 export default restaurantSlice.reducer;

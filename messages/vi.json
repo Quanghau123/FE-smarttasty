@@ -21,7 +21,9 @@
     "category_cafenuocuong": "Cafe/Nước uống",
     "category_quanan": "Quán ăn",
     "category_bar": "Bar",
-    "category_quannhau": "Quán nhậu"
+    "category_quannhau": "Quán nhậu",
+    "no_notifications": "Không có thông báo",
+    "notifications_title": "Thông báo"
   },
   "footer": { 
     "contactus_btn_title": "Liên Hệ",
@@ -178,6 +180,10 @@
     "success_added": "Món đã được thêm vào giỏ hàng!",
     "loading": "Đang tải...",
     "restaurant_not_found": "Không tìm thấy nhà hàng"
+    ,
+    "follow_label": "Theo dõi",
+    "following_label": "Đang theo dõi",
+    "followers_label": "Người theo dõi"
   },
   "review": {
     "form_title": "Đánh giá nhà hàng",

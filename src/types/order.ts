@@ -69,6 +69,8 @@ export interface OrderItem {
   dishName: string;
   quantity: number;
   totalPrice: number;
+  unitPrice?: number;
+  originalPrice?: number;
   image?: string; // URL hình ảnh món ăn
 }
 
@@ -124,6 +126,20 @@ export interface ApiEnvelope<T> {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                             REVENUE / DASHBOARD                             */
+/* -------------------------------------------------------------------------- */
+
+export interface RestaurantRevenue {
+  restaurantId: number;
+  year: number;
+  month: number;
+  totalRevenue: number;
+  ordersCount: number;
+  // optional breakdown by day or category
+  breakdown?: Record<string, number> | null;
+}
+
+/* -------------------------------------------------------------------------- */
 /*                       RAW ORDER RESPONSE (from BE)                         */
 /* -------------------------------------------------------------------------- */
 
@@ -142,6 +158,8 @@ export interface RawOrderResponse {
     dishName?: string | null;
     quantity: number;
     totalPrice: number;
+    unitPrice?: number;
+    originalPrice?: number;
     image?: string | null; // URL hình ảnh món ăn từ backend
   }[];
   restaurant?: Partial<Restaurant>;
@@ -177,6 +195,8 @@ export const normalizeOrderResponse = (
         dishName: it.dishName ?? "",
         quantity: it.quantity,
         totalPrice: it.totalPrice,
+        unitPrice: it.unitPrice ?? (it.quantity ? it.totalPrice / it.quantity : 0),
+        originalPrice: it.originalPrice ?? undefined,
         image: it.image ?? undefined, // Chuyển null thành undefined
       })) ?? [],
     restaurant: {

@@ -33,6 +33,8 @@ export interface Restaurant {
   // Để tương thích ngược, giữ cả hai field và ưu tiên averageRating khi hiển thị.
   averageRating?: number;
   rating?: number;
+  // Optional total reviews count (some API endpoints return this alongside restaurant)
+  totalReviews?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -44,6 +46,9 @@ export interface RestaurantState {
   // Lưu tổng số reviews từ API detail (data.totalReviews)
   currentTotalReviews?: number | null;
   nearby: Restaurant[];
+  // Gợi ý tìm kiếm (autocomplete)
+  suggestions?: string[];
+  loadingSuggestions?: boolean;
   loading: boolean;
   loadingNearby: boolean;
   error: string | null;

@@ -74,9 +74,68 @@ export const applyPromotion = createAsyncThunk(
     try {
       const { orderId, voucherCode } = payload;
       const query = voucherCode ? `?voucherCode=${encodeURIComponent(voucherCode)}` : '';
-      const res = await axios.post(`/api/ApplyPromotion/${orderId}${query}`);
-      // backend returns { OrderId, OriginalTotal, FinalTotal, VoucherCode }
-      return res.data as { orderId: number; originalTotal: number; finalTotal: number; voucherCode?: string | null };
+  const res = await axios.post(`/api/ApplyPromotion/${orderId}${query}`);
+  // Normalize backend response which may use PascalCase (OrderId, FinalTotal, VoucherCode)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = res.data || {};
+      const normalized = {
+        orderId: data.orderId ?? data.OrderId ?? data.OrderID ?? null,
+        // originalTotal may not be provided by backend; keep as-is if present
+        originalTotal: data.originalTotal ?? data.OriginalTotal ?? undefined,
+        finalTotal: data.finalTotal ?? data.FinalTotal ?? undefined,
+        voucherCode: data.voucherCode ?? data.VoucherCode ?? null,
+      } as { orderId: number | null; originalTotal?: number; finalTotal?: number; voucherCode?: string | null };
+
+      return normalized;
+    } catch (err: unknown) {
+      let message = String(err);
+      if (err && typeof err === 'object') {
+        const maybe = err as Record<string, unknown>;
+        if (typeof maybe.message === 'string') message = maybe.message;
+      }
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const removePromotion = createAsyncThunk(
+  'orderPromotions/remove',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+  const res = await axios.post(`/api/ApplyPromotion/${orderId}/remove`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = res.data || {};
+      const normalized = {
+        orderId: data.orderId ?? data.OrderId ?? data.OrderID ?? null,
+        originalTotal: data.originalTotal ?? data.OriginalTotal ?? undefined,
+        finalTotal: data.finalTotal ?? data.FinalTotal ?? undefined,
+        voucherCode: data.voucherCode ?? data.VoucherCode ?? null,
+      } as { orderId: number | null; originalTotal?: number; finalTotal?: number; voucherCode?: string | null };
+
+      return normalized;
+    } catch (err: unknown) {
+      let message = String(err);
+      if (err && typeof err === 'object') {
+        const maybe = err as Record<string, unknown>;
+        if (typeof maybe.message === 'string') message = maybe.message;
+      }
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const getOrderPromotionsForUser = createAsyncThunk(
+  'orderPromotions/getForUser',
+  async (
+    payload: { userId?: number | null; restaurantId?: number | null },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { userId, restaurantId } = payload;
+      const res = await axios.get<ApiResponse<OrderPromotion[]>>('/api/OrderPromotions/user', {
+        params: { userId: userId ?? undefined, restaurantId: restaurantId ?? undefined }
+      });
+      return res.data.data as OrderPromotion[];
     } catch (err: unknown) {
       let message = String(err);
       if (err && typeof err === 'object') {
@@ -136,6 +195,43 @@ const slice = createSlice({
         state.items = state.items.filter(i => i.id !== action.payload.id);
       })
       .addCase(deleteOrderPromotion.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // apply promotion
+      .addCase(applyPromotion.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(applyPromotion.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(applyPromotion.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // remove promotion
+      .addCase(removePromotion.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removePromotion.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(removePromotion.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // get promotions for user
+      .addCase(getOrderPromotionsForUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getOrderPromotionsForUser.fulfilled, (state, action: PayloadAction<OrderPromotion[]>) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(getOrderPromotionsForUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

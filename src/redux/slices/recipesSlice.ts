@@ -5,6 +5,7 @@ import { Recipe, RecipeRequest } from "@/types/recipes";
 
 interface RecipesState {
 	items: Recipe[];
+	allItems?: Recipe[];
 	loading: boolean;
 	error: string | null;
 }
@@ -45,6 +46,22 @@ export const fetchRecipesByUser = createAsyncThunk<
 		return list.map(normalizeRecipe);
 	} catch (err: unknown) {
 		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải công thức"));
+	}
+});
+
+export const fetchAllRecipes = createAsyncThunk<
+	Recipe[],
+	void,
+	{ rejectValue: string }
+>("recipes/fetchAll", async (_void, { rejectWithValue }) => {
+	try {
+		const res = await axiosInstance.get(`/api/Recipes`);
+		const body = res.data ?? {};
+		const payload = (body.data ?? body.Data ?? body) as unknown;
+		const list = Array.isArray(payload) ? (payload as Recipe[]) : [];
+		return list.map(normalizeRecipe);
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách công thức"));
 	}
 });
 
@@ -141,6 +158,18 @@ const recipesSlice = createSlice({
 			.addCase(fetchRecipesByUser.rejected, (state, action) => {
 				state.loading = false;
 				state.error = action.payload ?? "Lỗi tải công thức";
+			})
+			.addCase(fetchAllRecipes.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchAllRecipes.fulfilled, (state, action) => {
+				state.allItems = action.payload;
+				state.loading = false;
+			})
+			.addCase(fetchAllRecipes.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload ?? "Lỗi tải danh sách công thức";
 			})
 			// ADD
 			.addCase(addRecipe.fulfilled, (state, action) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Grid,
@@ -14,13 +14,22 @@ import {
   Paper,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
+import {
+  fetchRestaurants,
+  searchRestaurants,
+} from "@/redux/slices/restaurantSlice";
 import { fetchAllPromotions } from "@/redux/slices/promotionSlice";
+import { fetchAllRecipes } from "@/redux/slices/recipesSlice";
+import { fetchRecipeReviews } from "@/redux/slices/recipeReviewsSlice";
+import { Recipe } from "@/types/recipes";
 import StarIcon from "@mui/icons-material/Star";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./styles.module.scss";
+import Image from "next/image";
+import banerV2 from "../../../assets/Image/SlideHeader/banerV2.png";
+import HopTac from "../../../assets/Image/SlideHeader/hoptac.png";
 import dayjs from "dayjs";
 import { Promotion } from "@/types/promotion";
 
@@ -32,17 +41,34 @@ const BodyPage = () => {
     loading: restLoading,
     error,
   } = useAppSelector((state) => state.restaurant);
+  const { allItems: allRecipes = [], loading: recipesLoading } = useAppSelector(
+    (state) => state.recipes
+  );
+  const { reviews: recipeReviews = [] } = useAppSelector(
+    (state) => state.recipeReviews
+  );
   const {
     promotions,
     loading: promoLoading,
     error: promoError,
   } = useAppSelector((state) => state.promotion);
 
+  const searchParams = useSearchParams();
+  const q = searchParams?.get("q") ?? "";
+
   // Load danh sách nhà hàng khi mở trang
   useEffect(() => {
-    dispatch(fetchRestaurants());
+    if (q && q.trim().length > 0) {
+      dispatch(searchRestaurants(q));
+    } else {
+      dispatch(fetchRestaurants());
+    }
+
     dispatch(fetchAllPromotions());
-  }, [dispatch]);
+    // Load recipes and their reviews so we can show top-rated recipes on the home page
+    dispatch(fetchAllRecipes());
+    dispatch(fetchRecipeReviews());
+  }, [dispatch, q]);
 
   // Lọc nhà hàng đề xuất: từ 4 sao trở lên
   const visibleRestaurants = useMemo(() => {
@@ -75,6 +101,70 @@ const BodyPage = () => {
       behavior: "smooth",
     });
   };
+
+  // Promotion arrows visibility state
+  const [promotionsOverflow, setPromotionsOverflow] = useState(false);
+  const [promotionsCanScrollLeft, setPromotionsCanScrollLeft] = useState(false);
+  const [promotionsCanScrollRight, setPromotionsCanScrollRight] =
+    useState(false);
+
+  useEffect(() => {
+    const el = promotionsRef.current;
+    if (!el) return;
+    const update = () => {
+      // allow a small epsilon to avoid off-by-1
+      const overflow = el.scrollWidth > el.clientWidth + 1;
+      setPromotionsOverflow(overflow);
+      setPromotionsCanScrollLeft(el.scrollLeft > 5);
+      setPromotionsCanScrollRight(
+        el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+      );
+    };
+    update();
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [promotions]);
+
+  // Top recipes (>= 4★) carousel
+  const recipesRef = useRef<HTMLDivElement | null>(null);
+  const scrollRecipes = (direction: "left" | "right") => {
+    const el = recipesRef.current;
+    if (!el) return;
+    const amount = Math.floor(el.clientWidth * 0.85);
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
+  // Recipes arrows visibility state
+  const [recipesOverflow, setRecipesOverflow] = useState(false);
+  const [recipesCanScrollLeft, setRecipesCanScrollLeft] = useState(false);
+  const [recipesCanScrollRight, setRecipesCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = recipesRef.current;
+    if (!el) return;
+    const update = () => {
+      const overflow = el.scrollWidth > el.clientWidth + 1;
+      setRecipesOverflow(overflow);
+      setRecipesCanScrollLeft(el.scrollLeft > 5);
+      setRecipesCanScrollRight(
+        el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+      );
+    };
+    update();
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [allRecipes, recipeReviews]);
 
   // Hàm render danh sách nhà hàng (có thể bật nhãn 'Được đề xuất')
   // Card dùng chung cho cả 2 section
@@ -378,7 +468,7 @@ const BodyPage = () => {
           >
             Khuyến mãi
           </Box>
-          {p.discountValue != null && (
+          {/* {p.discountValue != null && (
             <Box
               sx={{
                 position: "absolute",
@@ -399,7 +489,7 @@ const BodyPage = () => {
                 ? `${Number(p.discountValue)}%`
                 : `${Number(p.discountValue).toLocaleString()}đ`}
             </Box>
-          )}
+          )} */}
         </Box>
       ) : (
         <Box sx={{ position: "relative" }}>
@@ -496,6 +586,236 @@ const BodyPage = () => {
     </Card>
   );
 
+  // --- Top recipes helpers ---
+  type EnrichedRecipe = Recipe & {
+    averageRating?: number;
+    totalReviews?: number;
+  };
+
+  const topRecipes = useMemo(() => {
+    if (!Array.isArray(allRecipes) || allRecipes.length === 0)
+      return [] as Recipe[];
+
+    // Compute average rating for each recipe from recipeReviews
+    const byId = new Map<number, { sum: number; cnt: number }>();
+    recipeReviews.forEach((r) => {
+      const cur = byId.get(r.recipeId) ?? { sum: 0, cnt: 0 };
+      cur.sum += r.rating ?? 0;
+      cur.cnt += 1;
+      byId.set(r.recipeId, cur);
+    });
+
+    const enriched: EnrichedRecipe[] = allRecipes.map((rec) => {
+      const stats = byId.get(rec.id);
+      const avg = stats && stats.cnt > 0 ? stats.sum / stats.cnt : 0;
+      return {
+        ...rec,
+        averageRating: avg,
+        totalReviews: stats?.cnt ?? 0,
+      } as EnrichedRecipe;
+    });
+
+    return enriched
+      .filter((r: EnrichedRecipe) => (r.averageRating ?? 0) >= 4)
+      .sort(
+        (a: EnrichedRecipe, b: EnrichedRecipe) =>
+          (b.averageRating ?? 0) - (a.averageRating ?? 0)
+      )
+      .slice(0, 8);
+  }, [allRecipes, recipeReviews]);
+
+  const renderRecipeCard = (recipe: EnrichedRecipe) => (
+    <Card
+      className={styles.card}
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
+      }}
+    >
+      <Box
+        onClick={() => router.push(`/recipes`)}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          cursor: "pointer",
+        }}
+      >
+        {recipe.imageUrl ? (
+          <Box sx={{ position: "relative" }}>
+            <Box
+              component="img"
+              src={recipe.imageUrl}
+              alt={recipe.title}
+              sx={{
+                width: "100%",
+                height: { xs: 120, sm: 140, md: 160 },
+                objectFit: "cover",
+              }}
+            />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              width: "100%",
+              height: { xs: 120, sm: 140, md: 160 },
+              backgroundColor: "#f5f5f5",
+            }}
+          />
+        )}
+
+        <CardContent sx={{ flexGrow: 1, width: "100%" }}>
+          <Typography
+            variant="subtitle1"
+            fontWeight="700"
+            gutterBottom
+            noWrap
+            title={recipe.title}
+          >
+            {recipe.title}
+          </Typography>
+
+          <Box display="flex" alignItems="center" mb={1}>
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <StarIcon
+                key={idx}
+                fontSize="small"
+                color={
+                  idx < Math.round(recipe.averageRating ?? 0)
+                    ? "warning"
+                    : "disabled"
+                }
+              />
+            ))}
+            <Typography variant="body2" color="text.secondary" ml={0.5}>
+              {(recipe.averageRating ?? 0).toFixed(1)} (
+              {recipe.totalReviews ?? 0})
+            </Typography>
+          </Box>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              minHeight: 36,
+            }}
+          >
+            {recipe.description || "Không có mô tả"}
+          </Typography>
+        </CardContent>
+      </Box>
+
+      <Box sx={{ p: 2, pt: 0 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/recipes`);
+          }}
+        >
+          Xem công thức
+        </Button>
+      </Box>
+    </Card>
+  );
+
+  const renderTopRecipesCarousel = () => (
+    <Box position="relative">
+      <Grid
+        ref={recipesRef}
+        container
+        spacing={{ xs: 1, sm: 2, md: 2 }}
+        sx={{
+          flexWrap: "nowrap",
+          overflowX: "auto",
+          scrollBehavior: "smooth",
+          px: { xs: 1, sm: 2 },
+          py: 0,
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
+        {topRecipes.map((r) => (
+          <Grid
+            item
+            xs={6}
+            sm={6}
+            md={4}
+            lg={3}
+            key={r.id}
+            component={"div" as React.ElementType}
+            sx={{ flex: "0 0 auto" }}
+          >
+            {renderRecipeCard(r)}
+          </Grid>
+        ))}
+      </Grid>
+
+      <IconButton
+        onClick={() => scrollRecipes("left")}
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: 8,
+          transform: "translateY(-50%)",
+          bgcolor: "background.paper",
+          boxShadow: 2,
+          "&:hover": { bgcolor: "background.paper" },
+        }}
+        size="small"
+        aria-label="scroll-left-recipes"
+      >
+        <ChevronLeftIcon />
+      </IconButton>
+      {recipesOverflow && recipesCanScrollLeft && (
+        <IconButton
+          onClick={() => scrollRecipes("left")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 8,
+            transform: "translateY(-50%)",
+            bgcolor: "background.paper",
+            boxShadow: 2,
+            "&:hover": { bgcolor: "background.paper" },
+          }}
+          size="small"
+          aria-label="scroll-left-recipes"
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+      )}
+      {recipesOverflow && recipesCanScrollRight && (
+        <IconButton
+          onClick={() => scrollRecipes("right")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 8,
+            transform: "translateY(-50%)",
+            bgcolor: "background.paper",
+            boxShadow: 2,
+            "&:hover": { bgcolor: "background.paper" },
+          }}
+          size="small"
+          aria-label="scroll-right-recipes"
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      )}
+    </Box>
+  );
+
   const renderPromotionsCarousel = () => (
     <Box position="relative">
       <Grid
@@ -529,38 +849,42 @@ const BodyPage = () => {
         ))}
       </Grid>
 
-      <IconButton
-        onClick={() => scrollPromotions("left")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: 8,
-          transform: "translateY(-50%)",
-          bgcolor: "background.paper",
-          boxShadow: 2,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-        aria-label="scroll-left-promotions"
-      >
-        <ChevronLeftIcon />
-      </IconButton>
-      <IconButton
-        onClick={() => scrollPromotions("right")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          right: 8,
-          transform: "translateY(-50%)",
-          bgcolor: "background.paper",
-          boxShadow: 2,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-        aria-label="scroll-right-promotions"
-      >
-        <ChevronRightIcon />
-      </IconButton>
+      {promotionsOverflow && promotionsCanScrollLeft && (
+        <IconButton
+          onClick={() => scrollPromotions("left")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 8,
+            transform: "translateY(-50%)",
+            bgcolor: "background.paper",
+            boxShadow: 2,
+            "&:hover": { bgcolor: "background.paper" },
+          }}
+          size="small"
+          aria-label="scroll-left-promotions"
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+      )}
+      {promotionsOverflow && promotionsCanScrollRight && (
+        <IconButton
+          onClick={() => scrollPromotions("right")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 8,
+            transform: "translateY(-50%)",
+            bgcolor: "background.paper",
+            boxShadow: 2,
+            "&:hover": { bgcolor: "background.paper" },
+          }}
+          size="small"
+          aria-label="scroll-right-promotions"
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      )}
     </Box>
   );
 
@@ -609,7 +933,6 @@ const BodyPage = () => {
               renderPromotionsCarousel()
             )}
           </Paper>
-
           {visibleRestaurants.length > 0 && (
             <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 4, borderRadius: 2 }}>
               <Typography variant="h5" fontWeight={700} mb={1}>
@@ -618,12 +941,81 @@ const BodyPage = () => {
               {renderSuggestedCarousel()}
             </Paper>
           )}
+          {/* Banner trước phần công thức - sử dụng ảnh banerV2 */}
+          <Paper
+            sx={{ mb: 4, borderRadius: 3, overflow: "hidden", boxShadow: 3 }}
+          >
+            <Box
+              sx={{
+                position: "relative",
+                width: "100%",
+                height: { xs: 340, sm: 400, md: 480 },
+              }}
+            >
+              <Image
+                src={banerV2}
+                alt="Banner công thức"
+                fill
+                sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
+                //  style={{ objectFit: "cover" }}
+              />
+            </Box>
+          </Paper>
+
+          {topRecipes.length > 0 && (
+            <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 4, borderRadius: 2 }}>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                mb={1}
+              >
+                <Typography variant="h5" fontWeight={700}>
+                  Các công thức nổi bật trên SmartTasty
+                </Typography>
+                {recipesLoading && <CircularProgress size={18} />}
+              </Box>
+              {topRecipes.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Chưa có công thức nổi bật.
+                </Typography>
+              ) : (
+                renderTopRecipesCarousel()
+              )}
+            </Paper>
+          )}
 
           <Paper sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2 }}>
             <Typography variant="h5" fontWeight={700} mb={2}>
               Tất cả nhà hàng
             </Typography>
             {renderRestaurants(restaurants, false)}
+          </Paper>
+
+          {/* Hình hợp tác (giống banner) đặt cuối trang */}
+          <Paper
+            sx={{
+              mb: 4,
+              mt: 4,
+              borderRadius: 3,
+              overflow: "hidden",
+              boxShadow: 3,
+            }}
+          >
+            <Box
+              sx={{
+                position: "relative",
+                width: "100%",
+                height: { xs: 340, sm: 400, md: 580 },
+              }}
+            >
+              <Image
+                src={HopTac}
+                alt="Đối tác SmartTasty"
+                fill
+                sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
+              />
+            </Box>
           </Paper>
         </>
       )}
