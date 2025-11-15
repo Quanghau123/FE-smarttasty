@@ -1,20 +1,12 @@
 services:
   fe-smarttasty:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: https://api.smart-tasty.io.vn
-        NEXT_PUBLIC_WEBSOCKET_URL: https://socket.smart-tasty.io.vn
-        NEXT_PUBLIC_CHATBOT_URL: https://chatbot.smart-tasty.io.vn
-        NEXT_PUBLIC_SOCKET_URL: https://socket.smart-tasty.io.vn/hubs/notification
-        NEXT_PUBLIC_ENV: production
+    image: quanghau123/fe-smarttasty:latest
     container_name: ${FE_CONTAINER_NAME}
     ports:
       - "${FE_PORT}:3000"
     restart: always
     environment:
-      - NODE_ENV=${NODE_ENV} # runtime
+      - NODE_ENV=${NODE_ENV}
 
   watchtower:
     image: containrrr/watchtower
@@ -25,4 +17,4 @@ services:
       - WATCHTOWER_CLEANUP=true
       - DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}
       - DOCKER_HUB_PASSWORD=${DOCKER_HUB_ACCESS_TOKEN}
-    command: --interval ${WATCHTOWER_INTERVAL} # Checks for updates
+    command: --interval ${WATCHTOWER_INTERVAL}
