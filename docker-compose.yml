@@ -6,6 +6,8 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: https://api.smart-tasty.io.vn
         NEXT_PUBLIC_WEBSOCKET_URL: https://socket.smart-tasty.io.vn
+        NEXT_PUBLIC_CHATBOT_URL: https://chatbot.smart-tasty.io.vn
+        NEXT_PUBLIC_SOCKET_URL: https://socket.smart-tasty.io.vn/hubs/notification
         NEXT_PUBLIC_ENV: production
     container_name: ${FE_CONTAINER_NAME}
     ports:
