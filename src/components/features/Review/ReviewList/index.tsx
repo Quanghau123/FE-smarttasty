@@ -10,7 +10,7 @@ import {
 import React, { useMemo, useState, useEffect } from "react";
 import styles from "./styles.module.scss";
 import { useTranslations } from "next-intl";
-import { Pagination } from "@mui/material";
+import Pagination from "@/components/commons/pagination";
 
 interface Review {
   id: number;
@@ -24,9 +24,17 @@ interface ReviewListProps {
   reviews: Review[];
   loading: boolean;
   error?: string | null;
+  onDelete?: (reviewId: number) => void | Promise<void>;
+  showDeleteButton?: boolean;
 }
 
-const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
+const ReviewList = ({
+  reviews,
+  loading,
+  error,
+  onDelete,
+  showDeleteButton = false,
+}: ReviewListProps) => {
   const t = useTranslations("review");
   const [selectedStar, setSelectedStar] = useState<number | null>(null);
 
@@ -150,12 +158,26 @@ const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
       {paginated.map((r) => (
         <Box key={r.id} className={styles.reviewCard}>
           <Box className={styles.reviewHeader}>
-            <Typography variant="subtitle1" className={styles.reviewer}>
-              {maskName(r.userName)}
-            </Typography>
-            <Typography variant="caption" className={styles.date}>
-              {new Date(r.createdAt).toLocaleString()}
-            </Typography>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}
+            >
+              <Typography variant="subtitle1" className={styles.reviewer}>
+                {maskName(r.userName)}
+              </Typography>
+              <Typography variant="caption" className={styles.date}>
+                {new Date(r.createdAt).toLocaleString()}
+              </Typography>
+            </Box>
+            {showDeleteButton && onDelete && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => onDelete(r.id)}
+              >
+                Xóa
+              </Button>
+            )}
           </Box>
 
           {/* ⭐ Rating component của MUI */}
@@ -175,16 +197,11 @@ const ReviewList = ({ reviews, loading, error }: ReviewListProps) => {
       {/* Pagination controls */}
       {(filtered.length ?? 0) > itemsPerPage ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          {/*
-            Condensed pagination: when there are many pages, show first 2 and last 2
-            with an ellipsis in between (e.g. 1 2 ... 5 6). We use MUI's
-            boundaryCount and siblingCount to control this.
-          */}
           <Pagination
-            count={totalPages}
             page={page}
-            onChange={(_, v) => setPage(v)}
-            color="primary"
+            onPageChange={(v) => setPage(v)}
+            totalRecords={filtered.length}
+            pageSize={itemsPerPage}
             size="small"
             boundaryCount={totalPages > 4 ? 2 : 1}
             siblingCount={totalPages > 4 ? 0 : 1}

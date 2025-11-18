@@ -1,6 +1,6 @@
 .card {
   height: 100%;
-  width: 200px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -15,7 +15,6 @@
 
 .image {
   width: 100%;
-  height: 140px;
   object-fit: cover;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
@@ -28,4 +27,36 @@
   justify-content: space-between;
   text-align: center;
   justify-content: center;
+}
+
+/* Keep an element square using padding trick (works on all browsers) */
+.aspectSquare {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 */
+  overflow: hidden;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+
+  & > img,
+  & > .next-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Utility to clamp multi-line text cleanly */
+.textClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Helpers for consistent card content spacing on mobile */
+.cardContentCompact {
+  padding: 12px;
 }

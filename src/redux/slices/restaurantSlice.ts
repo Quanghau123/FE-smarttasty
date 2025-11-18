@@ -94,14 +94,32 @@ export const createRestaurant = createAsyncThunk<
 });
 
 // Fetch all
+export type FetchRestaurantsResult = {
+  items: Restaurant[];
+  totalRecords: number;
+  pageNumber: number;
+  pageSize: number;
+};
+
 export const fetchRestaurants = createAsyncThunk<
-  Restaurant[],
-  void,
+  FetchRestaurantsResult,
+  { pageNumber?: number; pageSize?: number } | undefined,
   { rejectValue: string }
->("restaurant/fetchAll", async (_, { rejectWithValue }) => {
+>("restaurant/fetchAll", async (params, { rejectWithValue }) => {
   try {
-    const res = await axiosInstance.get("/api/Restaurant");
-    return res.data?.data?.items ?? [];
+    const pageNumber = params?.pageNumber ?? 1;
+    const pageSize = params?.pageSize ?? 12;
+    const res = await axiosInstance.get("/api/Restaurant", {
+      params: { PageNumber: pageNumber, PageSize: pageSize },
+    });
+
+    const data = res.data?.data;
+    return {
+      items: data?.items ?? [],
+      totalRecords: data?.totalRecords ?? 0,
+      pageNumber: data?.pageNumber ?? pageNumber,
+      pageSize: data?.pageSize ?? pageSize,
+    } as FetchRestaurantsResult;
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err));
   }
@@ -289,14 +307,17 @@ const restaurantSlice = createSlice({
         state.error = action.payload || "Lỗi không xác định";
       })
 
-      // fetchAll
+      // fetchAll (server-side paged)
       .addCase(fetchRestaurants.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchRestaurants.fulfilled, (state, action) => {
         state.loading = false;
-        state.restaurants = action.payload;
+        state.restaurants = action.payload.items ?? [];
+        state.totalRecords = action.payload.totalRecords ?? 0;
+        state.pageNumber = action.payload.pageNumber ?? 1;
+        state.pageSize = action.payload.pageSize ?? 12;
       })
       .addCase(fetchRestaurants.rejected, (state, action) => {
         state.loading = false;

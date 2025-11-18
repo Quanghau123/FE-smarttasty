@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  IconButton,
   Paper,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -23,10 +22,11 @@ import { fetchAllRecipes } from "@/redux/slices/recipesSlice";
 import { fetchRecipeReviews } from "@/redux/slices/recipeReviewsSlice";
 import { Recipe } from "@/types/recipes";
 import StarIcon from "@mui/icons-material/Star";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+// chevron icons are provided inside HorizontalArrows component
+import HorizontalArrows from "@/components/commons/HorizontalArrows";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./styles.module.scss";
+import Pagination from "@/components/commons/pagination";
 import Image from "next/image";
 import banerV2 from "../../../assets/Image/SlideHeader/banerV2.png";
 import HopTac from "../../../assets/Image/SlideHeader/hoptac.png";
@@ -40,7 +40,14 @@ const BodyPage = () => {
     restaurants,
     loading: restLoading,
     error,
+    totalRecords,
+    pageNumber: storePageNumber,
+    pageSize: storePageSize,
   } = useAppSelector((state) => state.restaurant);
+
+  // Local pagination state
+  const [page, setPage] = useState<number>(storePageNumber ?? 1);
+  const itemsPerPage = storePageSize ?? 12;
   const { allItems: allRecipes = [], loading: recipesLoading } = useAppSelector(
     (state) => state.recipes
   );
@@ -59,16 +66,20 @@ const BodyPage = () => {
   // Load danh sách nhà hàng khi mở trang
   useEffect(() => {
     if (q && q.trim().length > 0) {
+      // Search mode: server returns full list for search endpoint
       dispatch(searchRestaurants(q));
+      // reset to first page for UX
+      setPage(1);
     } else {
-      dispatch(fetchRestaurants());
+      // Fetch paged restaurants from server
+      dispatch(fetchRestaurants({ pageNumber: page, pageSize: itemsPerPage }));
     }
 
     dispatch(fetchAllPromotions());
     // Load recipes and their reviews so we can show top-rated recipes on the home page
     dispatch(fetchAllRecipes());
     dispatch(fetchRecipeReviews());
-  }, [dispatch, q]);
+  }, [dispatch, q, page, itemsPerPage]);
 
   // Lọc nhà hàng đề xuất: từ 4 sao trở lên
   const visibleRestaurants = useMemo(() => {
@@ -90,6 +101,39 @@ const BodyPage = () => {
     });
   };
 
+  const updateSuggestedState = () => {
+    const el = suggestedRef.current;
+    if (!el) {
+      setSuggestedOverflow(false);
+      setSuggestedCanScrollLeft(false);
+      setSuggestedCanScrollRight(false);
+      return;
+    }
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    setSuggestedOverflow(overflow);
+    setSuggestedCanScrollLeft(el.scrollLeft > 5);
+    setSuggestedCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+    );
+  };
+
+  // Suggested arrows visibility state
+  const [suggestedOverflow, setSuggestedOverflow] = useState(false);
+  const [suggestedCanScrollLeft, setSuggestedCanScrollLeft] = useState(false);
+  const [suggestedCanScrollRight, setSuggestedCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = suggestedRef.current;
+    if (!el) return;
+    updateSuggestedState();
+    el.addEventListener("scroll", updateSuggestedState);
+    window.addEventListener("resize", updateSuggestedState);
+    return () => {
+      el.removeEventListener("scroll", updateSuggestedState);
+      window.removeEventListener("resize", updateSuggestedState);
+    };
+  }, [visibleRestaurants]);
+
   // Ref + scroll cho danh sách khuyến mãi (1 hàng, kéo ngang)
   const promotionsRef = useRef<HTMLDivElement | null>(null);
   const scrollPromotions = (direction: "left" | "right") => {
@@ -102,6 +146,22 @@ const BodyPage = () => {
     });
   };
 
+  const updatePromotionsState = () => {
+    const el = promotionsRef.current;
+    if (!el) {
+      setPromotionsOverflow(false);
+      setPromotionsCanScrollLeft(false);
+      setPromotionsCanScrollRight(false);
+      return;
+    }
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    setPromotionsOverflow(overflow);
+    setPromotionsCanScrollLeft(el.scrollLeft > 5);
+    setPromotionsCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+    );
+  };
+
   // Promotion arrows visibility state
   const [promotionsOverflow, setPromotionsOverflow] = useState(false);
   const [promotionsCanScrollLeft, setPromotionsCanScrollLeft] = useState(false);
@@ -111,21 +171,12 @@ const BodyPage = () => {
   useEffect(() => {
     const el = promotionsRef.current;
     if (!el) return;
-    const update = () => {
-      // allow a small epsilon to avoid off-by-1
-      const overflow = el.scrollWidth > el.clientWidth + 1;
-      setPromotionsOverflow(overflow);
-      setPromotionsCanScrollLeft(el.scrollLeft > 5);
-      setPromotionsCanScrollRight(
-        el.scrollLeft + el.clientWidth < el.scrollWidth - 5
-      );
-    };
-    update();
-    el.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
+    updatePromotionsState();
+    el.addEventListener("scroll", updatePromotionsState);
+    window.addEventListener("resize", updatePromotionsState);
     return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      el.removeEventListener("scroll", updatePromotionsState);
+      window.removeEventListener("resize", updatePromotionsState);
     };
   }, [promotions]);
 
@@ -141,6 +192,22 @@ const BodyPage = () => {
     });
   };
 
+  const updateRecipesState = () => {
+    const el = recipesRef.current;
+    if (!el) {
+      setRecipesOverflow(false);
+      setRecipesCanScrollLeft(false);
+      setRecipesCanScrollRight(false);
+      return;
+    }
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    setRecipesOverflow(overflow);
+    setRecipesCanScrollLeft(el.scrollLeft > 5);
+    setRecipesCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+    );
+  };
+
   // Recipes arrows visibility state
   const [recipesOverflow, setRecipesOverflow] = useState(false);
   const [recipesCanScrollLeft, setRecipesCanScrollLeft] = useState(false);
@@ -149,20 +216,12 @@ const BodyPage = () => {
   useEffect(() => {
     const el = recipesRef.current;
     if (!el) return;
-    const update = () => {
-      const overflow = el.scrollWidth > el.clientWidth + 1;
-      setRecipesOverflow(overflow);
-      setRecipesCanScrollLeft(el.scrollLeft > 5);
-      setRecipesCanScrollRight(
-        el.scrollLeft + el.clientWidth < el.scrollWidth - 5
-      );
-    };
-    update();
-    el.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
+    updateRecipesState();
+    el.addEventListener("scroll", updateRecipesState);
+    window.addEventListener("resize", updateRecipesState);
     return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      el.removeEventListener("scroll", updateRecipesState);
+      window.removeEventListener("resize", updateRecipesState);
     };
   }, [allRecipes, recipeReviews]);
 
@@ -194,19 +253,17 @@ const BodyPage = () => {
           cursor: "pointer",
         }}
       >
-        {/* Ảnh nhà hàng */}
+        {/* Ảnh nhà hàng (bắt buộc 1:1 để giữ layout ổn định) */}
         {restaurant.imageUrl ? (
-          <Box sx={{ position: "relative" }}>
+          <Box className={styles.aspectSquare}>
             <Box
               component="img"
               src={restaurant.imageUrl}
               alt={restaurant.name}
               sx={{
                 width: "100%",
-                height: { xs: 150, sm: 180, md: 200 },
+                height: "100%",
                 objectFit: "cover",
-                borderTopLeftRadius: "4px",
-                borderTopRightRadius: "4px",
               }}
             />
             {showSuggestedBadge && (
@@ -230,17 +287,18 @@ const BodyPage = () => {
             )}
           </Box>
         ) : (
-          <Box sx={{ position: "relative" }}>
+          <Box className={styles.aspectSquare}>
             <Box
               sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
                 width: "100%",
-                height: { xs: 150, sm: 180, md: 200 },
+                height: "100%",
                 backgroundColor: "#f5f5f5",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderTopLeftRadius: "4px",
-                borderTopRightRadius: "4px",
               }}
             >
               <Typography variant="body2" color="text.secondary">
@@ -275,7 +333,8 @@ const BodyPage = () => {
             variant="subtitle1"
             fontWeight="bold"
             gutterBottom
-            noWrap
+            className={styles.textClamp}
+            sx={{ WebkitLineClamp: 2 }}
             title={restaurant.name}
           >
             {restaurant.name}
@@ -337,16 +396,20 @@ const BodyPage = () => {
     list: typeof restaurants,
     showSuggestedBadge: boolean = false
   ) => (
-    <Grid container spacing={{ xs: 1, sm: 2, md: 2 }}>
+    <Grid container  rowSpacing={2} 
+    // spacing={{ xs: 1, sm: 2, md: 2 }}
+    >
       {list.map((restaurant) => (
         <Grid
           item
-          xs={6}
-          sm={6}
-          md={4}
-          lg={3}
           key={restaurant.id}
           component={"div" as React.ElementType}
+          sx={{
+            flexBasis: { xs: "100%", sm: "50%", md: "33.3333%", lg: "20%" },
+            maxWidth: { xs: "100%", sm: "50%", md: "33.3333%", lg: "20%" },
+            px: 1,
+            boxSizing: "border-box",
+          }}
         >
           {renderRestaurantCard(restaurant, showSuggestedBadge)}
         </Grid>
@@ -360,14 +423,15 @@ const BodyPage = () => {
       <Grid
         ref={suggestedRef}
         container
-        spacing={{ xs: 1, sm: 2, md: 2 }}
+        // spacing={{ xs: 1, sm: 2, md: 2 }}
+        onScroll={() => updateSuggestedState()}
         sx={{
           flexWrap: "nowrap",
           overflowX: "auto",
           scrollBehavior: "smooth",
           // Thêm khoảng “đệm” hai bên để item đầu/cuối không dính sát lề
           px: { xs: 1, sm: 2 },
-          py: 0,
+          py: 1,
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
         }}
@@ -375,50 +439,27 @@ const BodyPage = () => {
         {visibleRestaurants.map((restaurant) => (
           <Grid
             item
-            xs={6}
-            sm={6}
-            md={4}
-            lg={3}
             key={restaurant.id}
             component={"div" as React.ElementType}
-            sx={{ flex: "0 0 auto" }}
+            sx={{
+              flex: "0 0 auto",
+              width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
+              boxSizing: "border-box",
+              px: 1,
+            }}
           >
             {renderRestaurantCard(restaurant, true)}
           </Grid>
         ))}
       </Grid>
-      <IconButton
-        onClick={() => scrollSuggested("left")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: 8,
-          transform: "translateY(-50%)",
-          bgcolor: "background.paper",
-          boxShadow: 2,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-        aria-label="scroll-left"
-      >
-        <ChevronLeftIcon />
-      </IconButton>
-      <IconButton
-        onClick={() => scrollSuggested("right")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          right: 8,
-          transform: "translateY(-50%)",
-          bgcolor: "background.paper",
-          boxShadow: 2,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-        aria-label="scroll-right"
-      >
-        <ChevronRightIcon />
-      </IconButton>
+      <HorizontalArrows
+        onLeft={() => scrollSuggested("left")}
+        onRight={() => scrollSuggested("right")}
+        showLeft={suggestedOverflow && suggestedCanScrollLeft}
+        showRight={suggestedOverflow && suggestedCanScrollRight}
+        leftAria="scroll-left-suggested"
+        rightAria="scroll-right-suggested"
+      />
     </Box>
   );
 
@@ -438,18 +479,12 @@ const BodyPage = () => {
     >
       {/* Image area similar to restaurant card */}
       {p.imageUrl ? (
-        <Box sx={{ position: "relative" }}>
+        <Box className={styles.aspectSquare}>
           <Box
             component="img"
             src={p.imageUrl}
             alt={p.title}
-            sx={{
-              width: "100%",
-              height: { xs: 140, sm: 160, md: 180 },
-              objectFit: "cover",
-              borderTopLeftRadius: "4px",
-              borderTopRightRadius: "4px",
-            }}
+            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <Box
             sx={{
@@ -468,41 +503,20 @@ const BodyPage = () => {
           >
             Khuyến mãi
           </Box>
-          {/* {p.discountValue != null && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                bgcolor: "rgba(255,255,255,0.9)",
-                color: "error.main",
-                px: 1,
-                py: 0.25,
-                borderRadius: 1,
-                fontSize: 12,
-                fontWeight: 800,
-                border: "1px solid",
-                borderColor: "error.main",
-              }}
-            >
-              {p.discountType === "percent"
-                ? `${Number(p.discountValue)}%`
-                : `${Number(p.discountValue).toLocaleString()}đ`}
-            </Box>
-          )} */}
         </Box>
       ) : (
-        <Box sx={{ position: "relative" }}>
+        <Box className={styles.aspectSquare}>
           <Box
             sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
               width: "100%",
-              height: { xs: 140, sm: 160, md: 180 },
+              height: "100%",
               backgroundColor: "#f5f5f5",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderTopLeftRadius: "4px",
-              borderTopRightRadius: "4px",
             }}
           >
             <Typography variant="body2" color="text.secondary">
@@ -546,7 +560,7 @@ const BodyPage = () => {
         {/* 2) Tiêu đề khuyến mãi to và nổi bật ngay dưới tên nhà hàng */}
         <Typography
           variant="h6"
-          fontWeight={800}
+          fontWeight={600}
           sx={{
             lineHeight: 1.25,
             mb: 1,
@@ -582,7 +596,7 @@ const BodyPage = () => {
         >
           Xem ưu đãi
         </Button>
-      </Box>
+      </Box>  
     </Card>
   );
 
@@ -645,26 +659,27 @@ const BodyPage = () => {
         }}
       >
         {recipe.imageUrl ? (
-          <Box sx={{ position: "relative" }}>
+          <Box className={styles.aspectSquare}>
             <Box
               component="img"
               src={recipe.imageUrl}
               alt={recipe.title}
-              sx={{
-                width: "100%",
-                height: { xs: 120, sm: 140, md: 160 },
-                objectFit: "cover",
-              }}
+              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           </Box>
         ) : (
-          <Box
-            sx={{
-              width: "100%",
-              height: { xs: 120, sm: 140, md: 160 },
-              backgroundColor: "#f5f5f5",
-            }}
-          />
+          <Box className={styles.aspectSquare}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#f5f5f5",
+              }}
+            />
+          </Box>
         )}
 
         <CardContent sx={{ flexGrow: 1, width: "100%" }}>
@@ -734,13 +749,14 @@ const BodyPage = () => {
       <Grid
         ref={recipesRef}
         container
-        spacing={{ xs: 1, sm: 2, md: 2 }}
+        // spacing={{ xs: 1, sm: 1, md: 1 }}
+        onScroll={() => updateRecipesState()}
         sx={{
           flexWrap: "nowrap",
           overflowX: "auto",
           scrollBehavior: "smooth",
           px: { xs: 1, sm: 2 },
-          py: 0,
+          py: 1,
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
         }}
@@ -748,71 +764,28 @@ const BodyPage = () => {
         {topRecipes.map((r) => (
           <Grid
             item
-            xs={6}
-            sm={6}
-            md={4}
-            lg={3}
             key={r.id}
             component={"div" as React.ElementType}
-            sx={{ flex: "0 0 auto" }}
+            sx={{
+              flex: "0 0 auto",
+              width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
+              boxSizing: "border-box",
+              px: 1,
+            }}
           >
             {renderRecipeCard(r)}
           </Grid>
         ))}
       </Grid>
 
-      <IconButton
-        onClick={() => scrollRecipes("left")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: 8,
-          transform: "translateY(-50%)",
-          bgcolor: "background.paper",
-          boxShadow: 2,
-          "&:hover": { bgcolor: "background.paper" },
-        }}
-        size="small"
-        aria-label="scroll-left-recipes"
-      >
-        <ChevronLeftIcon />
-      </IconButton>
-      {recipesOverflow && recipesCanScrollLeft && (
-        <IconButton
-          onClick={() => scrollRecipes("left")}
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: 8,
-            transform: "translateY(-50%)",
-            bgcolor: "background.paper",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "background.paper" },
-          }}
-          size="small"
-          aria-label="scroll-left-recipes"
-        >
-          <ChevronLeftIcon />
-        </IconButton>
-      )}
-      {recipesOverflow && recipesCanScrollRight && (
-        <IconButton
-          onClick={() => scrollRecipes("right")}
-          sx={{
-            position: "absolute",
-            top: "50%",
-            right: 8,
-            transform: "translateY(-50%)",
-            bgcolor: "background.paper",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "background.paper" },
-          }}
-          size="small"
-          aria-label="scroll-right-recipes"
-        >
-          <ChevronRightIcon />
-        </IconButton>
-      )}
+      <HorizontalArrows
+        onLeft={() => scrollRecipes("left")}
+        onRight={() => scrollRecipes("right")}
+        showLeft={recipesOverflow && recipesCanScrollLeft}
+        showRight={recipesOverflow && recipesCanScrollRight}
+        leftAria="scroll-left-recipes"
+        rightAria="scroll-right-recipes"
+      />
     </Box>
   );
 
@@ -821,14 +794,15 @@ const BodyPage = () => {
       <Grid
         ref={promotionsRef}
         container
-        spacing={{ xs: 1, sm: 2, md: 2 }}
+        // spacing={{ xs: 1, sm: 2, md: 2 }}
+        onScroll={() => updatePromotionsState()}
         sx={{
           flexWrap: "nowrap",
           overflowX: "auto",
           scrollBehavior: "smooth",
           // Thêm khoảng “đệm” hai bên để item đầu/cuối không dính sát lề
           px: { xs: 1, sm: 2 },
-          py: 0,
+          py: 1,
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
         }}
@@ -836,55 +810,28 @@ const BodyPage = () => {
         {promotions.map((p) => (
           <Grid
             item
-            xs={6}
-            sm={6}
-            md={4}
-            lg={3}
             key={p.id}
             component={"div" as React.ElementType}
-            sx={{ flex: "0 0 auto" }}
+            sx={{
+              flex: "0 0 auto",
+              width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
+              boxSizing: "border-box",
+              px: 1,
+            }}
           >
             {renderPromotionCard(p)}
           </Grid>
         ))}
       </Grid>
 
-      {promotionsOverflow && promotionsCanScrollLeft && (
-        <IconButton
-          onClick={() => scrollPromotions("left")}
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: 8,
-            transform: "translateY(-50%)",
-            bgcolor: "background.paper",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "background.paper" },
-          }}
-          size="small"
-          aria-label="scroll-left-promotions"
-        >
-          <ChevronLeftIcon />
-        </IconButton>
-      )}
-      {promotionsOverflow && promotionsCanScrollRight && (
-        <IconButton
-          onClick={() => scrollPromotions("right")}
-          sx={{
-            position: "absolute",
-            top: "50%",
-            right: 8,
-            transform: "translateY(-50%)",
-            bgcolor: "background.paper",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "background.paper" },
-          }}
-          size="small"
-          aria-label="scroll-right-promotions"
-        >
-          <ChevronRightIcon />
-        </IconButton>
-      )}
+      <HorizontalArrows
+        onLeft={() => scrollPromotions("left")}
+        onRight={() => scrollPromotions("right")}
+        showLeft={promotionsOverflow && promotionsCanScrollLeft}
+        showRight={promotionsOverflow && promotionsCanScrollRight}
+        leftAria="scroll-left-promotions"
+        rightAria="scroll-right-promotions"
+      />
     </Box>
   );
 
@@ -990,6 +937,23 @@ const BodyPage = () => {
               Tất cả nhà hàng
             </Typography>
             {renderRestaurants(restaurants, false)}
+            {/* Pagination for restaurant listing (server-side) */}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Pagination
+                page={page}
+                onPageChange={(p) => {
+                  setPage(p);
+                  dispatch(
+                    fetchRestaurants({ pageNumber: p, pageSize: itemsPerPage })
+                  );
+                }}
+                totalRecords={totalRecords ?? restaurants.length}
+                pageSize={itemsPerPage}
+                size="small"
+                boundaryCount={3}
+                siblingCount={1}
+              />
+            </Box>
           </Paper>
 
           {/* Hình hợp tác (giống banner) đặt cuối trang */}

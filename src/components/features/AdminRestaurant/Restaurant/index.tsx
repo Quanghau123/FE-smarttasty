@@ -13,6 +13,11 @@ import {
   Chip,
   CircularProgress,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import DishCard from "@/components/features/AdminRestaurant/Dish";
@@ -27,7 +32,14 @@ import {
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
 import { getAccessToken } from "@/lib/utils/tokenHelper";
-// import { Description } from "@mui/icons-material";
+import StarIcon from "@mui/icons-material/Star";
+import { fetchFavoritesByRestaurant } from "@/redux/slices/favoritesSlice";
+import {
+  getReviewsByRestaurant,
+  deleteReview,
+} from "@/redux/slices/reviewSlice";
+import ReviewList from "@/components/features/Review/ReviewList";
+// import { Description } from "@mui/icons-material");
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -44,8 +56,25 @@ const RestaurantPage = () => {
     (state) => state.dishpromotion
   );
 
+  // Favorites for this restaurant (followers)
+  const { favorites: restaurantFavorites = [] } = useAppSelector(
+    (state) => state.favorites
+  );
+
+  // Total reviews from state
+  const totalReviewsFromState = useAppSelector(
+    (state) => state.restaurant.currentTotalReviews ?? 0
+  );
+
+  // Reviews for this restaurant
+  const { reviews = [], loading: reviewLoading } = useAppSelector(
+    (state) => state.review
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const isMobile = useMediaQuery("(max-width:600px)");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<number | null>(null);
 
   const [formState, setFormState] = useState({
     name: "",
@@ -79,6 +108,10 @@ const RestaurantPage = () => {
       dispatch(fetchDishes(restaurantInfo.id));
       // ✅ lấy toàn bộ khuyến mãi món để tính giá hiển thị
       dispatch(fetchDishPromotions());
+      // Load favorites for this restaurant
+      dispatch(fetchFavoritesByRestaurant(restaurantInfo.id));
+      // Load reviews for this restaurant
+      dispatch(getReviewsByRestaurant(restaurantInfo.id));
 
       setFormState({
         name: restaurantInfo.name || "",
@@ -164,6 +197,36 @@ const RestaurantPage = () => {
 
     return map;
   }, [dishes, dishPromotions]);
+
+  // Handle delete review
+  const handleDeleteReview = async (reviewId: number) => {
+    setReviewToDelete(reviewId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
+
+    try {
+      await dispatch(deleteReview(reviewToDelete)).unwrap();
+      toast.success("Đã xóa đánh giá thành công!");
+      // Refresh reviews after deletion
+      if (restaurantInfo?.id) {
+        dispatch(getReviewsByRestaurant(restaurantInfo.id));
+      }
+    } catch (error) {
+      toast.error("Không thể xóa đánh giá. Vui lòng thử lại.");
+      console.error("Delete review error:", error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setReviewToDelete(null);
+    }
+  };
+
+  const cancelDeleteReview = () => {
+    setDeleteDialogOpen(false);
+    setReviewToDelete(null);
+  };
 
   if (restaurantLoading) {
     return (
@@ -324,7 +387,7 @@ const RestaurantPage = () => {
                   {restaurantInfo.name}
                 </Typography>
                 <Typography color="text.secondary" sx={{ mb: 1 }}>
-                  {restaurantInfo.address}
+                  <strong>Địa chỉ:</strong> {restaurantInfo.address}
                 </Typography>
                 {restaurantInfo.description && (
                   <Typography variant="body2" sx={{ mb: 1.5 }}>
@@ -332,11 +395,89 @@ const RestaurantPage = () => {
                   </Typography>
                 )}
 
+                {/* Operating Hours and Status */}
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Trạng thái:</strong>{" "}
+                  {(() => {
+                    const parseHHMM = (v?: string): [number, number] | null => {
+                      if (v && v.includes(":")) {
+                        const [h, m] = v.split(":");
+                        const hh = Number(h);
+                        const mm = Number(m);
+                        if (Number.isFinite(hh) && Number.isFinite(mm)) {
+                          return [hh, mm];
+                        }
+                      }
+                      return null;
+                    };
+
+                    const now = new Date();
+                    const open = parseHHMM(restaurantInfo.openTime);
+                    const close = parseHHMM(restaurantInfo.closeTime);
+
+                    if (!open || !close) {
+                      return <span style={{ color: "#666" }}>Không rõ</span>;
+                    }
+
+                    const [openHour, openMinute] = open;
+                    const [closeHour, closeMinute] = close;
+                    const openDate = new Date(now);
+                    openDate.setHours(openHour, openMinute, 0, 0);
+                    const closeDate = new Date(now);
+                    closeDate.setHours(closeHour, closeMinute, 0, 0);
+                    if (closeDate <= openDate)
+                      closeDate.setDate(closeDate.getDate() + 1);
+                    return now >= openDate && now <= closeDate ? (
+                      <span style={{ color: "green" }}>Đang mở cửa</span>
+                    ) : (
+                      <span style={{ color: "red" }}>Đã đóng cửa</span>
+                    );
+                  })()}
+                </Typography>
+
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Giờ hoạt động:</strong> {restaurantInfo.openTime} -{" "}
+                  {restaurantInfo.closeTime}
+                </Typography>
+
+                {/* Followers Count */}
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Số người theo dõi:</strong>{" "}
+                  {restaurantFavorites?.length ?? 0}
+                </Typography>
+
+                {/* Rating with Stars */}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  sx={{ mb: 1.5 }}
+                >
+                  <strong>Đánh giá:</strong>
+                  {Array.from({ length: 5 }).map((_, idx) => {
+                    const avgRating =
+                      (restaurantInfo as unknown as { averageRating?: number })
+                        ?.averageRating ?? 0;
+                    return (
+                      <StarIcon
+                        key={idx}
+                        fontSize="small"
+                        color={
+                          idx < Math.round(avgRating) ? "warning" : "disabled"
+                        }
+                      />
+                    );
+                  })}
+                  <Typography variant="body2" color="error" sx={{ ml: 0.5 }}>
+                    {(
+                      (restaurantInfo as unknown as { averageRating?: number })
+                        ?.averageRating ?? 0
+                    ).toFixed(1)}{" "}
+                    ({totalReviewsFromState.toLocaleString()} đánh giá)
+                  </Typography>
+                </Box>
+
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Chip
-                    label={`Giờ: ${restaurantInfo.openTime} - ${restaurantInfo.closeTime}`}
-                    size="small"
-                  />
                   {(() => {
                     const ri = restaurantInfo as unknown as {
                       isVerified?: boolean;
@@ -435,6 +576,62 @@ const RestaurantPage = () => {
           })()
         )}
       </Box>
+
+      {/* Đánh giá của khách hàng */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+          Đánh giá từ khách hàng
+        </Typography>
+        {reviewLoading ? (
+          <Box display="flex" justifyContent="center" py={4}>
+            <CircularProgress />
+          </Box>
+        ) : reviews.length === 0 ? (
+          <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
+            <Typography color="text.secondary">
+              Chưa có đánh giá nào cho nhà hàng này.
+            </Typography>
+          </Paper>
+        ) : (
+          <ReviewList
+            reviews={reviews}
+            loading={reviewLoading}
+            onDelete={handleDeleteReview}
+            showDeleteButton={true}
+          />
+        )}
+      </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={cancelDeleteReview}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Xác nhận xóa đánh giá
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn
+            tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDeleteReview} color="inherit">
+            Hủy
+          </Button>
+          <Button
+            onClick={confirmDeleteReview}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

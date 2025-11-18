@@ -15,11 +15,18 @@ import {
   Paper,
   List,
   ListItem,
-  ListItemText,
   Avatar,
   Divider,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Stack,
+  Collapse,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchMyStaffInfo } from "@/redux/slices/staffSlice";
 import {
@@ -41,12 +48,22 @@ export default function StaffRestaurantOrders() {
     open: boolean;
     message: string;
     severity: "success" | "error";
-  }>({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  }>({ open: false, message: "", severity: "success" });
   const [noPermission, setNoPermission] = useState(false);
+
+  // confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    type?: "cod" | "delivered";
+    paymentId?: number;
+    orderId?: number;
+    message?: string;
+  }>({ open: false });
+
+  // expanded orders for details view
+  const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>(
+    {}
+  );
 
   // normalize restaurants: backend sometimes returns a JSON string in User.restaurants
   const restaurants = useMemo(() => {
@@ -69,15 +86,12 @@ export default function StaffRestaurantOrders() {
 
   // pick default restaurant when available
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants.length > 0) {
+    if (!selectedRestaurantId && restaurants.length > 0)
       setSelectedRestaurantId(restaurants[0].id);
-    }
   }, [restaurants, selectedRestaurantId]);
 
   useEffect(() => {
     if (!selectedRestaurantId) return;
-
-    // attempt to fetch restaurant payments and detect 403 / forbidden
     (async () => {
       try {
         setNoPermission(false);
@@ -91,31 +105,26 @@ export default function StaffRestaurantOrders() {
           low.includes("403") ||
           low.includes("forbidden") ||
           low.includes("permission")
-        ) {
+        )
           setNoPermission(true);
-        } else {
-          // other errors: show brief snackbar
+        else
           setSnackbar({
             open: true,
             message: msg || "Lỗi khi lấy đơn hàng",
             severity: "error",
           });
-        }
       }
     })();
   }, [dispatch, selectedRestaurantId]);
 
   const loading = paymentState.loading || staffLoading;
 
-  const handleChangeRestaurant = (id: number) => {
-    setSelectedRestaurantId(id);
-  };
+  const handleChangeRestaurant = (id: number) => setSelectedRestaurantId(id);
 
   const handleChangeDelivery = async (
     orderId: number,
     value: DeliveryStatus
   ) => {
-    // map FE alias "Shipping" -> BE expects "Delivering"
     const mapped =
       String(value).toLowerCase() === "shipping"
         ? ("Delivering" as unknown as typeof value)
@@ -129,7 +138,6 @@ export default function StaffRestaurantOrders() {
         message: "Cập nhật trạng thái giao hàng thành công",
         severity: "success",
       });
-      // refresh payments for the selected restaurant
       if (selectedRestaurantId && !noPermission)
         dispatch(
           fetchPaymentsByRestaurant({ restaurantId: selectedRestaurantId })
@@ -140,6 +148,61 @@ export default function StaffRestaurantOrders() {
         message: (e as Error)?.message ?? "Cập nhật thất bại",
         severity: "error",
       });
+    }
+  };
+
+  const toggleExpand = (orderId: number) =>
+    setExpandedOrders((s) => ({ ...s, [orderId]: !s[orderId] }));
+
+  const openConfirmDialog = (opts: {
+    type: "cod" | "delivered";
+    paymentId?: number;
+    orderId?: number;
+    message?: string;
+  }) => setConfirmDialog({ open: true, ...opts });
+  const closeConfirmDialog = () => setConfirmDialog({ open: false });
+
+  const handleConfirmDialog = async () => {
+    if (!confirmDialog.type) return closeConfirmDialog();
+    try {
+      if (confirmDialog.type === "cod" && confirmDialog.paymentId) {
+        await dispatch(
+          confirmCODPaymentByPaymentId({
+            paymentId: confirmDialog.paymentId,
+            restaurantId: selectedRestaurantId!,
+          })
+        ).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Xác nhận thu COD thành công",
+          severity: "success",
+        });
+      }
+      if (confirmDialog.type === "delivered" && confirmDialog.orderId) {
+        await dispatch(
+          updateDeliveryStatus({
+            id: confirmDialog.orderId,
+            deliveryStatus: DeliveryStatus.Delivered,
+          })
+        ).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Đã đánh dấu Đã giao",
+          severity: "success",
+        });
+      }
+      if (selectedRestaurantId && !noPermission)
+        dispatch(
+          fetchPaymentsByRestaurant({ restaurantId: selectedRestaurantId })
+        );
+    } catch (e: unknown) {
+      setSnackbar({
+        open: true,
+        message: (e as Error)?.message ?? "Thao tác thất bại",
+        severity: "error",
+      });
+    } finally {
+      closeConfirmDialog();
     }
   };
 
@@ -185,6 +248,25 @@ export default function StaffRestaurantOrders() {
       default:
         return s || "Không rõ";
     }
+  };
+
+  const chipColorForOrder = (s?: string) => {
+    const st = String(s || "").toLowerCase();
+    if (st === "paid" || st === "success") return "success" as const;
+    if (st === "pending") return "warning" as const;
+    if (st === "cancelled" || st === "canceled" || st === "failed")
+      return "error" as const;
+    return "default" as const;
+  };
+
+  const chipColorForDelivery = (s?: string) => {
+    const d = String(s || "").toLowerCase();
+    if (d === "delivered") return "success" as const;
+    if (d === "preparing") return "warning" as const;
+    if (d === "delivering" || d === "shipping") return "info" as const;
+    if (d === "canceled" || d === "cancelled" || d === "failed")
+      return "error" as const;
+    return "default" as const;
   };
 
   return (
@@ -237,257 +319,267 @@ export default function StaffRestaurantOrders() {
               if (payments.length === 0)
                 return <Typography>Không có đơn hàng</Typography>;
 
-              const handleConfirmCOD = async (paymentId: number) => {
-                if (!selectedRestaurantId) return;
-                try {
-                  await dispatch(
-                    confirmCODPaymentByPaymentId({
-                      paymentId,
-                      restaurantId: selectedRestaurantId,
-                    })
-                  ).unwrap();
-                  setSnackbar({
-                    open: true,
-                    message: "Xác nhận thu COD thành công",
-                    severity: "success",
-                  });
-                  // refresh
-                  dispatch(
-                    fetchPaymentsByRestaurant({
-                      restaurantId: selectedRestaurantId,
-                    })
-                  );
-                } catch (e: unknown) {
-                  setSnackbar({
-                    open: true,
-                    message: (e as Error)?.message ?? "Xác nhận thất bại",
-                    severity: "error",
-                  });
-                }
-              };
-
               return (
                 <List>
                   {payments.map((p) => {
                     const o = p.order;
+                    const expanded = Boolean(o?.id && expandedOrders[o.id]);
                     return (
-                      <Paper key={p.id} sx={{ mb: 1, p: 1 }} variant="outlined">
-                        <ListItem>
-                          <Box
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            width="100%"
-                          >
-                            <ListItemText
-                              primary={`Đơn #${o?.id} — ${
-                                o?.recipientName || `#${o?.userId}`
-                              }`}
-                              secondary={`Tổng: ${(
-                                o?.finalPrice ??
-                                p.amount ??
-                                0
-                              ).toLocaleString()}đ — Tạo: ${
-                                o?.createdAt
-                                  ? new Date(o.createdAt).toLocaleString()
-                                  : "-"
-                              }`}
-                            />
-
-                            <Box display="flex" gap={1} alignItems="center">
-                              <Chip
-                                size="small"
-                                label={labelOrderStatus(o?.status)}
-                                color={(():
-                                  | "default"
-                                  | "primary"
-                                  | "secondary"
-                                  | "error"
-                                  | "info"
-                                  | "success"
-                                  | "warning" => {
-                                  const s = String(
-                                    o?.status || ""
-                                  ).toLowerCase();
-                                  if (s === "paid" || s === "success")
-                                    return "success";
-                                  if (s === "pending") return "warning";
-                                  if (
-                                    s === "cancelled" ||
-                                    s === "canceled" ||
-                                    s === "failed"
-                                  )
-                                    return "error";
-                                  return "default";
-                                })()}
-                              />
-
-                              <Chip
-                                size="small"
-                                label={labelDeliveryStatus(o?.deliveryStatus)}
-                                color={(():
-                                  | "default"
-                                  | "primary"
-                                  | "secondary"
-                                  | "error"
-                                  | "info"
-                                  | "success"
-                                  | "warning" => {
-                                  const d = String(
-                                    o?.deliveryStatus || ""
-                                  ).toLowerCase();
-                                  if (d === "delivered") return "success";
-                                  if (d === "preparing") return "warning";
-                                  if (d === "delivering" || d === "shipping")
-                                    return "info";
-                                  if (
-                                    d === "canceled" ||
-                                    d === "cancelled" ||
-                                    d === "failed"
-                                  )
-                                    return "error";
-                                  return "default";
-                                })()}
-                              />
-                            </Box>
-                          </Box>
-
-                          <Box display="flex" gap={1} alignItems="center">
-                            <Box
-                              display="flex"
-                              flexDirection="column"
-                              gap={1}
-                              alignItems="flex-end"
+                      <Paper
+                        key={p.id}
+                        sx={{ mb: 2, p: 1.25 }}
+                        variant="outlined"
+                      >
+                        <ListItem disableGutters>
+                          <Box sx={{ width: "100%" }}>
+                            <Stack
+                              direction={{ xs: "column", sm: "row" }}
+                              justifyContent="space-between"
+                              alignItems="center"
+                              spacing={1}
                             >
-                              <FormControl size="small">
-                                <Select
-                                  value={
-                                    (o?.deliveryStatus as DeliveryStatus) ??
-                                    DeliveryStatus.Preparing
-                                  }
-                                  onChange={(e) =>
-                                    handleChangeDelivery(
-                                      o?.id ?? 0,
-                                      e.target.value as DeliveryStatus
-                                    )
-                                  }
-                                >
-                                  {statusOptions.map((s) => (
-                                    <MenuItem key={s.value} value={s.value}>
-                                      {s.label}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() =>
-                                  handleChangeDelivery(
-                                    o?.id ?? 0,
-                                    DeliveryStatus.Delivered
-                                  )
-                                }
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={2}
+                                sx={{ minWidth: 0 }}
                               >
-                                Đánh dấu Đã giao
-                              </Button>
-                            </Box>
+                                <Avatar
+                                  sx={{
+                                    width: 56,
+                                    height: 56,
+                                    bgcolor: "background.paper",
+                                  }}
+                                >
+                                  {String(
+                                    o?.recipientName || o?.userId || ""
+                                  ).charAt(0) || "#"}
+                                </Avatar>
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Typography
+                                    variant="subtitle1"
+                                    noWrap
+                                    sx={{ fontWeight: 700 }}
+                                  >
+                                    {`Đơn #${o?.id} — ${
+                                      o?.recipientName || `#${o?.userId}`
+                                    }`}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    noWrap
+                                  >
+                                    {`Tổng: ${(
+                                      o?.finalPrice ??
+                                      p.amount ??
+                                      0
+                                    ).toLocaleString()}đ — Tạo: ${
+                                      o?.createdAt
+                                        ? new Date(o.createdAt).toLocaleString()
+                                        : "-"
+                                    }`}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                              >
+                                <Chip
+                                  size="small"
+                                  label={labelOrderStatus(o?.status)}
+                                  color={chipColorForOrder(o?.status)}
+                                />
+
+                                <Chip
+                                  size="small"
+                                  label={labelDeliveryStatus(o?.deliveryStatus)}
+                                  color={chipColorForDelivery(
+                                    o?.deliveryStatus
+                                  )}
+                                />
+
+                                <IconButton
+                                  aria-label={expanded ? "collapse" : "expand"}
+                                  onClick={() => toggleExpand(o?.id ?? 0)}
+                                  size="small"
+                                >
+                                  <ExpandMoreIcon
+                                    sx={{
+                                      transform: expanded
+                                        ? "rotate(180deg)"
+                                        : "rotate(0deg)",
+                                      transition: "transform 0.2s",
+                                    }}
+                                  />
+                                </IconButton>
+                              </Stack>
+                            </Stack>
+
+                            <Collapse
+                              in={expanded}
+                              timeout="auto"
+                              unmountOnExit
+                            >
+                              <Divider sx={{ my: 1 }} />
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: { xs: "column", md: "row" },
+                                  gap: 2,
+                                }}
+                              >
+                                <Box sx={{ flex: 1 }}>
+                                  {/* Items */}
+                                  {(o?.items || []).map((it) => (
+                                    <Box
+                                      key={it.id}
+                                      display="flex"
+                                      alignItems="center"
+                                      gap={2}
+                                      sx={{ py: 0.75 }}
+                                    >
+                                      <Avatar
+                                        variant="rounded"
+                                        src={it.image || undefined}
+                                        alt={it.dishName}
+                                        sx={{ width: 56, height: 40 }}
+                                      >
+                                        {it.dishName?.charAt(0) || "?"}
+                                      </Avatar>
+                                      <Box sx={{ minWidth: 0 }}>
+                                        <Typography
+                                          variant="body2"
+                                          sx={{ fontWeight: 600 }}
+                                          noWrap
+                                        >
+                                          {it.dishName}
+                                        </Typography>
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                          noWrap
+                                        >
+                                          x{it.quantity} •{" "}
+                                          {(
+                                            it.unitPrice ?? it.totalPrice
+                                          ).toLocaleString()}
+                                          đ
+                                        </Typography>
+                                      </Box>
+                                      <Box sx={{ ml: "auto" }}>
+                                        <Typography variant="body2">
+                                          {(
+                                            it.totalPrice ?? 0
+                                          ).toLocaleString()}
+                                          đ
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  ))}
+                                </Box>
+
+                                <Box sx={{ width: { xs: "100%", md: 320 } }}>
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 700 }}
+                                  >
+                                    Thông tin giao hàng
+                                  </Typography>
+                                  <Typography variant="body2">
+                                    {o?.recipientName} •{" "}
+                                    {o?.recipientPhone || "-"}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ wordBreak: "break-word" }}
+                                  >
+                                    {o?.deliveryAddress ||
+                                      o?.restaurant?.address ||
+                                      "-"}
+                                  </Typography>
+
+                                  <Divider sx={{ my: 1 }} />
+
+                                  <Stack direction="column" spacing={1}>
+                                    <FormControl size="small">
+                                      <InputLabel
+                                        id={`delivery-select-${o?.id}`}
+                                      >
+                                        Trạng thái giao
+                                      </InputLabel>
+                                      <Select
+                                        labelId={`delivery-select-${o?.id}`}
+                                        value={
+                                          (o?.deliveryStatus as DeliveryStatus) ??
+                                          DeliveryStatus.Preparing
+                                        }
+                                        label="Trạng thái giao"
+                                        onChange={(e) =>
+                                          handleChangeDelivery(
+                                            o?.id ?? 0,
+                                            e.target.value as DeliveryStatus
+                                          )
+                                        }
+                                      >
+                                        {statusOptions.map((s) => (
+                                          <MenuItem
+                                            key={s.value}
+                                            value={s.value}
+                                          >
+                                            {s.label}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </FormControl>
+
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() =>
+                                        openConfirmDialog({
+                                          type: "delivered",
+                                          orderId: o?.id,
+                                        })
+                                      }
+                                    >
+                                      Đánh dấu Đã giao
+                                    </Button>
+
+                                    {p.codPayment ? (
+                                      p.codPayment.isCollected ? (
+                                        <Typography variant="body2">
+                                          Đã thu COD:{" "}
+                                          {p.codPayment.collectedAt
+                                            ? new Date(
+                                                p.codPayment.collectedAt
+                                              ).toLocaleString()
+                                            : "-"}
+                                        </Typography>
+                                      ) : (
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          onClick={() =>
+                                            openConfirmDialog({
+                                              type: "cod",
+                                              paymentId: p.id,
+                                            })
+                                          }
+                                        >
+                                          Xác nhận thu COD
+                                        </Button>
+                                      )
+                                    ) : null}
+                                  </Stack>
+                                </Box>
+                              </Box>
+                            </Collapse>
                           </Box>
                         </ListItem>
-
-                        <Divider sx={{ my: 1 }} />
-
-                        {/* Items */}
-                        <Box sx={{ px: 1, pb: 1 }}>
-                          {(o?.items || []).map((it) => (
-                            <Box
-                              key={it.id}
-                              display="flex"
-                              alignItems="center"
-                              gap={2}
-                              sx={{ py: 0.5 }}
-                            >
-                              <Avatar
-                                variant="rounded"
-                                src={it.image || undefined}
-                                alt={it.dishName}
-                                sx={{ width: 56, height: 40 }}
-                              >
-                                {it.dishName?.charAt(0) || "?"}
-                              </Avatar>
-                              <Box flex={1}>
-                                <Typography variant="body2" fontWeight={600}>
-                                  {it.dishName}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  x{it.quantity} •{" "}
-                                  {(
-                                    it.unitPrice ?? it.totalPrice
-                                  ).toLocaleString()}
-                                  đ
-                                </Typography>
-                              </Box>
-                              <Typography variant="body2">
-                                {it.totalPrice.toLocaleString()}đ
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Box>
-
-                        {/* Payment & restaurant info */}
-                        <Box
-                          sx={{
-                            px: 1,
-                            pb: 1,
-                            display: "flex",
-                            gap: 2,
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2">
-                              Nhà hàng: {o?.restaurant?.name}
-                            </Typography>
-                            <Typography variant="body2">
-                              Địa chỉ:{" "}
-                              {o?.deliveryAddress || o?.restaurant?.address}
-                            </Typography>
-                          </Box>
-
-                          <Box textAlign="right">
-                            <Typography variant="body2">
-                              Thanh toán: {p.status}
-                            </Typography>
-                            <Typography variant="body2">
-                              Số tiền: {(p.amount ?? 0).toLocaleString()}đ
-                            </Typography>
-                            {p.codPayment ? (
-                              p.codPayment.isCollected ? (
-                                <Typography variant="body2">
-                                  Đã thu COD:{" "}
-                                  {p.codPayment.collectedAt
-                                    ? new Date(
-                                        p.codPayment.collectedAt
-                                      ).toLocaleString()
-                                    : "-"}
-                                </Typography>
-                              ) : (
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => handleConfirmCOD(p.id)}
-                                >
-                                  Xác nhận thu COD
-                                </Button>
-                              )
-                            ) : null}
-                          </Box>
-                        </Box>
                       </Paper>
                     );
                   })}
@@ -497,6 +589,23 @@ export default function StaffRestaurantOrders() {
           )}
         </Box>
       )}
+
+      <Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
+        <DialogTitle>Xác nhận</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {confirmDialog.type === "cod"
+              ? "Bạn có chắc chắn muốn xác nhận thu COD?"
+              : "Bạn muốn đánh dấu đơn đã giao?"}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeConfirmDialog}>Hủy</Button>
+          <Button variant="contained" onClick={handleConfirmDialog}>
+            Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

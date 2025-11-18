@@ -99,6 +99,20 @@ export const getReviewsByRestaurant = createAsyncThunk<
   }
 );
 
+// ✅ Async thunk: xóa review
+export const deleteReview = createAsyncThunk<
+  number,
+  number,
+  { rejectValue: string }
+>("review/deleteReview", async (id, { rejectWithValue }) => {
+  try {
+    await axiosInstance.delete(`/api/Review/${id}`);
+    return id;
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});
+
 const reviewSlice = createSlice({
   name: "review",
   initialState,
@@ -181,6 +195,21 @@ const reviewSlice = createSlice({
         } else {
           state.error = payloadMessage;
         }
+      });
+
+    // DELETE
+    builder
+      .addCase(deleteReview.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteReview.fulfilled, (state, action: PayloadAction<number>) => {
+        state.loading = false;
+        state.reviews = state.reviews.filter((r) => r.id !== action.payload);
+      })
+      .addCase(deleteReview.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Không thể xóa review";
       });
   },
 });

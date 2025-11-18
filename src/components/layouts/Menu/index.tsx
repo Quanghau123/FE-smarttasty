@@ -1,45 +1,55 @@
 "use client";
 
 import { Box, Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const Menu = () => {
   const router = useRouter();
+  const pathname = usePathname() || "/";
+
+  const menuItems = [
+    { label: "Tất cả nhà hàng", path: "/" },
+    { label: "Nhà hàng gần bạn", path: "/NearbyRestaurant" },
+    { label: "Công thức món ăn", path: "/recipes" },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname.startsWith(path);
+  };
 
   return (
     <Box
       display="flex"
-      gap={4}
+      gap={2}
       p={2}
       sx={{
         bgcolor: "background.default",
         color: "text.primary",
       }}
     >
-      {/* Nút menu chính */}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => router.push("/")}
-      >
-        Tất cả nhà hàng
-      </Button>
-
-      {/* Nút dẫn sang trang nhà hàng gần bạn */}
-      <Button
-        variant="outlined"
-        color="secondary"
-        onClick={() => router.push("/NearbyRestaurant")}
-      >
-        Nhà hàng gần bạn
-      </Button>
-       <Button
-        variant="outlined"
-        color="secondary"
-        onClick={() => router.push("/recipes")}
-      >
-        Công thức món ăn
-      </Button>
+      {menuItems.map((item) => {
+        const active = isActive(item.path);
+        return (
+          <Button
+            key={item.path}
+            onClick={() => router.push(item.path)}
+            className={`menu-button ${
+              active
+                ? item.path === "/recipes"
+                  ? "menu-active--strong"
+                  : "menu-active"
+                : ""
+            }`}
+            aria-current={active ? "page" : undefined}
+            sx={{
+              textTransform: "none",
+            }}
+          >
+            {item.label}
+          </Button>
+        );
+      })}
     </Box>
   );
 };

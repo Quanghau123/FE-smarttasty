@@ -41,6 +41,17 @@ const PurchaseHistoryPage = () => {
 
   // track which order's items list is expanded (keyed by order id)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  // selected delivery status filter (e.g. 'all', 'preparing', 'delivering', 'delivered', 'canceled')
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  // Show delivery-related statuses (user requested: Chờ xác nhận, Đang giao, Đã giao, Đã hủy)
+  const ORDER_STATUSES: { key: string; label: string }[] = [
+     { key: "all", label: "Tất cả" },
+    { key: "preparing", label: "Chờ xác nhận" },
+    { key: "delivering", label: "Đang giao" },
+    { key: "delivered", label: "Đã giao" },
+    { key: "canceled", label: "Đã hủy" },
+  ];
 
   const normalize = (s?: string | null) => (s ? String(s).toLowerCase() : "");
 
@@ -233,6 +244,35 @@ const PurchaseHistoryPage = () => {
           Lịch sử thanh toán
         </Typography>
 
+        {/* Status filter tabs (like Shopee) */}
+        <Box mb={2}>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            {ORDER_STATUSES.map((s) => {
+              const count = history.filter((h) => {
+                if (s.key === "all") return true;
+                const st = normalize(h.order?.deliveryStatus);
+                if (s.key === "canceled")
+                  return st === "cancelled" || st === "canceled";
+                return st === s.key;
+              }).length;
+
+              return (
+                <Button
+                  key={s.key}
+                  size="small"
+                  variant={selectedStatus === s.key ? "contained" : "outlined"}
+                  onClick={() => setSelectedStatus(s.key)}
+                  sx={{ textTransform: "none" }}
+                >
+                  {s.label} {"("}
+                  {count}
+                  {")"}
+                </Button>
+              );
+            })}
+          </Stack>
+        </Box>
+
         {paymentState.error ? (
           <Typography color="error">{paymentState.error}</Typography>
         ) : history.length === 0 ? (
@@ -246,155 +286,169 @@ const PurchaseHistoryPage = () => {
           </Box>
         ) : (
           <Stack spacing={1}>
-            {history.map((h: InfoPayment) => {
-              const orderId = h.order?.id ?? -1;
-              return (
-                <Paper key={h.id} variant="outlined" sx={{ p: 1.5 }}>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexWrap="wrap"
-                    gap={1}
-                  >
-                    <Box>
-                      <Typography fontWeight={600}>
-                        Đơn hàng #{h.order?.id ?? "-"}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {h.order?.createdAt
-                          ? new Date(h.order.createdAt).toLocaleString()
-                          : "-"}
-                      </Typography>
-                      <Typography variant="body2">
-                        Nhà hàng:{" "}
-                        {h.order?.restaurant?.name ||
-                          `#${h.order?.restaurantId ?? "-"}`}
-                      </Typography>
+            {history
+              .filter((h: InfoPayment) => {
+                if (selectedStatus === "all") return true;
+                const st = normalize(h.order?.deliveryStatus);
+                if (selectedStatus === "canceled")
+                  return st === "cancelled" || st === "canceled";
+                return st === selectedStatus;
+              })
+              .map((h: InfoPayment) => {
+                const orderId = h.order?.id ?? -1;
+                return (
+                  <Paper key={h.id} variant="outlined" sx={{ p: 1.5 }}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      flexWrap="wrap"
+                      gap={1}
+                    >
+                      <Box>
+                        <Typography fontWeight={600}>
+                          Đơn hàng #{h.order?.id ?? "-"}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {h.order?.createdAt
+                            ? new Date(h.order.createdAt).toLocaleString()
+                            : "-"}
+                        </Typography>
+                        <Typography variant="body2">
+                          Nhà hàng:{" "}
+                          {h.order?.restaurant?.name ||
+                            `#${h.order?.restaurantId ?? "-"}`}
+                        </Typography>
 
-                      {/* Order status + delivery status */}
-                      <Box mt={0.5} display="flex" gap={1} alignItems="center">
-                        <Chip
-                          label={orderStatusLabel(h.order?.status)}
-                          color={orderStatusColor(h.order?.status)}
-                          size="small"
-                        />
-                        <Chip
-                          label={deliveryStatusLabel(h.order?.deliveryStatus)}
-                          color={deliveryStatusColor(h.order?.deliveryStatus)}
-                          size="small"
-                        />
+                        {/* Order status + delivery status */}
+                        <Box
+                          mt={0.5}
+                          display="flex"
+                          gap={1}
+                          alignItems="center"
+                        >
+                          <Chip
+                            label={orderStatusLabel(h.order?.status)}
+                            color={orderStatusColor(h.order?.status)}
+                            size="small"
+                          />
+                          <Chip
+                            label={deliveryStatusLabel(h.order?.deliveryStatus)}
+                            color={deliveryStatusColor(h.order?.deliveryStatus)}
+                            size="small"
+                          />
+                        </Box>
+
+                        {/* Items preview: show first item, collapse rest */}
+                        {h.order?.items && h.order.items.length > 0 && (
+                          <>
+                            <Box
+                              mt={0.5}
+                              display="flex"
+                              alignItems="center"
+                              gap={1}
+                            >
+                              <Typography variant="body2">
+                                {h.order.items[0].dishName}
+                                {h.order.items[0].quantity
+                                  ? ` x${h.order.items[0].quantity}`
+                                  : ""}
+                              </Typography>
+                              {h.order.items.length > 1 && (
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  onClick={() =>
+                                    setExpanded((prev) => ({
+                                      ...prev,
+                                      [orderId]: !prev[orderId],
+                                    }))
+                                  }
+                                  sx={{ textTransform: "none" }}
+                                >
+                                  +{h.order.items.length - 1} món khác
+                                </Button>
+                              )}
+                            </Box>
+
+                            <Collapse in={!!expanded[orderId]}>
+                              <List dense>
+                                {h.order.items.map((it) => (
+                                  <ListItem key={it.id} sx={{ py: 0.4 }}>
+                                    <ListItemText
+                                      primary={`${it.dishName} x${it.quantity}`}
+                                      secondary={`${Number(
+                                        it.totalPrice
+                                      ).toLocaleString()}đ`}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            </Collapse>
+                          </>
+                        )}
                       </Box>
-
-                      {/* Items preview: show first item, collapse rest */}
-                      {h.order?.items && h.order.items.length > 0 && (
-                        <>
-                          <Box
-                            mt={0.5}
-                            display="flex"
-                            alignItems="center"
-                            gap={1}
-                          >
-                            <Typography variant="body2">
-                              {h.order.items[0].dishName}
-                              {h.order.items[0].quantity
-                                ? ` x${h.order.items[0].quantity}`
-                                : ""}
-                            </Typography>
-                            {h.order.items.length > 1 && (
-                              <Button
-                                size="small"
-                                variant="text"
-                                onClick={() =>
-                                  setExpanded((prev) => ({
-                                    ...prev,
-                                    [orderId]: !prev[orderId],
-                                  }))
-                                }
-                                sx={{ textTransform: "none" }}
-                              >
-                                +{h.order.items.length - 1} món khác
-                              </Button>
-                            )}
-                          </Box>
-
-                          <Collapse in={!!expanded[orderId]}>
-                            <List dense>
-                              {h.order.items.map((it) => (
-                                <ListItem key={it.id} sx={{ py: 0.4 }}>
-                                  <ListItemText
-                                    primary={`${it.dishName} x${it.quantity}`}
-                                    secondary={`${Number(
-                                      it.totalPrice
-                                    ).toLocaleString()}đ`}
-                                  />
-                                </ListItem>
-                              ))}
-                            </List>
-                          </Collapse>
-                        </>
-                      )}
-                    </Box>
-                    <Box textAlign="right">
-                      <Chip
-                        label={paymentLabel(h.status)}
-                        color={paymentChipColor(h.status)}
-                        size="small"
-                        sx={{ mr: 1 }}
-                      />
-                      <Typography fontWeight={700}>
-                        {Number(h.amount).toLocaleString()}đ
-                      </Typography>
-                      <Box mt={0.5}>
-                        <Button
+                      <Box textAlign="right">
+                        <Chip
+                          label={paymentLabel(h.status)}
+                          color={paymentChipColor(h.status)}
                           size="small"
-                          color="error"
-                          variant="outlined"
                           sx={{ mr: 1 }}
-                          disabled={!canCancelOrder(h.order?.status)}
-                          onClick={() => {
-                            if (h.order?.id) {
-                              void handleCancelOrder(
-                                h.order.id,
-                                h.order.status
-                              );
-                            }
-                          }}
-                        >
-                          Hủy đơn
-                        </Button>
+                        />
+                        <Typography fontWeight={700}>
+                          {Number(h.amount).toLocaleString()}đ
+                        </Typography>
+                        <Box mt={0.5}>
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            sx={{ mr: 1 }}
+                            disabled={!canCancelOrder(h.order?.status)}
+                            onClick={() => {
+                              if (h.order?.id) {
+                                void handleCancelOrder(
+                                  h.order.id,
+                                  h.order.status
+                                );
+                              }
+                            }}
+                          >
+                            Hủy đơn
+                          </Button>
 
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => {
-                            // jump to restaurant page
-                            const rid =
-                              h.order?.restaurant?.id ?? h.order?.restaurantId;
-                            if (rid) router.push(`/RestaurantDetails/${rid}`);
-                          }}
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                              // jump to restaurant page
+                              const rid =
+                                h.order?.restaurant?.id ??
+                                h.order?.restaurantId;
+                              if (rid) router.push(`/RestaurantDetails/${rid}`);
+                            }}
+                          >
+                            Xem nhà hàng
+                          </Button>
+                        </Box>
+                        {/* show small summary of items */}
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          mt={0.5}
+                          color="text.secondary"
                         >
-                          Xem nhà hàng
-                        </Button>
+                          {h.order?.items?.length ?? 0} món • Tổng:{" "}
+                          {Number(
+                            h.order?.finalPrice ?? h.amount
+                          ).toLocaleString()}
+                          đ
+                        </Typography>
                       </Box>
-                      {/* show small summary of items */}
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        mt={0.5}
-                        color="text.secondary"
-                      >
-                        {h.order?.items?.length ?? 0} món • Tổng:{" "}
-                        {Number(
-                          h.order?.finalPrice ?? h.amount
-                        ).toLocaleString()}
-                        đ
-                      </Typography>
                     </Box>
-                  </Box>
-                </Paper>
-              );
-            })}
+                  </Paper>
+                );
+              })}
           </Stack>
         )}
       </Paper>

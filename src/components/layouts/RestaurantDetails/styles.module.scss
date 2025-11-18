@@ -17,12 +17,6 @@
   gap: 24px;
 }
 
-.rightContent {
-  flex: 1;
-  position: sticky;
-  top: 92px; // 72px (header height) + 20px (spacing)
-  align-self: flex-start;
-}
 
 .restaurantCard {
   display: flex;
@@ -157,10 +151,17 @@
     flex-direction: column;
   }
 
+  /* Make both columns full-width and remove sticky on mobile */
+  .leftContent,
   .rightContent {
-    position: static;
-    top: auto;
     width: 100%;
+    flex: none;
+    align-self: stretch;
+  }
+
+  .rightContent {
+    position: static !important;
+    top: auto !important;
   }
 
   .restaurantCard {
@@ -170,6 +171,12 @@
   .restaurantImage {
     width: 100%;
     height: 220px; // ảnh full-width trên mobile
+  }
+
+  /* Center the reservation form and constrain its max width for better layout */
+  .rightContent form {
+    max-width: 720px;
+    margin: 12px auto 0 auto;
   }
 }
 

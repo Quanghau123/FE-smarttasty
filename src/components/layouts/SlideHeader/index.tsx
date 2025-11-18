@@ -32,8 +32,8 @@ const SlideHeader: React.FC = () => {
       sx={{
         position: "relative",
         width: "100%",
-        height: { xs: "25vh", sm: "35vh", md: "60vh" },
-        maxHeight: 600,
+        height: { xs: "18vh", sm: "28vh", md: "48vh" },
+        maxHeight: 420,
         overflow: "hidden",
       }}
     >
@@ -73,7 +73,7 @@ const SlideHeader: React.FC = () => {
       <Box
         sx={{
           position: "absolute",
-          bottom: 12,
+          bottom: { xs: 8, sm: 12 },
           left: "50%",
           transform: "translateX(-50%)",
           display: "flex",
@@ -95,10 +95,11 @@ const SlideHeader: React.FC = () => {
             aria-selected={idx === currentIndex}
             aria-label={`Chuyển đến slide ${idx + 1}`}
             sx={{
-              width: { xs: 8, sm: 10 },
-              height: { xs: 8, sm: 10 },
+              width: { xs: 6, sm: 8, md: 10 },
+              height: { xs: 6, sm: 8, md: 10 },
               borderRadius: "50%",
-              bgcolor: idx === currentIndex ? "#fff" : "rgba(255, 255, 255, 0.96)",
+              bgcolor:
+                idx === currentIndex ? "#fff" : "rgba(255, 255, 255, 0.8)",
               cursor: "pointer",
               boxShadow: idx === currentIndex ? 2 : "none",
             }}

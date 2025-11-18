@@ -19,8 +19,6 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import type { RootState } from "@/redux/store";
@@ -40,6 +38,7 @@ import ReviewForm from "@/components/features/Review/ReviewForm";
 import ReviewList from "@/components/features/Review/ReviewList";
 import ReservationForm from "@/components/features/Reservation";
 import MapView from "@/components/layouts/MapView";
+import HorizontalArrows from "@/components/commons/HorizontalArrows";
 import StarIcon from "@mui/icons-material/Star";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -88,6 +87,34 @@ const RestaurantDetailPage = () => {
     });
   };
 
+  // Suggested arrows visibility state (for the "Có thể bạn quan tâm" carousel)
+  const [suggestedOverflow, setSuggestedOverflow] = useState(false);
+  const [suggestedCanScrollLeft, setSuggestedCanScrollLeft] = useState(false);
+  const [suggestedCanScrollRight, setSuggestedCanScrollRight] = useState(false);
+
+  const updateSuggestedState = () => {
+    const el = suggestedRef.current;
+    if (!el) {
+      setSuggestedOverflow(false);
+      setSuggestedCanScrollLeft(false);
+      setSuggestedCanScrollRight(false);
+      return;
+    }
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    setSuggestedOverflow(overflow);
+    setSuggestedCanScrollLeft(el.scrollLeft > 5);
+    setSuggestedCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 5
+    );
+  };
+
+  useEffect(() => {
+    const el = suggestedRef.current;
+    if (!el) return;
+    // NOTE: effect moved below after allRestaurants is declared
+    // placeholder to satisfy linter ordering; real effect is added later.
+  }, []);
+
   const {
     current: restaurant,
     loading: restaurantLoading,
@@ -109,6 +136,19 @@ const RestaurantDetailPage = () => {
     loading: reviewLoading,
     error: reviewError,
   } = useAppSelector((state) => state.review);
+
+  // Move suggested carousel effect here so dependency `allRestaurants` is defined
+  useEffect(() => {
+    const el = suggestedRef.current;
+    if (!el) return;
+    updateSuggestedState();
+    el.addEventListener("scroll", updateSuggestedState);
+    window.addEventListener("resize", updateSuggestedState);
+    return () => {
+      el.removeEventListener("scroll", updateSuggestedState);
+      window.removeEventListener("resize", updateSuggestedState);
+    };
+  }, [allRestaurants]);
 
   // Favorites for this restaurant (yêu thích)
   const { favorites: restaurantFavorites = [] } = useAppSelector(
@@ -1175,6 +1215,7 @@ const RestaurantDetailPage = () => {
                   container
                   ref={suggestedRef}
                   spacing={2}
+                  onScroll={() => updateSuggestedState()}
                   sx={{
                     flexWrap: "nowrap",
                     overflowX: "auto",
@@ -1195,34 +1236,14 @@ const RestaurantDetailPage = () => {
                     </Grid>
                   ))}
                 </Grid>
-                <IconButton
-                  onClick={() => scrollSuggested("left")}
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: 8,
-                    transform: "translateY(-50%)",
-                    bgcolor: "background.paper",
-                    boxShadow: 2,
-                  }}
-                  size="small"
-                >
-                  <ChevronLeftIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => scrollSuggested("right")}
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    right: 8,
-                    transform: "translateY(-50%)",
-                    bgcolor: "background.paper",
-                    boxShadow: 2,
-                  }}
-                  size="small"
-                >
-                  <ChevronRightIcon />
-                </IconButton>
+                <HorizontalArrows
+                  onLeft={() => scrollSuggested("left")}
+                  onRight={() => scrollSuggested("right")}
+                  showLeft={suggestedOverflow && suggestedCanScrollLeft}
+                  showRight={suggestedOverflow && suggestedCanScrollRight}
+                  leftAria="scroll-left-suggested"
+                  rightAria="scroll-right-suggested"
+                />
               </Box>
             </Box>
           );

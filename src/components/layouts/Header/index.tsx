@@ -357,8 +357,18 @@ const Header = () => {
         <Box className={styles.rightSection}>
           {isLoggedIn ? (
             <>
-              <IconButton onClick={handlePopoverOpen}>
-                <FaUserCircle size={24} />
+              <IconButton
+                onClick={handlePopoverOpen}
+                sx={{
+                  p: 0.5,
+                  "& svg": {
+                    fontSize: { xs: 20, sm: 20, md: 24 },
+                    width: { xs: 20, sm: 20, md: 24 },
+                    height: { xs: 20, sm: 20, md: 24 },
+                  },
+                }}
+              >
+                <FaUserCircle />
               </IconButton>
               <Popover
                 open={open}

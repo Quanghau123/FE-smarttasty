@@ -14,12 +14,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
+
 import axios from "axios";
 
 interface Message {
@@ -194,7 +194,7 @@ const Chatbot: React.FC = () => {
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <CloseIcon /> : <ChatIcon />}
+        {isOpen ? <CloseIcon /> : <SmartToyIcon />}
       </Fab>
 
       {/* Chatbox */}
@@ -206,7 +206,7 @@ const Chatbot: React.FC = () => {
             bottom: 100,
             right: 24,
             width: 380,
-            height: 600,
+            height: 500,
             display: isOpen ? "flex" : "none",
             flexDirection: "column",
             zIndex: 999,

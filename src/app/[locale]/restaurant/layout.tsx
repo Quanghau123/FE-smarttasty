@@ -48,7 +48,7 @@ export default function RestaurantLayout({
       console.log("  - Role:", decoded.role);
       console.log("  - Email:", decoded.email);
 
-      if (decoded.role !== "business" && decoded.role !== "staff"){
+      if (decoded.role !== "business" ){
         console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound"); 
       } else {

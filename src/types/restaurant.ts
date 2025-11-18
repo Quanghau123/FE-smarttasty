@@ -52,4 +52,8 @@ export interface RestaurantState {
   loading: boolean;
   loadingNearby: boolean;
   error: string | null;
+  // Pagination metadata for server-side listing
+  totalRecords?: number;
+  pageNumber?: number;
+  pageSize?: number;
 }

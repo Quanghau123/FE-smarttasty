@@ -1,37 +1,58 @@
 "use client";
 
 import React from "react";
+import { Box, Pagination as MuiPagination, Typography } from "@mui/material";
+// import { flex } from "@mui/system";
 
-type PaginationProps = {
-  currentPage: number;
-  totalPage: number;
+interface Props {
+  page: number;
   onPageChange: (page: number) => void;
-};
+  totalRecords: number;
+  pageSize?: number;
+  size?: "small" | "medium";
+  boundaryCount?: number;
+  siblingCount?: number;
+  showRange?: boolean;
+}
 
-export default function Pagination({
-  currentPage,
-  totalPage,
+const Pagination: React.FC<Props> = ({
+  page,
   onPageChange,
-}: PaginationProps) {
-  if (totalPage <= 1) return null;
+  totalRecords,
+  pageSize = 10,
+  size = "small",
+  boundaryCount = 1,
+  siblingCount = 1,
+  showRange = false,
+}) => {
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
 
-  const pages = Array.from({ length: totalPage }, (_, i) => i + 1);
+  const handleChange = (_: React.ChangeEvent<unknown>, value: number) => {
+    onPageChange(value);
+  };
+
+  const start = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(totalRecords, page * pageSize);
 
   return (
-    <div className="inline-flex space-x-2">
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-md text-sm font-semibold ${
-            currentPage === page
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
-    </div>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      {showRange ? (
+        <Typography variant="caption" sx={{ minWidth: 80 }}>
+          {start}-{end} / {totalRecords}
+        </Typography>
+      ) : null}
+
+      <MuiPagination
+        count={totalPages}
+        page={page}
+        onChange={handleChange}
+        color="primary"
+        size={size}
+        boundaryCount={boundaryCount}
+        siblingCount={siblingCount}
+      />
+    </Box>
   );
-}
+};
+
+export default Pagination;
