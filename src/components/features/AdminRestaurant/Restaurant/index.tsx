@@ -5,10 +5,7 @@ import Image from "next/image";
 import {
   Box,
   Button,
-  Grid,
   Paper,
-  Card,
-  Stack,
   Typography,
   Chip,
   CircularProgress,
@@ -256,382 +253,729 @@ const RestaurantPage = () => {
   }
 
   return (
-    // remove top padding so layout sits directly under header
-    <Box sx={{ pt: 0, px: { xs: 2, md: 4 }, pb: 4 }}>
-      <Card
-        elevation={3}
-        sx={{
-          display: "flex",
-          gap: { xs: 2, md: 4 },
-          p: { xs: 2, md: 3 },
-          mb: 4,
-          alignItems: "stretch",
-          flexDirection: { xs: "column", sm: "row" },
-        }}
-      >
-        <Box sx={{ width: { xs: "100%", sm: 300 }, flexShrink: 0 }}>
-          <Box
-            sx={{
-              position: "relative",
-              width: "100%",
-              height: { xs: 180, sm: 200 },
-              borderRadius: 2,
-              overflow: "hidden",
-              boxShadow: 1,
-            }}
-          >
-            <Image
-              src={
-                formState.file
-                  ? URL.createObjectURL(formState.file)
-                  : restaurantInfo.imageUrl ||
-                    `https://res.cloudinary.com/djcur1ymq/image/upload/${restaurantInfo.imagePublicId}`
-              }
-              alt="Ảnh nhà hàng"
-              fill
-              style={{ objectFit: "cover" }}
-            />
-          </Box>
-          {isEditing && (
-            <Button
-              fullWidth
-              variant="outlined"
-              component="label"
-              sx={{ mt: 1 }}
-            >
-              Chọn ảnh mới
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) =>
-                  setFormState({
-                    ...formState,
-                    file: e.target.files?.[0] || null,
-                  })
-                }
-              />
-            </Button>
-          )}
-        </Box>
-
-        <Box
-          flex={1}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "background.default",
+        pt: 0,
+        pb: { xs: 2, sm: 3, md: 4 },
+        px: { xs: 2, sm: 3, md: 4 },
+      }}
+    >
+      <Box sx={{ maxWidth: "1600px", mx: "auto" }}>
+        {/* Restaurant Info Card */}
+        <Paper
+          elevation={3}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
+            p: { xs: 2.5, sm: 3, md: 4 },
+            mb: 4,
+            borderRadius: 3,
+            overflow: "hidden",
           }}
         >
-          <Box>
-            {isEditing ? (
-              <>
-                <TextField
-                  fullWidth
-                  label="Tên nhà hàng"
-                  value={formState.name}
-                  onChange={(e) =>
-                    setFormState({ ...formState, name: e.target.value })
-                  }
-                  margin="normal"
-                />
-                <TextField
-                  fullWidth
-                  label="Địa chỉ"
-                  value={formState.address}
-                  onChange={(e) =>
-                    setFormState({ ...formState, address: e.target.value })
-                  }
-                  margin="normal"
-                />
-                <TextField
-                  fullWidth
-                  label="Mô tả"
-                  value={formState.description}
-                  onChange={(e) =>
-                    setFormState({ ...formState, description: e.target.value })
-                  }
-                  margin="normal"
-                  multiline
-                  minRows={3}
-                />
-
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <TextField
-                    label="Giờ mở cửa"
-                    value={formState.openTime}
-                    onChange={(e) =>
-                      setFormState({ ...formState, openTime: e.target.value })
-                    }
-                    margin="normal"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Giờ đóng cửa"
-                    value={formState.closeTime}
-                    onChange={(e) =>
-                      setFormState({ ...formState, closeTime: e.target.value })
-                    }
-                    margin="normal"
-                    fullWidth
-                  />
-                </Stack>
-              </>
-            ) : (
-              <>
-                <Typography
-                  variant={isMobile ? "h5" : "h4"}
-                  gutterBottom
-                  sx={{ wordBreak: "break-word" }}
-                >
-                  {restaurantInfo.name}
-                </Typography>
-                <Typography color="text.secondary" sx={{ mb: 1 }}>
-                  <strong>Địa chỉ:</strong> {restaurantInfo.address}
-                </Typography>
-                {restaurantInfo.description && (
-                  <Typography variant="body2" sx={{ mb: 1.5 }}>
-                    {restaurantInfo.description}
-                  </Typography>
-                )}
-
-                {/* Operating Hours and Status */}
-                <Typography sx={{ mb: 1 }}>
-                  <strong>Trạng thái:</strong>{" "}
-                  {(() => {
-                    const parseHHMM = (v?: string): [number, number] | null => {
-                      if (v && v.includes(":")) {
-                        const [h, m] = v.split(":");
-                        const hh = Number(h);
-                        const mm = Number(m);
-                        if (Number.isFinite(hh) && Number.isFinite(mm)) {
-                          return [hh, mm];
-                        }
-                      }
-                      return null;
-                    };
-
-                    const now = new Date();
-                    const open = parseHHMM(restaurantInfo.openTime);
-                    const close = parseHHMM(restaurantInfo.closeTime);
-
-                    if (!open || !close) {
-                      return <span style={{ color: "#666" }}>Không rõ</span>;
-                    }
-
-                    const [openHour, openMinute] = open;
-                    const [closeHour, closeMinute] = close;
-                    const openDate = new Date(now);
-                    openDate.setHours(openHour, openMinute, 0, 0);
-                    const closeDate = new Date(now);
-                    closeDate.setHours(closeHour, closeMinute, 0, 0);
-                    if (closeDate <= openDate)
-                      closeDate.setDate(closeDate.getDate() + 1);
-                    return now >= openDate && now <= closeDate ? (
-                      <span style={{ color: "green" }}>Đang mở cửa</span>
-                    ) : (
-                      <span style={{ color: "red" }}>Đã đóng cửa</span>
-                    );
-                  })()}
-                </Typography>
-
-                <Typography sx={{ mb: 1 }}>
-                  <strong>Giờ hoạt động:</strong> {restaurantInfo.openTime} -{" "}
-                  {restaurantInfo.closeTime}
-                </Typography>
-
-                {/* Followers Count */}
-                <Typography sx={{ mb: 1 }}>
-                  <strong>Số người theo dõi:</strong>{" "}
-                  {restaurantFavorites?.length ?? 0}
-                </Typography>
-
-                {/* Rating with Stars */}
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={0.5}
-                  sx={{ mb: 1.5 }}
-                >
-                  <strong>Đánh giá:</strong>
-                  {Array.from({ length: 5 }).map((_, idx) => {
-                    const avgRating =
-                      (restaurantInfo as unknown as { averageRating?: number })
-                        ?.averageRating ?? 0;
-                    return (
-                      <StarIcon
-                        key={idx}
-                        fontSize="small"
-                        color={
-                          idx < Math.round(avgRating) ? "warning" : "disabled"
-                        }
-                      />
-                    );
-                  })}
-                  <Typography variant="body2" color="error" sx={{ ml: 0.5 }}>
-                    {(
-                      (restaurantInfo as unknown as { averageRating?: number })
-                        ?.averageRating ?? 0
-                    ).toFixed(1)}{" "}
-                    ({totalReviewsFromState.toLocaleString()} đánh giá)
-                  </Typography>
-                </Box>
-
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {(() => {
-                    const ri = restaurantInfo as unknown as {
-                      isVerified?: boolean;
-                    };
-                    return ri.isVerified ? (
-                      <Chip label="Đã xác thực" color="success" size="small" />
-                    ) : null;
-                  })()}
-                </Stack>
-              </>
-            )}
-          </Box>
-
-          <Box sx={{ mt: 2 }}>
-            {isEditing ? (
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth={isMobile}
-                  onClick={handleUpdate}
-                >
-                  Lưu thay đổi
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  fullWidth={isMobile}
-                  onClick={handleCancelEdit}
-                >
-                  Huỷ
-                </Button>
-              </Stack>
-            ) : (
+          {/* Header with Edit Button */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+              pb: 2,
+              borderBottom: "2px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                fontWeight: 700,
+                color: "text.primary",
+              }}
+            >
+              Thông tin nhà hàng
+            </Typography>
+            {!isEditing && (
               <Button
                 variant="contained"
-                fullWidth={isMobile}
                 onClick={() => setIsEditing(true)}
-                sx={{ mt: 1 }}
+                sx={{
+                  px: 3,
+                  py: 1,
+                  fontSize: "0.938rem",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  boxShadow: 2,
+                }}
               >
-                Sửa nhà hàng
+                Chỉnh sửa
               </Button>
             )}
           </Box>
-        </Box>
-      </Card>
 
-      {/* Thực đơn */}
-      <Box display="flex" justifyContent="center">
-        {dishLoading ? (
-          <CircularProgress />
-        ) : dishes.length === 0 ? (
-          <Typography>Chưa có món ăn nào.</Typography>
-        ) : (
-          (() => {
-            // Xác định số món tối đa trên 1 hàng dựa vào màn hình
-            //const isMobile = useMediaQuery("(max-width:600px)");
-            const itemsPerRow = isMobile ? 2 : 4;
-
-            // Số món còn lại ở hàng cuối
-            const remainder = dishes.length % itemsPerRow;
-
-            // Nếu hàng cuối còn lẻ, căn trái, các hàng đầy căn giữa
-            return (
-              <Grid
-                container
-                spacing={{ xs: 1.5, md: 2 }}
-                justifyContent={remainder === 0 ? "center" : "flex-start"}
+          <Box
+            sx={{
+              display: "flex",
+              gap: { xs: 2.5, sm: 3, md: 4 },
+              alignItems: "stretch",
+              flexDirection: { xs: "column", md: "row" },
+            }}
+          >
+            {/* Restaurant Image */}
+            <Box
+              sx={{
+                width: { xs: "100%", md: 350 },
+                flexShrink: 0,
+              }}
+            >
+              <Box
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: { xs: 220, sm: 280, md: 300 },
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: 3,
+                  border: "3px solid",
+                  borderColor: "divider",
+                }}
               >
-                {dishes.map((dish) => {
-                  const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+                <Image
+                  src={
+                    formState.file
+                      ? URL.createObjectURL(formState.file)
+                      : restaurantInfo.imageUrl ||
+                        `https://res.cloudinary.com/djcur1ymq/image/upload/${restaurantInfo.imagePublicId}`
+                  }
+                  alt="Ảnh nhà hàng"
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              </Box>
+              {isEditing && (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  component="label"
+                  sx={{
+                    mt: 2,
+                    py: 1.5,
+                    fontWeight: 600,
+                    borderWidth: 2,
+                    "&:hover": {
+                      borderWidth: 2,
+                    },
+                  }}
+                >
+                  Chọn ảnh mới
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        file: e.target.files?.[0] || null,
+                      })
+                    }
+                  />
+                </Button>
+              )}
+            </Box>
 
-                  return (
-                    <Grid
-                      item
-                      xs={12}
-                      sm={6}
-                      md={3}
-                      lg={3}
-                      key={dish.id}
-                      component={"div" as React.ElementType}
+            {/* Restaurant Details */}
+            <Box
+              flex={1}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                minWidth: 0,
+              }}
+            >
+              <Box>
+                {isEditing ? (
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    <TextField
+                      fullWidth
+                      label="Tên nhà hàng"
+                      value={formState.name}
+                      onChange={(e) =>
+                        setFormState({ ...formState, name: e.target.value })
+                      }
+                      size="medium"
+                      sx={{ "& .MuiInputBase-root": { fontSize: "1rem" } }}
+                    />
+                    <TextField
+                      fullWidth
+                      label="Địa chỉ"
+                      value={formState.address}
+                      onChange={(e) =>
+                        setFormState({ ...formState, address: e.target.value })
+                      }
+                      size="medium"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Mô tả"
+                      value={formState.description}
+                      onChange={(e) =>
+                        setFormState({
+                          ...formState,
+                          description: e.target.value,
+                        })
+                      }
+                      multiline
+                      minRows={3}
+                      size="medium"
+                    />
+
+                    <Box
                       sx={{
                         display: "flex",
-                        justifyContent: "center", // card luôn căn giữa trong cột
+                        gap: 2,
+                        flexDirection: { xs: "column", sm: "row" },
                       }}
                     >
-                      <DishCard
-                        dish={dish}
-                        discountedPrice={discounted ?? null}
+                      <TextField
+                        label="Giờ mở cửa"
+                        value={formState.openTime}
+                        onChange={(e) =>
+                          setFormState({
+                            ...formState,
+                            openTime: e.target.value,
+                          })
+                        }
+                        fullWidth
+                        size="medium"
                       />
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            );
-          })()
-        )}
-      </Box>
+                      <TextField
+                        label="Giờ đóng cửa"
+                        value={formState.closeTime}
+                        onChange={(e) =>
+                          setFormState({
+                            ...formState,
+                            closeTime: e.target.value,
+                          })
+                        }
+                        fullWidth
+                        size="medium"
+                      />
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      gutterBottom
+                      sx={{
+                        fontSize: {
+                          xs: "1.5rem",
+                          sm: "1.75rem",
+                          md: "2.125rem",
+                        },
+                        fontWeight: 700,
+                        color: "text.primary",
+                        mb: 2,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {restaurantInfo.name}
+                    </Typography>
 
-      {/* Đánh giá của khách hàng */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
-          Đánh giá từ khách hàng
-        </Typography>
-        {reviewLoading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 1,
+                        }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontWeight: 700,
+                            minWidth: { xs: "110px", sm: "140px" },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          Địa chỉ:
+                        </Typography>
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          {restaurantInfo.address}
+                        </Typography>
+                      </Box>
+
+                      {restaurantInfo.description && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 1,
+                          }}
+                        >
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: { xs: "110px", sm: "140px" },
+                              color: "text.secondary",
+                              fontSize: { xs: "0.938rem", sm: "1rem" },
+                            }}
+                          >
+                            Mô tả:
+                          </Typography>
+                          <Typography
+                            sx={{
+                              flex: 1,
+                              fontSize: { xs: "0.938rem", sm: "1rem" },
+                              color: "text.secondary",
+                            }}
+                          >
+                            {restaurantInfo.description}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontWeight: 700,
+                            minWidth: { xs: "110px", sm: "140px" },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          Trạng thái:
+                        </Typography>
+                        {(() => {
+                          const parseHHMM = (
+                            v?: string
+                          ): [number, number] | null => {
+                            if (v && v.includes(":")) {
+                              const [h, m] = v.split(":");
+                              const hh = Number(h);
+                              const mm = Number(m);
+                              if (Number.isFinite(hh) && Number.isFinite(mm)) {
+                                return [hh, mm];
+                              }
+                            }
+                            return null;
+                          };
+
+                          const now = new Date();
+                          const open = parseHHMM(restaurantInfo.openTime);
+                          const close = parseHHMM(restaurantInfo.closeTime);
+
+                          if (!open || !close) {
+                            return (
+                              <Chip
+                                label="Không rõ"
+                                size="small"
+                                sx={{ bgcolor: "grey.300" }}
+                              />
+                            );
+                          }
+
+                          const [openHour, openMinute] = open;
+                          const [closeHour, closeMinute] = close;
+                          const openDate = new Date(now);
+                          openDate.setHours(openHour, openMinute, 0, 0);
+                          const closeDate = new Date(now);
+                          closeDate.setHours(closeHour, closeMinute, 0, 0);
+                          if (closeDate <= openDate)
+                            closeDate.setDate(closeDate.getDate() + 1);
+
+                          const isOpen = now >= openDate && now <= closeDate;
+                          return (
+                            <Chip
+                              label={isOpen ? "Đang mở cửa" : "Đã đóng cửa"}
+                              color={isOpen ? "success" : "error"}
+                              size="small"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          );
+                        })()}
+                      </Box>
+
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontWeight: 700,
+                            minWidth: { xs: "110px", sm: "140px" },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          Giờ hoạt động:
+                        </Typography>
+                        <Typography
+                          sx={{ fontSize: { xs: "0.938rem", sm: "1rem" } }}
+                        >
+                          {restaurantInfo.openTime} - {restaurantInfo.closeTime}
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontWeight: 700,
+                            minWidth: { xs: "110px", sm: "140px" },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          Người theo dõi:
+                        </Typography>
+                        <Chip
+                          label={`${restaurantFavorites?.length ?? 0} người`}
+                          color="primary"
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </Box>
+
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontWeight: 700,
+                            minWidth: { xs: "110px", sm: "140px" },
+                            color: "text.secondary",
+                            fontSize: { xs: "0.938rem", sm: "1rem" },
+                          }}
+                        >
+                          Đánh giá:
+                        </Typography>
+                        <Box display="flex" alignItems="center" gap={0.5}>
+                          {Array.from({ length: 5 }).map((_, idx) => {
+                            const avgRating =
+                              (
+                                restaurantInfo as unknown as {
+                                  averageRating?: number;
+                                }
+                              )?.averageRating ?? 0;
+                            return (
+                              <StarIcon
+                                key={idx}
+                                fontSize="small"
+                                sx={{
+                                  color:
+                                    idx < Math.round(avgRating)
+                                      ? "warning.main"
+                                      : "grey.300",
+                                }}
+                              />
+                            );
+                          })}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              ml: 0.5,
+                              fontWeight: 600,
+                              fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            }}
+                          >
+                            {(
+                              (
+                                restaurantInfo as unknown as {
+                                  averageRating?: number;
+                                }
+                              )?.averageRating ?? 0
+                            ).toFixed(1)}{" "}
+                            {(totalReviewsFromState ?? 0) > 0 && (
+                              <Typography
+                                component="span"
+                                color="text.secondary"
+                                sx={{
+                                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                }}
+                              >
+                                ({(totalReviewsFromState ?? 0).toLocaleString()}{" "}
+                                đánh giá)
+                              </Typography>
+                            )}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mt: 0.5,
+                        }}
+                      >
+                        {(() => {
+                          const ri = restaurantInfo as unknown as {
+                            isVerified?: boolean;
+                          };
+                          return ri.isVerified ? (
+                            <Chip
+                              label="✓ Đã xác thực"
+                              color="success"
+                              size="medium"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          ) : null;
+                        })()}
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Action Buttons */}
+              {isEditing && (
+                <Box
+                  sx={{
+                    mt: 3,
+                    pt: 2,
+                    borderTop: "2px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 2,
+                      flexDirection: { xs: "column", sm: "row" },
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth={isMobile}
+                      onClick={handleUpdate}
+                      sx={{
+                        py: 1.5,
+                        fontSize: "1rem",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        boxShadow: 2,
+                      }}
+                    >
+                      Lưu thay đổi
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      fullWidth={isMobile}
+                      onClick={handleCancelEdit}
+                      sx={{
+                        py: 1.5,
+                        fontSize: "1rem",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        borderWidth: 2,
+                        "&:hover": {
+                          borderWidth: 2,
+                        },
+                      }}
+                    >
+                      Huỷ
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </Box>
           </Box>
-        ) : reviews.length === 0 ? (
-          <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
-            <Typography color="text.secondary">
-              Chưa có đánh giá nào cho nhà hàng này.
-            </Typography>
-          </Paper>
-        ) : (
-          <ReviewList
-            reviews={reviews}
-            loading={reviewLoading}
-            onDelete={handleDeleteReview}
-            showDeleteButton={true}
-          />
-        )}
-      </Box>
+        </Paper>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={cancelDeleteReview}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa đánh giá
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn
-            tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancelDeleteReview} color="inherit">
-            Hủy
-          </Button>
-          <Button
-            onClick={confirmDeleteReview}
-            color="error"
-            variant="contained"
-            autoFocus
+        {/* Menu Section */}
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{
+              mb: 3,
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 700,
+            }}
           >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+            Thực đơn
+          </Typography>
+
+          {dishLoading ? (
+            <Box display="flex" justifyContent="center" py={6}>
+              <CircularProgress />
+            </Box>
+          ) : dishes.length === 0 ? (
+            <Paper
+              elevation={2}
+              sx={{
+                p: 4,
+                textAlign: "center",
+                bgcolor: "background.paper",
+                borderRadius: 2,
+              }}
+            >
+              <Typography color="text.secondary">
+                Chưa có món ăn nào.
+              </Typography>
+            </Paper>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: { xs: 2, sm: 2.5, md: 3 },
+              }}
+            >
+              {dishes.map((dish) => {
+                const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+
+                return (
+                  <Box
+                    key={dish.id}
+                    sx={{
+                      // Responsive columns: 1 / 2 / 3 / 4 / 5 (xl)
+                      flex: {
+                        xs: "1 1 100%",
+                        sm: "1 1 calc(50% - 10px)",
+                        md: "1 1 calc(33.333% - 16px)",
+                        lg: "1 1 calc(25% - 19px)",
+                        xl: "1 1 calc(20% - 22px)",
+                      },
+                      // Allow items to shrink enough for 5 columns on wide screens
+                      minWidth: { xs: "100%", sm: "220px", md: "200px" },
+                      maxWidth: {
+                        xs: "100%",
+                        sm: "calc(50% - 10px)",
+                        md: "calc(33.333% - 16px)",
+                        lg: "calc(25% - 19px)",
+                        xl: "calc(20% - 22px)",
+                      },
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <DishCard
+                      dish={dish}
+                      discountedPrice={discounted ?? null}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+        </Box>
+
+        {/* Reviews Section */}
+        <Box>
+          {reviewLoading ? (
+            <Box display="flex" justifyContent="center" py={6}>
+              <CircularProgress />
+            </Box>
+          ) : reviews.length === 0 ? (
+            <Paper
+              elevation={2}
+              sx={{
+                p: 4,
+                textAlign: "center",
+                bgcolor: "background.paper",
+                borderRadius: 2,
+              }}
+            >
+              <Typography color="text.secondary">
+                Chưa có đánh giá nào cho nhà hàng này.
+              </Typography>
+            </Paper>
+          ) : (
+            <ReviewList
+              reviews={reviews}
+              loading={reviewLoading}
+              onDelete={handleDeleteReview}
+              showDeleteButton={true}
+            />
+          )}
+        </Box>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={cancelDeleteReview}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              minWidth: { xs: "90%", sm: 400 },
+            },
+          }}
+        >
+          <DialogTitle
+            id="delete-dialog-title"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: "1.125rem", sm: "1.25rem" },
+            }}
+          >
+            Xác nhận xóa đánh giá
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-dialog-description">
+              Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể
+              hoàn tác.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button
+              onClick={cancelDeleteReview}
+              color="inherit"
+              sx={{
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                textTransform: "none",
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={confirmDeleteReview}
+              color="error"
+              variant="contained"
+              autoFocus
+              sx={{
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                textTransform: "none",
+                boxShadow: 2,
+              }}
+            >
+              Xóa
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </Box>
   );
 };

@@ -121,7 +121,7 @@ const BusinessUserPage = () => {
   // 🔹 Error UI
   if (error) {
     return (
-      <Box sx={{ textAlign: "center", mt: 5 }}>
+      <Box sx={{ textAlign: "center", mt: 5, }} >
         <Typography color="error" variant="h6">
           {error}
         </Typography>
@@ -130,7 +130,7 @@ const BusinessUserPage = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ pt: 0 }}>
       <Typography
         variant="h5"
         sx={{

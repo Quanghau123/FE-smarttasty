@@ -203,7 +203,7 @@ const Chatbot: React.FC = () => {
           elevation={8}
           sx={{
             position: "fixed",
-            bottom: 100,
+            bottom: 155,
             right: 24,
             width: 380,
             height: 500,

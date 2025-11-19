@@ -380,7 +380,7 @@ const PromotionPage = () => {
 
       {/* Content */}
       {loading ? (
-        <Box display="flex" justifyContent="center" py={8}>
+        <Box display="flex" justifyContent="center" py={8} pt={0}>
           <CircularProgress size={40} />
         </Box>
       ) : !promotions || promotions.length === 0 ? (
@@ -420,14 +420,6 @@ const PromotionPage = () => {
               : isUpcoming
               ? "info"
               : "default";
-
-            // const discount = Number(promo.discountValue ?? NaN);
-            // const hasDiscount = Number.isFinite(discount) && discount > 0;
-            // const discountLabel =
-            //   promo.discountType === "percent"
-            //     ? `${discount}%`
-            //     : `${discount.toLocaleString()}đ`;
-
             const targetLabel =
               promo.targetType === "order"
                 ? "Đơn hàng"
@@ -483,34 +475,6 @@ const PromotionPage = () => {
                 </Box>
 
                 <CardContent sx={{ flexGrow: 1, pb: 2 }}>
-                  {/* Discount Badge */}
-                  {/* {hasDiscount && (
-                    <Box
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        backgroundColor: (theme) =>
-                          alpha(theme.palette.primary.main, 0.1),
-                        color: "primary.main",
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: 2,
-                        mb: 2,
-                      }}
-                    >
-                      {promo.discountType === "percent" ? (
-                        <PercentIcon sx={{ fontSize: 18 }} />
-                      ) : (
-                        <MoneyIcon sx={{ fontSize: 18 }} />
-                      )}
-                      <Typography variant="h6" fontWeight="bold">
-                        {discountLabel}
-                      </Typography>
-                    </Box>
-                  )} */}
-
-                  {/* Title */}
                   <Typography
                     variant="h6"
                     fontWeight="600"

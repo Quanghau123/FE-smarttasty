@@ -11,6 +11,7 @@ import {
   DialogTitle,
   IconButton,
   Paper,
+  TableContainer,
   Stack,
   Table,
   TableBody,
@@ -148,56 +149,85 @@ export default function StaffManagement() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ pt: 0, pb: 3 }}>
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={2}
+        sx={{
+          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: 1, sm: 0 },
+        }}
       >
         <Typography variant="h5">Quản lý tài khoản con</Typography>
-        <Button variant="contained" onClick={handleOpenCreate}>
+        <Button
+          variant="contained"
+          onClick={handleOpenCreate}
+          sx={{
+            mt: { xs: 1, sm: 0 },
+            alignSelf: { xs: "stretch", sm: "auto" },
+          }}
+        >
           Tạo tài khoản
         </Button>
       </Box>
 
-      <Paper variant="outlined">
+      <Paper variant="outlined" sx={{ p: { xs: 1, sm: 2 } }}>
         {loading ? (
           <Box display="flex" alignItems="center" justifyContent="center" p={4}>
             <CircularProgress />
           </Box>
         ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Tên</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Vai trò</TableCell>
-                <TableCell>Hành động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {staffs.map((s: User) => (
-                <TableRow key={s.userId}>
-                  <TableCell>{s.userId}</TableCell>
-                  <TableCell>{s.userName}</TableCell>
-                  <TableCell>{s.email}</TableCell>
-                  <TableCell>{s.phone}</TableCell>
-                  <TableCell>{s.role}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(s)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(s.userId)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
+          <TableContainer sx={{ overflowX: "auto" }}>
+            <Table size="small" sx={{ minWidth: 650 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Tên</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Phone</TableCell>
+                  <TableCell>Hành động</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {staffs.map((s: User) => (
+                  <TableRow key={s.userId}>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {s.userId}
+                    </TableCell>
+                    <TableCell>{s.userName}</TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 240,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {s.email}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {s.phone}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        onClick={() => handleEdit(s)}
+                        aria-label="edit"
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDelete(s.userId)}
+                        aria-label="delete"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </Paper>
 

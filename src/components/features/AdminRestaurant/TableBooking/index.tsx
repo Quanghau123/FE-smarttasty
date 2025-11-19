@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Box,
   Button,
@@ -10,13 +11,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   MenuItem,
   TextField,
   Typography,
   Paper,
   Alert,
   Stack,
+  Fade,
+  Grow,
 } from "@mui/material";
 import dayjs from "dayjs";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -84,6 +86,18 @@ const formatTime = (hhmmss?: string) => {
 const TableBooking: React.FC = () => {
   const dispatch = useAppDispatch();
   const { current: restaurant } = useAppSelector((s) => s.restaurant);
+  const t = useTranslations("tableBooking");
+  const STATUS_LABELS = useMemo(
+    () => ({
+      All: t("status.all"),
+      Pending: t("status.pending"),
+      Confirmed: t("status.confirmed"),
+      CheckedIn: t("status.checkedIn"),
+      Completed: t("status.completed"),
+      Cancelled: t("status.cancelled"),
+    }),
+    [t]
+  );
   const {
     reservations: rows,
     loading,
@@ -97,6 +111,7 @@ const TableBooking: React.FC = () => {
   }>({ open: false });
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [note, setNote] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("All");
 
   // init: set token header and load restaurant owned by user
   useEffect(() => {
@@ -128,7 +143,7 @@ const TableBooking: React.FC = () => {
     if (!updateDialog.id) return;
     const { user } = getUserFromLocalStorage();
     const changedBy = user.userId ?? 0;
-    if (!selectedStatus) return toast.warning("Chọn trạng thái mới");
+    if (!selectedStatus) return toast.warning(t("warnings.select_new_status"));
     try {
       await dispatch(
         updateReservationStatus({
@@ -140,20 +155,18 @@ const TableBooking: React.FC = () => {
           },
         })
       ).unwrap();
-      toast.success("Cập nhật trạng thái thành công");
+      toast.success(t("success.update_status"));
       setUpdateDialog({ open: false });
       await refresh();
     } catch (e: unknown) {
       const err = e as { message?: string };
-      toast.error(err?.message || "Cập nhật thất bại");
+      toast.error(err?.message || t("errors.update_failed"));
     }
   };
 
   const handleCancelByBusiness = React.useCallback(
     async (reservationId: number) => {
-      const confirm = window.confirm(
-        "Bạn có chắc muốn hủy đặt bàn này (hủy bởi nhà hàng)?"
-      );
+      const confirm = window.confirm(t("confirm.cancel_by_business"));
       if (!confirm) return;
       const { user } = getUserFromLocalStorage();
       const userId = user.userId ?? 0;
@@ -161,15 +174,23 @@ const TableBooking: React.FC = () => {
         await dispatch(
           deleteReservationForBusiness({ reservationId, userId })
         ).unwrap();
-        toast.success("Đã hủy đặt bàn (bởi nhà hàng)");
+        toast.success(t("success.cancelled_by_business"));
         await refresh();
       } catch (e: unknown) {
         const err = e as { message?: string };
-        toast.error(err?.message || "Hủy thất bại");
+        toast.error(err?.message || t("errors.cancel_failed"));
       }
     },
-    [dispatch, refresh]
+    [dispatch, refresh, t]
   );
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // small delay so transitions run after mount
+    const id = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(id);
+  }, []);
 
   const content = useMemo(() => {
     if (loading)
@@ -179,161 +200,718 @@ const TableBooking: React.FC = () => {
         </Box>
       );
     if (error) return <Alert severity="error">{error}</Alert>;
-    if (!rows.length) return <Typography>Chưa có đặt bàn nào.</Typography>;
+    if (!rows.length)
+      return (
+        <Box sx={{ textAlign: "center", py: 6 }}>
+          <Typography variant="body1" color="text.secondary">
+            {t("no_reservations")}
+          </Typography>
+        </Box>
+      );
+
+    // Filter reservations based on selected status
+    const filteredRows =
+      filterStatus === "All"
+        ? rows
+        : rows.filter((r) => toDisplayStatus(r.status) === filterStatus);
+
+    if (filteredRows.length === 0) {
+      return (
+        <Box sx={{ textAlign: "center", py: 6 }}>
+          <Typography variant="body1" color="text.secondary">
+            {t("no_reservations_with_status", {
+              status: t(`status.${filterStatus.toLowerCase()}`),
+            })}
+          </Typography>
+        </Box>
+      );
+    }
 
     return (
-      <Grid container spacing={2}>
-        {rows.map((r) => {
-          const displayStatus = toDisplayStatus(r.status);
-          const actions = nextStatusOptions(displayStatus);
-          const customer = r.customers?.[0];
-          return (
-            <Grid
-              item
-              xs={12}
-              md={6}
-              lg={4}
-              key={r.id}
-              component={"div" as React.ElementType}
-            >
-              <Paper sx={{ p: 2, height: "100%" }}>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={1}
+      <Fade in={mounted} timeout={400}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: { xs: 2, sm: 2.5, md: 3 },
+          }}
+        >
+          {filteredRows.map((r, idx) => {
+            const displayStatus = toDisplayStatus(r.status);
+            const actions = nextStatusOptions(displayStatus);
+            const customer = r.customers?.[0];
+            return (
+              <Grow
+                in={mounted}
+                timeout={300 + idx * 100}
+                style={{ transformOrigin: "0 0 0" }}
+                key={r.id}
+              >
+                <Box
+                  key={r.id}
+                  sx={{
+                    flex: {
+                      xs: "1 1 100%",
+                      sm: "1 1 calc(50% - 10px)",
+                      md: "1 1 calc(33.333% - 16px)",
+                      lg: "1 1 calc(25% - 19px)",
+                    },
+                    minWidth: { xs: "100%", sm: "280px" },
+                    maxWidth: {
+                      xs: "100%",
+                      sm: "calc(50% - 10px)",
+                      md: "calc(33.333% - 16px)",
+                      lg: "calc(25% - 19px)",
+                    },
+                  }}
                 >
-                  <Typography variant="h6" fontWeight={700}>
-                    Đặt bàn #{r.id}
-                  </Typography>
-                  <Chip
-                    label={displayStatus}
-                    color={
-                      displayStatus === "Pending"
-                        ? "default"
-                        : displayStatus === "Confirmed"
-                        ? "info"
-                        : displayStatus === "CheckedIn"
-                        ? "warning"
-                        : displayStatus === "Completed"
-                        ? "success"
-                        : "error"
-                    }
-                  />
-                </Stack>
-
-                <Stack spacing={0.5} mb={1}>
-                  <Typography variant="body2">
-                    <b>Khách:</b>{" "}
-                    {customer?.contactName || r.userName || `#${r.userId}`}
-                  </Typography>
-                  <Typography variant="body2">
-                    <b>Liên hệ:</b> {customer?.phone || "-"} ·{" "}
-                    {customer?.email || "-"}
-                  </Typography>
-                </Stack>
-
-                <Stack spacing={0.5} mb={1}>
-                  <Typography variant="body2">
-                    <b>Người lớn:</b> {r.adultCount} · <b>Trẻ em:</b>{" "}
-                    {r.childCount}
-                  </Typography>
-                  <Typography variant="body2">
-                    <b>Ngày đến:</b>{" "}
-                    {dayjs(r.arrivalDate).isValid()
-                      ? dayjs(r.arrivalDate).format("DD/MM/YYYY")
-                      : r.arrivalDate}{" "}
-                    · <b>Giờ:</b> {formatTime(r.reservationTime)}
-                  </Typography>
-                  {r.note && (
-                    <Typography variant="body2">
-                      <b>Ghi chú:</b> {r.note}
-                    </Typography>
-                  )}
-                </Stack>
-
-                <Stack direction="row" spacing={1}>
-                  {actions.length > 0 ? (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleOpenUpdate(r.id, displayStatus)}
-                    >
-                      Cập nhật trạng thái
-                    </Button>
-                  ) : (
-                    <Chip size="small" label="Không có hành động" />
-                  )}
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    onClick={() => handleCancelByBusiness(r.id)}
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: { xs: 2, sm: 2.5, md: 3 },
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      bgcolor: "background.paper",
+                      borderRadius: 2,
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      "&:hover": {
+                        transform: "translateY(-6px)",
+                        boxShadow: 6,
+                        borderColor: "primary.light",
+                      },
+                    }}
                   >
-                    Hủy (Nhà hàng)
-                  </Button>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={dayjs(r.createdAt).format("DD/MM/YYYY HH:mm")}
-                  />
-                </Stack>
-              </Paper>
-            </Grid>
-          );
-        })}
-      </Grid>
+                    {/* Header */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 2,
+                        pb: 2,
+                        borderBottom: "2px solid",
+                        borderColor: "divider",
+                        flexWrap: "wrap",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        sx={{
+                          fontSize: { xs: "1.125rem", sm: "1.25rem" },
+                          color: "primary.main",
+                        }}
+                      >
+                        {t("booking_number", { id: r.id })}
+                      </Typography>
+                      <Chip
+                        label={
+                          (STATUS_LABELS as Record<string, string>)[
+                            displayStatus
+                          ] ?? displayStatus
+                        }
+                        size="medium"
+                        color={
+                          displayStatus === "Pending"
+                            ? "default"
+                            : displayStatus === "Confirmed"
+                            ? "info"
+                            : displayStatus === "CheckedIn"
+                            ? "warning"
+                            : displayStatus === "Completed"
+                            ? "success"
+                            : "error"
+                        }
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: { xs: "0.813rem", sm: "0.875rem" },
+                        }}
+                      />
+                    </Box>
+
+                    {/* Customer Info */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          letterSpacing: "1px",
+                        }}
+                      >
+                        {t("customer_info_title")}
+                      </Typography>
+                      <Box
+                        sx={{
+                          mt: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.75,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: "80px",
+                              color: "text.secondary",
+                            }}
+                          >
+                            {t("label.name")}
+                          </Box>
+                          {customer?.contactName ||
+                            r.userName ||
+                            `#${r.userId}`}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: "80px",
+                              color: "text.secondary",
+                            }}
+                          >
+                            {t("label.phone")}
+                          </Box>
+                          {customer?.phone || "-"}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: "80px",
+                              color: "text.secondary",
+                            }}
+                          >
+                            {t("label.email")}
+                          </Box>
+                          {customer?.email || "-"}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Reservation Details */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          letterSpacing: "1px",
+                        }}
+                      >
+                        {t("reservation_details_title")}
+                      </Typography>
+                      <Box
+                        sx={{
+                          mt: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.75,
+                        }}
+                      >
+                        <Box sx={{ display: "flex", gap: 2 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{ fontWeight: 700, color: "text.secondary" }}
+                            >
+                              {t("label.adults")}
+                            </Box>
+                            {r.adultCount}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{ fontWeight: 700, color: "text.secondary" }}
+                            >
+                              {t("label.children")}
+                            </Box>
+                            {r.childCount}
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: "80px",
+                              color: "text.secondary",
+                            }}
+                          >
+                            {t("label.arrival_date")}
+                          </Box>
+                          {dayjs(r.arrivalDate).isValid()
+                            ? dayjs(r.arrivalDate).format("DD/MM/YYYY")
+                            : r.arrivalDate}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: "80px",
+                              color: "text.secondary",
+                            }}
+                          >
+                            {t("label.time")}
+                          </Box>
+                          {formatTime(r.reservationTime)}
+                        </Typography>
+                        {r.note && (
+                          <Box
+                            sx={{
+                              mt: 1,
+                              p: 1.5,
+                              bgcolor: "background.default",
+                              borderRadius: 1,
+                              border: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: { xs: "0.813rem", sm: "0.875rem" },
+                                fontStyle: "italic",
+                                color: "text.secondary",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              <Box
+                                component="span"
+                                sx={{ fontWeight: 700, color: "text.primary" }}
+                              >
+                                {t("label.note")}:{" "}
+                              </Box>
+                              {r.note}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Created Date */}
+                    <Box sx={{ mb: 2 }}>
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={t("created_at", {
+                          time: dayjs(r.createdAt).format("DD/MM/YYYY HH:mm"),
+                        })}
+                        sx={{
+                          fontSize: { xs: "0.75rem", sm: "0.813rem" },
+                          borderColor: "divider",
+                        }}
+                      />
+                    </Box>
+
+                    {/* Action Buttons */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
+                        gap: 1.5,
+                        mt: "auto",
+                        pt: 2,
+                        borderTop: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      {actions.length > 0 ? (
+                        <Button
+                          variant="contained"
+                          size="medium"
+                          fullWidth
+                          onClick={() => handleOpenUpdate(r.id, displayStatus)}
+                          sx={{
+                            fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                            py: 1,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            boxShadow: 2,
+                            "&:hover": {
+                              boxShadow: 4,
+                            },
+                          }}
+                        >
+                          {t("btn.update_status")}
+                        </Button>
+                      ) : null}
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="medium"
+                        fullWidth
+                        onClick={() => handleCancelByBusiness(r.id)}
+                        sx={{
+                          fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                          py: 1,
+                          fontWeight: 600,
+                          textTransform: "none",
+                          borderWidth: 2,
+                          "&:hover": {
+                            borderWidth: 2,
+                            boxShadow: 2,
+                          },
+                        }}
+                      >
+                        {t("btn.cancel_booking")}
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Box>
+              </Grow>
+            );
+          })}
+        </Box>
+      </Fade>
     );
-  }, [rows, loading, error, handleCancelByBusiness, handleOpenUpdate]);
+  }, [
+    rows,
+    loading,
+    error,
+    filterStatus,
+    handleCancelByBusiness,
+    handleOpenUpdate,
+    t,
+    STATUS_LABELS,
+    mounted,
+  ]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const pending = rows.filter(
+      (r) => toDisplayStatus(r.status) === "Pending"
+    ).length;
+    const confirmed = rows.filter(
+      (r) => toDisplayStatus(r.status) === "Confirmed"
+    ).length;
+    const checkedIn = rows.filter(
+      (r) => toDisplayStatus(r.status) === "CheckedIn"
+    ).length;
+    const completed = rows.filter(
+      (r) => toDisplayStatus(r.status) === "Completed"
+    ).length;
+    const cancelled = rows.filter(
+      (r) => toDisplayStatus(r.status) === "Cancelled"
+    ).length;
+    return {
+      pending,
+      confirmed,
+      checkedIn,
+      completed,
+      cancelled,
+      total: rows.length,
+    };
+  }, [rows]);
+
+  const statusCards = [
+    {
+      label: t("statusCards.all"),
+      value: stats.total,
+      status: "All",
+      color: "primary.main",
+    },
+    {
+      label: t("statusCards.pending"),
+      value: stats.pending,
+      status: "Pending",
+      color: "warning.main",
+    },
+    {
+      label: t("statusCards.confirmed"),
+      value: stats.confirmed,
+      status: "Confirmed",
+      color: "info.main",
+    },
+    {
+      label: t("statusCards.checkedIn"),
+      value: stats.checkedIn,
+      status: "CheckedIn",
+      color: "secondary.main",
+    },
+    {
+      label: t("statusCards.completed"),
+      value: stats.completed,
+      status: "Completed",
+      color: "success.main",
+    },
+    {
+      label: t("statusCards.cancelled"),
+      value: stats.cancelled,
+      status: "Cancelled",
+      color: "error.main",
+    },
+  ];
 
   return (
-    <Box p={2}>
-      <Typography variant="h5" fontWeight={700} mb={2}>
-        Danh sách đặt bàn
-      </Typography>
+    <Box
+      sx={{
+        px: { xs: 2, sm: 3, md: 4 },
+        pb: { xs: 2, sm: 3, md: 4 },
+        pt: 0,
+        maxWidth: "1600px",
+        mx: "auto",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
+      {/* Header */}
+      <Fade in={mounted} timeout={400}>
+        <Box
+          sx={{
+            mb: { xs: 3, sm: 4 },
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            sx={{
+              fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2.125rem" },
+              color: "text.primary",
+            }}
+          >
+            {t("page_title")}
+          </Typography>
+          {restaurant?.name && (
+            <Chip
+              label={restaurant.name}
+              color="primary"
+              sx={{
+                fontSize: { xs: "0.875rem", sm: "0.938rem" },
+                px: 1,
+                height: { xs: 32, sm: 36 },
+              }}
+            />
+          )}
+        </Box>
+      </Fade>
+
+      {/* Statistics Cards - Using Flexbox */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: { xs: 1.5, sm: 2, md: 2.5 },
+          mb: { xs: 3, sm: 4 },
+        }}
+      >
+        {statusCards.map((card, idx) => (
+          <Grow
+            in={mounted}
+            timeout={300 + idx * 80}
+            style={{ transformOrigin: "0 0 0" }}
+            key={card.status}
+          >
+            <Box
+              onClick={() => setFilterStatus(card.status)}
+              sx={{
+                flex: {
+                  xs: "calc(50% - 6px)",
+                  sm: "calc(33.333% - 11px)",
+                  md: "calc(16.666% - 17px)",
+                },
+                minWidth: { xs: "140px", sm: "160px" },
+                p: { xs: 2, sm: 2.5 },
+                bgcolor:
+                  filterStatus === card.status
+                    ? card.color
+                    : "background.paper",
+                color: filterStatus === card.status ? "white" : "text.primary",
+                borderRadius: 2,
+                cursor: "pointer",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "2px solid",
+                borderColor:
+                  filterStatus === card.status ? card.color : "divider",
+                boxShadow: filterStatus === card.status ? 3 : 0,
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: 4,
+                  borderColor: card.color,
+                },
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.813rem" },
+                  opacity: filterStatus === card.status ? 0.95 : 0.7,
+                  mb: { xs: 0.5, sm: 1 },
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                {card.label}
+              </Typography>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{
+                  fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+                  lineHeight: 1,
+                }}
+              >
+                {card.value}
+              </Typography>
+            </Box>
+          </Grow>
+        ))}
+      </Box>
+
+      {/* Reservations List - Using Flexbox */}
       {content}
 
       <Dialog
         open={updateDialog.open}
         onClose={() => setUpdateDialog({ open: false })}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 3 },
+            maxHeight: { xs: "calc(100% - 32px)", sm: "calc(100% - 64px)" },
+          },
+        }}
       >
-        <DialogTitle>Cập nhật trạng thái</DialogTitle>
+        <DialogTitle
+          sx={{
+            pb: 2,
+            fontSize: { xs: "1.125rem", sm: "1.25rem" },
+          }}
+        >
+          {t("dialog.title")}
+        </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2} minWidth={{ xs: 260, sm: 360 }}>
+          <Stack spacing={{ xs: 2, sm: 2.5 }}>
             <TextField
-              label="Trạng thái hiện tại"
+              label={t("dialog.current_status")}
               value={updateDialog.current || ""}
               InputProps={{ readOnly: true }}
+              fullWidth
+              size="medium"
             />
             <TextField
               select
-              label="Chọn trạng thái mới"
+              label={t("dialog.select_new_status")}
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
+              fullWidth
+              size="medium"
             >
               {nextStatusOptions(updateDialog.current || "").map((s) => (
                 <MenuItem key={s} value={s}>
-                  {s}
+                  {(STATUS_LABELS as Record<string, string>)[s] ?? s}
                 </MenuItem>
               ))}
             </TextField>
             <TextField
-              label="Ghi chú (tuỳ chọn)"
+              label={t("label.note")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               multiline
               rows={3}
+              fullWidth
+              size="medium"
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUpdateDialog({ open: false })}>Huỷ</Button>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2.5,
+            gap: 1,
+            flexDirection: { xs: "column-reverse", sm: "row" },
+          }}
+        >
+          <Button
+            onClick={() => setUpdateDialog({ open: false })}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+            size="large"
+          >
+            {t("dialog.cancel")}
+          </Button>
           <Button
             variant="contained"
             onClick={handleUpdateStatus}
             disabled={!selectedStatus}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+            size="large"
           >
-            Lưu
+            {t("dialog.save")}
           </Button>
         </DialogActions>
       </Dialog>

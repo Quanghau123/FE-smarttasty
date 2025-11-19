@@ -25,7 +25,7 @@ export default function DishCard({ dish, discountedPrice }: Props) {
         display: "flex",
         flexDirection: "column",
         transition: "box-shadow 200ms ease",
-        "&:hover": { boxShadow: 6 },
+        // "&:hover": { boxShadow: 6 },
       }}
     >
       {/* image area fixed */}
@@ -75,25 +75,36 @@ export default function DishCard({ dish, discountedPrice }: Props) {
               <Chip label="Ngưng bán" color="error" size="small" />
             )}
             {showDiscount && (
-              <Chip label="KM" color="secondary" size="small" sx={{ mt: 1 }} />
+              <Chip
+                label="KM"
+                sx={{ color: "error.main", mt: 1 }}
+                size="small"
+              />
             )}
           </Stack>
         </Stack>
 
         <Box mt={0.5}>
           {showDiscount ? (
-            <>
+            <Stack direction="row" spacing={1} alignItems="baseline">
               <Typography
-                sx={{ textDecoration: "line-through", color: "#777" }}
+                sx={{
+                  textDecoration: "line-through",
+                  color: "text.secondary",
+                  fontSize: "0.9rem",
+                }}
               >
                 {dish.price.toLocaleString()}đ
               </Typography>
-              <Typography fontWeight="bold" color="primary">
+              <Typography
+                fontWeight="bold"
+                sx={{ color: "error.main", fontSize: "1rem" }}
+              >
                 {discountedPrice!.toLocaleString()}đ
               </Typography>
-            </>
+            </Stack>
           ) : (
-            <Typography fontWeight="bold" color="primary">
+            <Typography fontWeight="bold" sx={{ color: "text.primary" }}>
               {dish.price.toLocaleString()}đ
             </Typography>
           )}

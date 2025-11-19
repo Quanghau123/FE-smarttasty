@@ -101,6 +101,116 @@
     "series_users": "Users",
     "series_business": "Business",
     "series_restaurants": "Restaurants"
+    ,
+    "revenue_title": "Revenue report",
+    "revenue_compare_chart": "Revenue comparison chart",
+    "previous_month": "Previous month",
+    "current_month": "Current month",
+    "month_label": "Month",
+    "year_label": "Year",
+    "all_label": "All",
+    "month": "Month",
+    "reset_btn": "Reset",
+    "kpi_revenue_month": "Revenue (month)",
+    "kpi_compare": "Compare",
+    "kpi_paid_orders": "Paid orders",
+    "kpi_avg_order": "Avg. order value",
+    "series_dish_count": "Dish counts",
+    "series_promotion_count": "Promotions",
+    "series_count": "Count",
+    "series_created": "Created",
+    "category": {
+      "food": "Food",
+      "drink": "Beverages",
+      "extraFood": "Extra food"
+    },
+    "promotion": {
+      "dish": "Dish",
+      "order": "Order"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dishes_promotions_title": "Dishes & Promotions",
+    "dishes_by_category_title": "Dishes by category",
+    "promotions_by_type_title": "Promotions by type",
+    "bookings_and_staff_title": "Bookings & staff accounts",
+    "reservations_by_status_title": "Reservations by status",
+    "staff_accounts_title": "Staff accounts"
+  }
+  ,
+  "tableBooking": {
+    "page_title": "Table bookings management",
+    "booking_number": "Booking # {id}",
+    "customer_info_title": "Customer information",
+    "reservation_details_title": "Reservation details",
+    "no_reservations": "No reservations yet.",
+    "no_reservations_with_status": "No reservations with status \"{status}\".",
+    "created_at": "Created at: {time}",
+    "btn": {
+      "update_status": "Update status",
+      "cancel_booking": "Cancel booking"
+    },
+    "warnings": {
+      "select_new_status": "Please select a new status"
+    },
+    "success": {
+      "update_status": "Status updated successfully",
+      "cancelled_by_business": "Reservation cancelled by business"
+    },
+    "errors": {
+      "update_failed": "Update failed",
+      "cancel_failed": "Cancel failed"
+    },
+    "confirm": {
+      "cancel_by_business": "Are you sure you want to cancel this reservation (cancelled by business)?"
+    },
+    "label": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "adults": "Adults",
+      "children": "Children",
+      "arrival_date": "Arrival date",
+      "time": "Time",
+      "note": "Note"
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "statusCards": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dialog": {
+      "title": "Update reservation status",
+      "current_status": "Current status",
+      "select_new_status": "Select new status",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  }
+
+  ,
+  "dialog": {
+    "title": "Update reservation status",
+    "current_status": "Current status",
+    "select_new_status": "Select new status",
+    "cancel": "Cancel",
+    "save": "Save"
   }
   ,
   "sidebarAdmin": {
@@ -217,5 +327,70 @@
     "success_message": "Reservation successful!",
     "loading": "Reserving...",
     "reserve_button": "Reserve now"
+  }
+  ,
+  "products": {
+    "title": "Manage dishes",
+    "add": "Add dish",
+    "search": "Search dishes",
+    "category_label": "Category",
+    "category_all": "All",
+    "category": {
+      "ThucAn": "Food",
+      "NuocUong": "Beverages",
+      "ThucAnThem": "Extra food"
+    },
+    "status": {
+      "selling": "Selling",
+      "out": "Out"
+    },
+    "edit": "Edit",
+    "voucher": "Voucher",
+    "delete": "Delete",
+    "col_name": "Dish name",
+    "col_price": "Price",
+    "col_category": "Category",
+    "col_status": "Status",
+    "col_image": "Image",
+    "col_actions": "Actions",
+    "no_image_text": "No image",
+    "add_dish_dialog_title": "Add dish",
+    "update_dish_dialog_title": "Update dish",
+    "name_label": "Name",
+    "price_label": "Price",
+    "switch_selling": "Selling",
+    "switch_out": "Out",
+    "change_image": "Change image",
+    "choose_image": "Choose image",
+    "cancel": "Cancel",
+    "add_btn": "Add",
+    "update_btn": "Update",
+    "confirm_delete_title": "Confirm delete",
+    "confirm_delete_text": "Are you sure you want to delete this dish?",
+    "assign_voucher_title": "Assign voucher to dish",
+    "dish_label": "Dish",
+    "voucher_applied_title": "Applied vouchers",
+    "choose_promotion_label": "Choose promotion",
+    "voucher_select": "-- Choose --",
+    "assign_btn": "Assign",
+    "cancel_voucher": "Remove voucher",
+    "assign_voucher_btn_title": "Assign voucher",
+    "errors": {
+      "missing_restaurant": "Account has no restaurant!",
+      "enter_name": "Please enter dish name",
+      "invalid_price": "Invalid price",
+      "upload_image": "Please upload a dish image",
+      "operation_failed": "Operation failed. Please try again!",
+      "missing_dish": "Missing dish",
+      "select_promotion": "Please select a promotion",
+      "add_voucher_success": "Assign voucher success",
+      "add_success": "Add dish success",
+      "update_success": "Update dish success",
+      "delete_success": "Delete dish success",
+      "delete_failed": "Delete dish failed",
+      "assign_voucher_failed": "Assign voucher failed",
+      "remove_voucher_failed": "Remove voucher failed",
+      "remove_voucher_success": "Voucher removed from dish"
+    }
   }
 }

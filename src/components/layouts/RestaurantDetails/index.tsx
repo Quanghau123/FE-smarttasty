@@ -978,16 +978,26 @@ const RestaurantDetailPage = () => {
                         )}
                       </Typography>
                       {showDiscount ? (
-                        <Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            alignItems: "baseline",
+                          }}
+                        >
                           <Typography
                             sx={{
                               textDecoration: "line-through",
-                              color: "#777",
+                              color: "text.secondary",
+                              fontSize: "0.95rem",
                             }}
                           >
                             {dish.price.toLocaleString()}đ
                           </Typography>
-                          <Typography fontWeight="bold" color="primary">
+                          <Typography
+                            fontWeight="bold"
+                            sx={{ color: "error.main", fontSize: "1rem" }}
+                          >
                             {discounted!.toLocaleString()}đ
                           </Typography>
                         </Box>

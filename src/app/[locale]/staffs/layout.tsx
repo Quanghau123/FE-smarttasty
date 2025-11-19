@@ -54,7 +54,7 @@ export default function RestaurantLayout({
   if (!authorized) return null;
 
   return (
-    <div style={{ display: "flex", marginTop: "80px" }}>
+    <div style={{ display: "flex", marginTop: "20px" }}>
       {!isMobile && (
         <div>
           <Sidebar />

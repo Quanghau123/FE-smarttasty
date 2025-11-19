@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useCallback } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import {
   Box,
@@ -84,8 +85,8 @@ const Dashboard = () => {
   );
 
   const chartOptions = (categories: string[]) => ({
-    chart: { id: "chart" },
-    xaxis: { categories },
+    chart: { id: "chart", foreColor: chartTextColor },
+    xaxis: { categories, labels: { style: { colors: [chartTextColor] } } },
   });
 
   const loading = userLoading || restaurantLoading;
@@ -107,6 +108,11 @@ const Dashboard = () => {
   }, [users, restaurants]);
 
   const theme = useTheme();
+  const prefersReducedMotion = useReducedMotion();
+  const chartTextColor =
+    theme.palette.mode === "dark"
+      ? theme.palette.common.white
+      : theme.palette.text.secondary;
   const gradients = {
     blue:
       theme.palette.mode === "dark"
@@ -147,291 +153,314 @@ const Dashboard = () => {
   }
 
   return (
-    <Box className={styles.dashboard}>
-      <Typography variant={isMobile ? "h5" : "h4"} fontWeight={600} mb={2}>
-        {t("title")}
-      </Typography>
-      <Typography
-        color="text.secondary"
-        mb={3}
-        sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
-      >
-        {t("summary", { lastUpdated: lastUpdated ?? t("no_data") })}
-      </Typography>
+    <motion.div
+      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
+      animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+    >
+      <Box className={styles.dashboard} sx={{ pt: 0 }}>
+        <Typography variant={isMobile ? "h5" : "h4"} fontWeight={600} mb={2}>
+          {t("title")}
+        </Typography>
+        <Typography
+          color="text.secondary"
+          mb={3}
+          sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+        >
+          {t("summary", { lastUpdated: lastUpdated ?? t("no_data") })}
+        </Typography>
 
-      {/* Thống kê tổng quan */}
-      <Grid container spacing={{ xs: 2, sm: 3 }} className={styles.cards}>
-        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: { xs: 2, sm: 2.5 },
-              background: gradients.blue,
-              color: "common.white",
-              borderRadius: 2,
-            }}
+        {/* Thống kê tổng quan */}
+        <Grid container spacing={{ xs: 2, sm: 3 }} className={styles.cards}>
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            component={"div" as React.ElementType}
           >
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              flexDirection={{ xs: "column", sm: "row" }}
-              gap={{ xs: 1.5, sm: 0 }}
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 2, sm: 2.5 },
+                background: gradients.blue,
+                color: "common.white",
+                borderRadius: 2,
+              }}
             >
               <Box
                 display="flex"
                 alignItems="center"
-                width={{ xs: "100%", sm: "auto" }}
+                justifyContent="space-between"
+                flexDirection={{ xs: "column", sm: "row" }}
+                gap={{ xs: 1.5, sm: 0 }}
               >
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
-                  <PersonIcon />
-                </Avatar>
-                <Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
+                    <PersonIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      }}
+                    >
+                      {t("total_normal_users")}
+                    </Typography>
+                    <Typography
+                      variant={isMobile ? "h6" : "h5"}
+                      sx={{ color: "white", fontWeight: 700 }}
+                    >
+                      {normalUsers.length}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  textAlign={{ xs: "center", sm: "right" }}
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Chip label="+3%" size="small" color="success" />
                   <Typography
-                    sx={{
-                      color: "white",
-                      fontSize: { xs: "0.875rem", sm: "1rem" },
-                    }}
+                    variant="caption"
+                    display="block"
+                    sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                   >
-                    {t("total_normal_users")}
-                  </Typography>
-                  <Typography
-                    variant={isMobile ? "h6" : "h5"}
-                    sx={{ color: "white", fontWeight: 700 }}
-                  >
-                    {normalUsers.length}
+                    {t("compare_label")}
                   </Typography>
                 </Box>
               </Box>
-              <Box
-                textAlign={{ xs: "center", sm: "right" }}
-                width={{ xs: "100%", sm: "auto" }}
-              >
-                <Chip label="+3%" size="small" color="success" />
-                <Typography
-                  variant="caption"
-                  display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
-                >
-                  {t("compare_label")}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
+            </Paper>
+          </Grid>
 
-        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: { xs: 2, sm: 2.5 },
-              background: gradients.red,
-              color: "common.white",
-              borderRadius: 2,
-            }}
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            component={"div" as React.ElementType}
           >
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              flexDirection={{ xs: "column", sm: "row" }}
-              gap={{ xs: 1.5, sm: 0 }}
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 2, sm: 2.5 },
+                background: gradients.red,
+                color: "common.white",
+                borderRadius: 2,
+              }}
             >
               <Box
                 display="flex"
                 alignItems="center"
-                width={{ xs: "100%", sm: "auto" }}
+                justifyContent="space-between"
+                flexDirection={{ xs: "column", sm: "row" }}
+                gap={{ xs: 1.5, sm: 0 }}
               >
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
-                  <BusinessIcon />
-                </Avatar>
-                <Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
+                    <BusinessIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      }}
+                    >
+                      {t("total_business_users")}
+                    </Typography>
+                    <Typography
+                      variant={isMobile ? "h6" : "h5"}
+                      sx={{ color: "white", fontWeight: 700 }}
+                    >
+                      {businessUsers.length}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  textAlign={{ xs: "center", sm: "right" }}
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Chip label="-1%" size="small" color="warning" />
                   <Typography
-                    sx={{
-                      color: "white",
-                      fontSize: { xs: "0.875rem", sm: "1rem" },
-                    }}
+                    variant="caption"
+                    display="block"
+                    sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                   >
-                    {t("total_business_users")}
-                  </Typography>
-                  <Typography
-                    variant={isMobile ? "h6" : "h5"}
-                    sx={{ color: "white", fontWeight: 700 }}
-                  >
-                    {businessUsers.length}
+                    {t("compare_label")}
                   </Typography>
                 </Box>
               </Box>
-              <Box
-                textAlign={{ xs: "center", sm: "right" }}
-                width={{ xs: "100%", sm: "auto" }}
-              >
-                <Chip label="-1%" size="small" color="warning" />
-                <Typography
-                  variant="caption"
-                  display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
-                >
-                  {t("compare_label")}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
+            </Paper>
+          </Grid>
 
-        <Grid item xs={12} sm={6} md={4} component={"div" as React.ElementType}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: { xs: 2, sm: 2.5 },
-              background: gradients.green,
-              color: "common.white",
-              borderRadius: 2,
-            }}
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={4}
+            component={"div" as React.ElementType}
           >
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              flexDirection={{ xs: "column", sm: "row" }}
-              gap={{ xs: 1.5, sm: 0 }}
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 2, sm: 2.5 },
+                background: gradients.green,
+                color: "common.white",
+                borderRadius: 2,
+              }}
             >
               <Box
                 display="flex"
                 alignItems="center"
-                width={{ xs: "100%", sm: "auto" }}
+                justifyContent="space-between"
+                flexDirection={{ xs: "column", sm: "row" }}
+                gap={{ xs: 1.5, sm: 0 }}
               >
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
-                  <BusinessIcon />
-                </Avatar>
-                <Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.12)", mr: 2 }}>
+                    <BusinessIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
+                      }}
+                    >
+                      {t("total_restaurants")}
+                    </Typography>
+                    <Typography
+                      variant={isMobile ? "h6" : "h5"}
+                      sx={{ color: "white", fontWeight: 700 }}
+                    >
+                      {restaurants.length}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  textAlign={{ xs: "center", sm: "right" }}
+                  width={{ xs: "100%", sm: "auto" }}
+                >
+                  <Chip label="+8%" size="small" color="success" />
                   <Typography
-                    sx={{
-                      color: "white",
-                      fontSize: { xs: "0.875rem", sm: "1rem" },
-                    }}
+                    variant="caption"
+                    display="block"
+                    sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
                   >
-                    {t("total_restaurants")}
-                  </Typography>
-                  <Typography
-                    variant={isMobile ? "h6" : "h5"}
-                    sx={{ color: "white", fontWeight: 700 }}
-                  >
-                    {restaurants.length}
+                    {t("compare_label")}
                   </Typography>
                 </Box>
               </Box>
-              <Box
-                textAlign={{ xs: "center", sm: "right" }}
-                width={{ xs: "100%", sm: "auto" }}
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Biểu đồ */}
+        <Grid
+          container
+          spacing={{ xs: 2, sm: 3 }}
+          mt={{ xs: 2, sm: 3 }}
+          className={styles.charts}
+        >
+          <Grid item xs={12} md={6} component={"div" as React.ElementType}>
+            <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography
+                variant={isMobile ? "subtitle1" : "h6"}
+                mb={2}
+                fontWeight={600}
               >
-                <Chip label="+8%" size="small" color="success" />
-                <Typography
-                  variant="caption"
-                  display="block"
-                  sx={{ color: "rgba(255,255,255,0.85)", mt: 0.5 }}
-                >
-                  {t("compare_label")}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+                {t("users_by_month")}
+              </Typography>
+              {Object.keys(userChartData).length ? (
+                <Chart
+                  options={chartOptions(Object.keys(userChartData))}
+                  series={[
+                    {
+                      name: t("series_users"),
+                      data: Object.values(userChartData),
+                    },
+                  ]}
+                  type="bar"
+                  width="100%"
+                  height={isMobile ? 250 : 300}
+                />
+              ) : (
+                <Typography>{t("no_chart_data")}</Typography>
+              )}
+            </Paper>
+          </Grid>
 
-      {/* Biểu đồ */}
-      <Grid
-        container
-        spacing={{ xs: 2, sm: 3 }}
-        mt={{ xs: 2, sm: 3 }}
-        className={styles.charts}
-      >
-        <Grid item xs={12} md={6} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
-            <Typography
-              variant={isMobile ? "subtitle1" : "h6"}
-              mb={2}
-              fontWeight={600}
-            >
-              {t("users_by_month")}
-            </Typography>
-            {Object.keys(userChartData).length ? (
-              <Chart
-                options={chartOptions(Object.keys(userChartData))}
-                series={[
-                  {
-                    name: t("series_users"),
-                    data: Object.values(userChartData),
-                  },
-                ]}
-                type="bar"
-                width="100%"
-                height={isMobile ? 250 : 300}
-              />
-            ) : (
-              <Typography>{t("no_chart_data")}</Typography>
-            )}
-          </Paper>
-        </Grid>
+          <Grid item xs={12} md={6} component={"div" as React.ElementType}>
+            <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography
+                variant={isMobile ? "subtitle1" : "h6"}
+                mb={2}
+                fontWeight={600}
+              >
+                {t("business_by_month")}
+              </Typography>
+              {Object.keys(businessChartData).length ? (
+                <Chart
+                  options={chartOptions(Object.keys(businessChartData))}
+                  series={[
+                    {
+                      name: t("series_business"),
+                      data: Object.values(businessChartData),
+                    },
+                  ]}
+                  type="bar"
+                  width="100%"
+                  height={isMobile ? 250 : 300}
+                />
+              ) : (
+                <Typography>{t("no_chart_data")}</Typography>
+              )}
+            </Paper>
+          </Grid>
 
-        <Grid item xs={12} md={6} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
-            <Typography
-              variant={isMobile ? "subtitle1" : "h6"}
-              mb={2}
-              fontWeight={600}
-            >
-              {t("business_by_month")}
-            </Typography>
-            {Object.keys(businessChartData).length ? (
-              <Chart
-                options={chartOptions(Object.keys(businessChartData))}
-                series={[
-                  {
-                    name: t("series_business"),
-                    data: Object.values(businessChartData),
-                  },
-                ]}
-                type="bar"
-                width="100%"
-                height={isMobile ? 250 : 300}
-              />
-            ) : (
-              <Typography>{t("no_chart_data")}</Typography>
-            )}
-          </Paper>
+          <Grid item xs={12} component={"div" as React.ElementType}>
+            <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography
+                variant={isMobile ? "subtitle1" : "h6"}
+                mb={2}
+                fontWeight={600}
+              >
+                {t("restaurants_by_month")}
+              </Typography>
+              <Divider sx={{ my: 1 }} />
+              {Object.keys(restaurantChartData).length ? (
+                <Chart
+                  options={chartOptions(Object.keys(restaurantChartData))}
+                  series={[
+                    {
+                      name: t("series_restaurants"),
+                      data: Object.values(restaurantChartData),
+                    },
+                  ]}
+                  type="bar"
+                  width="100%"
+                  height={isMobile ? 250 : 300}
+                />
+              ) : (
+                <Typography>{t("no_chart_data")}</Typography>
+              )}
+            </Paper>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} component={"div" as React.ElementType}>
-          <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
-            <Typography
-              variant={isMobile ? "subtitle1" : "h6"}
-              mb={2}
-              fontWeight={600}
-            >
-              {t("restaurants_by_month")}
-            </Typography>
-            <Divider sx={{ my: 1 }} />
-            {Object.keys(restaurantChartData).length ? (
-              <Chart
-                options={chartOptions(Object.keys(restaurantChartData))}
-                series={[
-                  {
-                    name: t("series_restaurants"),
-                    data: Object.values(restaurantChartData),
-                  },
-                ]}
-                type="bar"
-                width="100%"
-                height={isMobile ? 250 : 300}
-              />
-            ) : (
-              <Typography>{t("no_chart_data")}</Typography>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
+      </Box>
+    </motion.div>
   );
 };
 

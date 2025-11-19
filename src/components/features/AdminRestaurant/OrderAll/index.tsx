@@ -292,7 +292,7 @@ export default function AdminRestaurantOrdersPage() {
 
   if (restLoading || paymentLoading) {
     return (
-      <Box
+      <Box  
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -304,7 +304,7 @@ export default function AdminRestaurantOrdersPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 2, pt: 0 }}>
       <Typography variant="h5" fontWeight={700} mb={2}>
         Đơn hàng của nhà hàng {restaurant?.name || "(không xác định)"}
       </Typography>

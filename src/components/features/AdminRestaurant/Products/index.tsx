@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Box,
   Button,
@@ -84,6 +85,7 @@ const ProductPage = () => {
   const { items: dishes, loading } = useAppSelector((state) => state.dishes);
   const { current: restaurant } = useAppSelector((state) => state.restaurant);
   const isMobile = useMediaQuery("(max-width:600px)");
+  const t = useTranslations("products");
 
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [openModal, setOpenModal] = useState(false);
@@ -133,9 +135,9 @@ const ProductPage = () => {
       // ✅ load toàn bộ dish promotions để hiển thị giá giảm
       dispatch(fetchDishPromotions());
     } else if (restaurant) {
-      toast.warning("Tài khoản chưa có nhà hàng!");
+      toast.warning(t("errors.missing_restaurant"));
     }
-  }, [restaurant, dispatch]);
+  }, [restaurant, dispatch, t]);
 
   useEffect(() => {
     if (promotions) console.debug("promotions in store:", promotions);
@@ -168,11 +170,11 @@ const ProductPage = () => {
 
   const handleSubmit = async () => {
     if (!restaurantId) return toast.error("Thiếu nhà hàng!");
-    if (!formData.name.trim()) return toast.warning("Vui lòng nhập tên món");
+    if (!formData.name.trim()) return toast.warning(t("errors.enter_name"));
     const priceNum = Number(formData.price);
     if (!Number.isFinite(priceNum) || priceNum <= 0)
       return toast.warning("Giá không hợp lệ");
-    if (!editingDish && !file) return toast.warning("Vui lòng tải ảnh món ăn");
+    if (!editingDish && !file) return toast.warning(t("errors.upload_image"));
 
     const form = new FormData();
     form.append("name", formData.name.trim());
@@ -185,17 +187,17 @@ const ProductPage = () => {
     try {
       if (editingDish) {
         await dispatch(updateDish({ id: editingDish.id, data: form })).unwrap();
-        toast.success("Cập nhật món ăn thành công");
+        toast.success(t("errors.update_success"));
       } else {
         await dispatch(addDish(form)).unwrap();
-        toast.success("Thêm món ăn thành công");
+        toast.success(t("errors.add_success"));
       }
       handleCloseModal();
       dispatch(fetchDishes(restaurantId));
       // Sau khi thêm/cập nhật món, có thể giá trị khuyến mãi áp dụng thay đổi theo danh sách món
       dispatch(fetchDishPromotions());
     } catch {
-      toast.error("Thao tác thất bại. Vui lòng thử lại!");
+      toast.error(t("errors.operation_failed"));
     }
   };
 
@@ -221,10 +223,10 @@ const ProductPage = () => {
   const handleRemoveVoucherItem = async (dishPromotionId: number) => {
     try {
       await dispatch(deleteDishPromotion(dishPromotionId)).unwrap();
-      toast.success("Đã hủy voucher cho món");
+      toast.success(t("errors.remove_voucher_success"));
       dispatch(fetchDishPromotions());
     } catch (err: unknown) {
-      let message = "Hủy voucher thất bại. Vui lòng thử lại!";
+      let message = t("errors.remove_voucher_failed");
       if (err && typeof err === "object" && "message" in err) {
         message = (err as { message: string }).message;
       }
@@ -233,8 +235,9 @@ const ProductPage = () => {
   };
 
   const handleAddVoucher = async () => {
-    if (!voucherDish) return toast.error("Thiếu món ăn");
-    if (!selectedPromotionId) return toast.warning("Vui lòng chọn khuyến mãi");
+    if (!voucherDish) return toast.error(t("errors.missing_dish"));
+    if (!selectedPromotionId)
+      return toast.warning(t("errors.select_promotion"));
     try {
       // ✅ Chỉ cần gửi dishId và promotionId, BE sẽ tự tính toán giá
       const payload = {
@@ -243,14 +246,14 @@ const ProductPage = () => {
       };
 
       await dispatch(createDishPromotion(payload)).unwrap();
-      toast.success("Gán voucher cho món thành công");
+      toast.success(t("errors.add_voucher_success"));
 
       // Refresh toàn bộ danh sách khuyến mãi món để cột giá cập nhật ngay
       dispatch(fetchDishPromotions());
 
       handleCloseVoucherModal();
     } catch (err: unknown) {
-      let message = "Gán voucher thất bại. Vui lòng thử lại!";
+      let message = t("errors.assign_voucher_failed");
       if (err && typeof err === "object" && "message" in err) {
         message = (err as { message: string }).message;
       }
@@ -262,12 +265,12 @@ const ProductPage = () => {
     if (!selectedDishId) return;
     try {
       await dispatch(deleteDish(selectedDishId)).unwrap();
-      toast.success("Xóa món ăn thành công");
+      toast.success(t("errors.delete_success"));
       if (restaurantId) dispatch(fetchDishes(restaurantId));
       // Xoá món xong reload promotions để tránh hiển thị dư
       dispatch(fetchDishPromotions());
     } catch (error: unknown) {
-      let message = "Xóa món ăn thất bại. Vui lòng thử lại!";
+      let message = t("errors.delete_failed");
       if (error && typeof error === "object" && "message" in error) {
         message = (error as { message: string }).message;
       }
@@ -342,20 +345,20 @@ const ProductPage = () => {
       <Card className={styles.card}>
         <CardContent>
           <Box className={styles.header}>
-            <Typography variant="h6">Quản lý món ăn</Typography>
+            <Typography variant="h6">{t("title")}</Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenModal()}
               fullWidth={isMobile}
             >
-              Thêm món
+              {t("add")}
             </Button>
           </Box>
 
           <Box className={styles.filter}>
             <TextField
-              label="Tìm kiếm món ăn"
+              label={t("search")}
               variant="outlined"
               size="small"
               value={searchKeyword}
@@ -367,7 +370,7 @@ const ProductPage = () => {
               fullWidth={isMobile}
             />
             <TextField
-              label="Danh mục"
+              label={t("category_label")}
               select
               size="small"
               value={selectedCategory}
@@ -378,10 +381,10 @@ const ProductPage = () => {
               className={styles.categorySelect}
               fullWidth={isMobile}
             >
-              <MenuItem value="All">Tất cả</MenuItem>
-              <MenuItem value="ThucAn">Thức ăn</MenuItem>
-              <MenuItem value="NuocUong">Nước uống</MenuItem>
-              <MenuItem value="ThucAnThem">Thức ăn thêm</MenuItem>
+              <MenuItem value="All">{t("category_all")}</MenuItem>
+              <MenuItem value="ThucAn">{t("category.ThucAn")}</MenuItem>
+              <MenuItem value="NuocUong">{t("category.NuocUong")}</MenuItem>
+              <MenuItem value="ThucAnThem">{t("category.ThucAnThem")}</MenuItem>
             </TextField>
           </Box>
 
@@ -436,12 +439,16 @@ const ProductPage = () => {
                               }}
                             >
                               <Chip
-                                label={dish.category}
+                                label={t(`category.${dish.category}`)}
                                 size="small"
                                 variant="outlined"
                               />
                               <Chip
-                                label={dish.isActive ? "Đang bán" : "Ngưng"}
+                                label={
+                                  dish.isActive
+                                    ? t("status.selling")
+                                    : t("status.out")
+                                }
                                 size="small"
                                 color={dish.isActive ? "success" : "default"}
                                 variant={dish.isActive ? "filled" : "outlined"}
@@ -478,7 +485,7 @@ const ProductPage = () => {
                             startIcon={<EditIcon />}
                             fullWidth
                           >
-                            Sửa
+                            {t("edit")}
                           </Button>
                           <Button
                             size="small"
@@ -487,7 +494,7 @@ const ProductPage = () => {
                             startIcon={<LocalOfferIcon />}
                             fullWidth
                           >
-                            Voucher
+                            {t("voucher")}
                           </Button>
                           <Button
                             size="small"
@@ -497,7 +504,7 @@ const ProductPage = () => {
                             startIcon={<DeleteIcon />}
                             fullWidth
                           >
-                            Xoá
+                            {t("delete")}
                           </Button>
                         </Box>
                       </CardContent>
@@ -521,12 +528,12 @@ const ProductPage = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Tên món</TableCell>
-                      <TableCell>Giá</TableCell>
-                      <TableCell>Danh mục</TableCell>
-                      <TableCell>Trạng thái</TableCell>
-                      <TableCell>Hình ảnh</TableCell>
-                      <TableCell>Hành động</TableCell>
+                      <TableCell>{t("col_name")}</TableCell>
+                      <TableCell>{t("col_price")}</TableCell>
+                      <TableCell>{t("col_category")}</TableCell>
+                      <TableCell>{t("col_status")}</TableCell>
+                      <TableCell>{t("col_image")}</TableCell>
+                      <TableCell>{t("col_actions")}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -563,7 +570,9 @@ const ProductPage = () => {
                               <>{originalPrice.toLocaleString()}đ</>
                             )}
                           </TableCell>
-                          <TableCell>{dish.category}</TableCell>
+                          <TableCell>
+                            {t(`category.${dish.category}`)}
+                          </TableCell>
                           <TableCell>
                             <Typography
                               className={
@@ -572,7 +581,9 @@ const ProductPage = () => {
                                   : styles.statusInactive
                               }
                             >
-                              {dish.isActive ? "Đang bán" : "Ngưng"}
+                              {dish.isActive
+                                ? t("status.selling")
+                                : t("status.out")}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -584,7 +595,7 @@ const ProductPage = () => {
                                 height={80}
                               />
                             ) : (
-                              <Typography>Không có ảnh</Typography>
+                              <Typography>{t("no_image_text")}</Typography>
                             )}
                           </TableCell>
                           <TableCell>
@@ -592,7 +603,7 @@ const ProductPage = () => {
                               <EditIcon />
                             </IconButton>
                             <IconButton
-                              title="Gán voucher"
+                              title={t("assign_voucher_btn_title")}
                               onClick={() => handleOpenVoucherModal(dish)}
                             >
                               <LocalOfferIcon />
@@ -632,12 +643,14 @@ const ProductPage = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingDish ? "Cập nhật món ăn" : "Thêm món ăn"}
+          {editingDish
+            ? t("update_dish_dialog_title")
+            : t("add_dish_dialog_title")}
         </DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
             <TextField
-              label="Tên món"
+              label={t("name_label")}
               value={formData.name}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -645,7 +658,7 @@ const ProductPage = () => {
               fullWidth
             />
             <TextField
-              label="Giá"
+              label={t("price_label")}
               type="number"
               value={formData.price}
               onChange={(e) =>
@@ -655,7 +668,7 @@ const ProductPage = () => {
               inputProps={{ min: 0 }}
             />
             <TextField
-              label="Danh mục"
+              label={t("category_label")}
               select
               value={formData.category}
               onChange={(e) =>
@@ -666,9 +679,9 @@ const ProductPage = () => {
               }
               fullWidth
             >
-              <MenuItem value="ThucAn">Thức ăn</MenuItem>
-              <MenuItem value="NuocUong">Nước uống</MenuItem>
-              <MenuItem value="ThucAnThem">Thức ăn thêm</MenuItem>
+              <MenuItem value="ThucAn">{t("category.ThucAn")}</MenuItem>
+              <MenuItem value="NuocUong">{t("category.NuocUong")}</MenuItem>
+              <MenuItem value="ThucAnThem">{t("category.ThucAnThem")}</MenuItem>
             </TextField>
 
             <Box display="flex" alignItems="center" gap={1}>
@@ -682,13 +695,13 @@ const ProductPage = () => {
                 }
               />
               <Typography>
-                {formData.isActive ? "Đang bán" : "Ngưng"}
+                {formData.isActive ? t("status.selling") : t("status.out")}
               </Typography>
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
               <Button variant="outlined" component="label">
-                {file ? "Đổi ảnh" : "Chọn ảnh"}
+                {file ? t("change_image") : t("choose_image")}
                 <input
                   type="file"
                   hidden
@@ -713,9 +726,9 @@ const ProductPage = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModal}>Hủy</Button>
+          <Button onClick={handleCloseModal}>{t("cancel")}</Button>
           <Button variant="contained" onClick={handleSubmit}>
-            {editingDish ? "Cập nhật" : "Thêm"}
+            {editingDish ? t("update_btn") : t("add_btn")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -725,20 +738,20 @@ const ProductPage = () => {
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
       >
-        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogTitle>{t("confirm_delete_title")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xoá món ăn này không?
-          </DialogContentText>
+          <DialogContentText>{t("confirm_delete_text")}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)}>
+            {t("cancel")}
+          </Button>
           <Button
             color="error"
             variant="contained"
             onClick={handleConfirmDelete}
           >
-            Xoá
+            {t("delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -750,11 +763,11 @@ const ProductPage = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Gán voucher cho món</DialogTitle>
+        <DialogTitle>{t("assign_voucher_title")}</DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
             <TextField
-              label="Món"
+              label={t("dish_label")}
               value={voucherDish?.name || ""}
               fullWidth
               disabled
@@ -769,7 +782,7 @@ const ProductPage = () => {
                 return (
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
-                      Voucher đang áp dụng
+                      {t("voucher_applied_title")}
                     </Typography>
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
@@ -826,7 +839,7 @@ const ProductPage = () => {
               })()}
 
             <TextField
-              label="Chọn khuyến mãi"
+              label={t("choose_promotion_label")}
               select
               value={selectedPromotionId}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -835,7 +848,7 @@ const ProductPage = () => {
               }}
               fullWidth
             >
-              <MenuItem value="">-- Chọn --</MenuItem>
+              <MenuItem value="">{t("voucher_select")}</MenuItem>
               {filteredPromotions
                 .filter(
                   (p) =>
@@ -857,7 +870,7 @@ const ProductPage = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseVoucherModal}>Hủy</Button>
+          <Button onClick={handleCloseVoucherModal}>{t("cancel")}</Button>
           <Button
             variant="contained"
             onClick={handleAddVoucher}
@@ -867,7 +880,7 @@ const ProductPage = () => {
               selectedPromotionId === ""
             }
           >
-            Gán
+            {t("assign_btn")}
           </Button>
         </DialogActions>
       </Dialog>
