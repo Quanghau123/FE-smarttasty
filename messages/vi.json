@@ -8,14 +8,38 @@
     "logout_btn_title": "Đăng Xuất",
     "welcome_text": "Xin Chào",
     "register_btn_title": "Đăng Ký",
-    "login_btn_title": "Đăng Nhập"
+    "login_btn_title": "Đăng Nhập",
+    "my_purchase_btn_title": "Đơn Mua",
+    "my_booking_btn_title": "Đặt Bàn",
+    "logo_alt": "Logo SmartTasty",
+    "search_placeholder": "Địa điểm, món ăn, loại hình...",
+    "category_all": "Ăn uống",
+    "category_buffet": "Buffet",
+    "category_nhahang": "Nhà Hàng",
+    "category_anvatviahe": "Ăn vặt/vỉa hè",
+    "category_anchay": "Ăn chay",
+    "category_cafenuocuong": "Cafe/Nước uống",
+    "category_quanan": "Quán ăn",
+    "category_bar": "Bar",
+    "category_quannhau": "Quán nhậu",
+    "no_notifications": "Không có thông báo",
+    "notifications_title": "Thông báo"
   },
-  "footer": {
+  "footer": { 
     "contactus_btn_title": "Liên Hệ",
     "aboutus_btn_title": "Về Chúng Tôi",
     "followme_btn_title": "Theo Dõi",
     "openinghours_btn_title": "Giờ Mở Cửa",
-    "daily_btn_title": "Hàng Ngày"
+    "daily_btn_title": "Hàng Ngày",
+    "tagline": "Ngon miệng, giao nhanh",
+    "description": "SmartTasty — nền tảng đặt món, giao hàng nhanh. Tìm nhà hàng gần bạn và đặt món yêu thích chỉ trong vài bước.",
+    "subscribe_text": "Đăng ký nhận ưu đãi và tin tức mới nhất",
+    "subscribe_placeholder": "Email của bạn",
+    "subscribe_button": "Đăng ký",
+    "privacy_policy": "Chính sách bảo mật",
+    "link_intro": "Giới thiệu",
+    "link_careers": "Tuyển dụng",
+    "link_contact": "Liên hệ"
   },
   "account": {
     "accountinformation_btn_title": "Thông Tin Tài Khoản",
@@ -58,5 +82,314 @@
     "register_btn_title": "Đăng ký doanh nghiệp",
     "have_account_text": "Bạn đã có tài khoản?",
     "login_btn_title": "Đăng nhập"
+  }
+  ,
+  "dashboard": {
+    "title": "Tổng quan người dùng & nhà hàng",
+    "summary": "Báo cáo tóm tắt — số liệu cập nhật {lastUpdated}",
+    "no_data": "chưa có",
+    "no_date": "Chưa có",
+    "total_normal_users": "Tổng User thường",
+    "total_business_users": "Tổng User Business",
+    "total_restaurants": "Tổng nhà hàng",
+    "compare_label": "so với tháng trước",
+    "users_by_month": "User thường theo tháng",
+    "business_by_month": "User Business theo tháng",
+    "restaurants_by_month": "Nhà hàng theo tháng",
+    "no_chart_data": "Chưa có dữ liệu",
+    "series_users": "Users",
+    "series_business": "Business",
+    "series_restaurants": "Nhà hàng"
+    ,
+    "revenue_title": "Báo cáo doanh thu",
+    "revenue_compare_chart": "Biểu đồ so sánh doanh thu",
+    "previous_month": "Tháng trước",
+    "current_month": "Tháng này",
+    "month_label": "Tháng",
+    "year_label": "Năm",
+    "all_label": "Tất cả",
+    "month": "Tháng",
+    "reset_btn": "Đặt lại",
+    "kpi_revenue_month": "Doanh thu (tháng)",
+    "kpi_compare": "So sánh",
+    "kpi_paid_orders": "Đơn đã thanh toán",
+    "kpi_avg_order": "Giá trị TB / đơn",
+    "series_dish_count": "Số lượng món",
+    "series_promotion_count": "Khuyến mãi",
+    "series_count": "Số lượng",
+    "series_created": "Tạo mới",
+    "category": {
+      "food": "Thức ăn",
+      "drink": "Nước uống",
+      "extraFood": "Thức ăn thêm"
+    },
+    "promotion": {
+      "dish": "Món ăn",
+      "order": "Đơn hàng"
+    },
+    "status": {
+      "pending": "Đang chờ",
+      "confirmed": "Đã xác nhận",
+      "checkedIn": "Đã nhận bàn",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "dishes_promotions_title": "Thống kê món ăn & khuyến mãi",
+    "dishes_by_category_title": "Số lượng món theo danh mục",
+    "promotions_by_type_title": "Khuyến mãi theo loại",
+    "bookings_and_staff_title": "Đặt bàn & tài khoản con",
+    "reservations_by_status_title": "Đặt bàn theo trạng thái",
+    "staff_accounts_title": "Tài khoản con"
+  }
+  ,
+  "tableBooking": {
+    "page_title": "Quản lý đặt bàn",
+    "booking_number": "Đặt bàn # {id}",
+    "customer_info_title": "Thông tin khách hàng",
+    "reservation_details_title": "Chi tiết đặt bàn",
+    "no_reservations": "Chưa có đặt bàn nào.",
+    "no_reservations_with_status": "Không có đặt bàn nào với trạng thái \"{status}\".",
+    "created_at": "Tạo lúc: {time}",
+    "btn": {
+      "update_status": "Cập nhật trạng thái",
+      "cancel_booking": "Hủy đặt bàn"
+    },
+    "warnings": {
+      "select_new_status": "Chọn trạng thái mới"
+    },
+    "success": {
+      "update_status": "Cập nhật trạng thái thành công",
+      "cancelled_by_business": "Đã hủy đặt bàn (bởi nhà hàng)"
+    },
+    "errors": {
+      "update_failed": "Cập nhật thất bại",
+      "cancel_failed": "Hủy thất bại"
+    },
+    "confirm": {
+      "cancel_by_business": "Bạn có chắc muốn hủy đặt bàn này (hủy bởi nhà hàng)?"
+    },
+    "label": {
+      "name": "Tên:",
+      "phone": "Điện thoại:",
+      "email": "Email:",
+      "adults": "Người lớn:",
+      "children": "Trẻ em:",
+      "arrival_date": "Ngày đến:",
+      "time": "Giờ:",
+      "note": "Ghi chú"
+    },
+    "status": {
+      "all": "Tất cả",
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "checkedIn": "Đã nhận bàn",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "statusCards": {
+      "all": "Tất cả",
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "checkedIn": "Đã check-in",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "dialog": {
+      "title": "Cập nhật trạng thái",
+      "current_status": "Trạng thái hiện tại",
+      "select_new_status": "Chọn trạng thái mới",
+      "cancel": "Huỷ",
+      "save": "Lưu"
+    }
+  }
+
+  ,
+  "dialog": {
+    "title": "Cập nhật trạng thái",
+    "current_status": "Trạng thái hiện tại",
+    "select_new_status": "Chọn trạng thái mới",
+    "cancel": "Huỷ",
+    "save": "Lưu"
+  }
+  ,
+  "sidebarAdmin": {
+    "title": "Admin",
+    "dashboard": "Dashboard",
+    "management": "Quản lý",
+    "user": "Người dùng",
+    "business": "Doanh nghiệp"
+  }
+  ,
+  "adminUser": {
+    "title": "Thông tin người dùng",
+    "search_label": "Tìm kiếm người dùng",
+    "col_delete": "Xoá",
+    "col_username": "Tên người dùng",
+    "col_email": "Email",
+    "col_phone": "Số điện thoại",
+    "col_role": "Vai trò",
+    "col_created_at": "Ngày tạo",
+    "confirm_title": "Xác nhận xóa",
+    "confirm_text": "Bạn có chắc chắn muốn xóa người dùng này không?",
+    "cancel": "Hủy",
+    "delete_btn": "Xoá",
+    "delete_success": "Xóa thành công!",
+    "delete_failed": "Xóa thất bại"
+  }
+  ,
+  "adminBusiness": {
+    "title": "Người dùng Doanh nghiệp",
+    "search_label": "Tìm kiếm người dùng doanh nghiệp",
+    "col_delete": "Xoá",
+    "col_username": "Tên người dùng",
+    "col_email": "Email",
+    "col_role": "Vai trò",
+    "col_restaurants": "Nhà hàng",
+    "col_created_at": "Ngày tạo",
+    "tooltip_delete": "Xoá người dùng doanh nghiệp",
+    "confirm_title": "Xác nhận xóa",
+    "confirm_text": "Bạn có chắc chắn muốn xóa người dùng doanh nghiệp này không?",
+    "cancel": "Hủy",
+    "delete_btn": "Xoá",
+    "delete_success": "Xóa thành công!",
+    "delete_failed": "Xóa thất bại",
+    "no_restaurants": "Chưa có nhà hàng"
+  },
+  "restaurantDetails": {
+    "info": "Thông tin",
+    "menu": "Thực đơn",
+    "map": "Bản đồ",
+    "reviews": "Đánh giá",
+    "reserve": "Đặt bàn",
+    "no_image": "Chưa có ảnh nhà hàng",
+    "address": "Địa chỉ",
+    "status": "Trạng thái",
+    "open": "Đang mở cửa",
+    "closed": "Đóng cửa",
+    "hours": "Giờ hoạt động",
+    "rating": "Đánh giá",
+    "promotions_title": "Khuyến mãi của nhà hàng",
+    "loading_promotions": "Đang tải khuyến mãi...",
+    "valid_until": "Hạn sử dụng đến",
+    "summary": "Tóm tắt",
+    "menu_title": "Thực đơn",
+    "no_dishes": "Chưa có món ăn nào.",
+    "no_dish_image": "Chưa có ảnh",
+    "out_of_stock": "Ngưng bán",
+    "decrease_quantity": "Giảm số lượng",
+    "increase_quantity": "Tăng số lượng",
+    "add_to_cart": "Thêm vào giỏ",
+    "map_title": "Vị trí trên bản đồ",
+    "open_google_maps": "Mở Google Maps",
+    "no_coordinates": "Không có tọa độ để hiển thị bản đồ",
+    "location": "Vị trí",
+    "error_missing_info": "Thiếu thông tin giao hàng (địa chỉ/tên/sđt). Vui lòng cập nhật trước khi đặt.",
+    "error_no_restaurant": "Không tìm thấy nhà hàng",
+    "error_add_to_cart": "Không thể thêm món vào giỏ hàng!",
+    "error_occurred": "Có lỗi xảy ra. Vui lòng thử lại.",
+    "success_added": "Món đã được thêm vào giỏ hàng!",
+    "loading": "Đang tải...",
+    "restaurant_not_found": "Không tìm thấy nhà hàng"
+    ,
+    "follow_label": "Theo dõi",
+    "following_label": "Đang theo dõi",
+    "followers_label": "Người theo dõi"
+  },
+  "review": {
+    "form_title": "Đánh giá nhà hàng",
+    "comment_label": "Nhận xét của bạn",
+    "submit_button": "Gửi đánh giá",
+    "error_missing_info": "Thiếu thông tin người dùng hoặc nhà hàng!",
+    "success_message": "Đánh giá thành công!",
+    "error_message": "Gửi đánh giá thất bại. Vui lòng thử lại!",
+    "list_title": "Đánh giá của khách hàng",
+    "no_reviews": "Chưa có đánh giá nào.",
+    "loading": "Đang tải..."
+    ,
+    "filter_by_rating": "Lọc theo số sao",
+    "clear": "Bỏ lọc",
+    "reviews_count_text": "đánh giá hiển thị",
+    "star": "sao"
+  }
+  ,
+  "reservation": {
+    "title": "Đặt chỗ (Để có chỗ trước khi đến)",
+    "adults_label": "Người lớn",
+    "children_label": "Trẻ em",
+    "arrival_date": "Ngày đến",
+    "arrival_time": "Giờ đến",
+    "contact_name": "Tên liên hệ",
+    "phone": "Số điện thoại",
+    "email": "Email",
+    "note": "Ghi chú",
+    "login_required": "Bạn cần đăng nhập để đặt chỗ!",
+    "success_message": "Đặt chỗ thành công!",
+    "loading": "Đang đặt chỗ...",
+    "reserve_button": "Đặt chỗ ngay"
+  }
+  ,
+  "products": {
+    "title": "Quản lý món ăn",
+    "add": "Thêm món",
+    "search": "Tìm kiếm món ăn",
+    "category_label": "Danh mục",
+    "category_all": "Tất cả",
+    "category": {
+      "ThucAn": "Thức ăn",
+      "NuocUong": "Nước uống",
+      "ThucAnThem": "Thức ăn thêm"
+    },
+    "status": {
+      "selling": "Đang bán",
+      "out": "Ngưng"
+    },
+    "edit": "Sửa",
+    "voucher": "Voucher",
+    "delete": "Xoá",
+    "col_name": "Tên món",
+    "col_price": "Giá",
+    "col_category": "Danh mục",
+    "col_status": "Trạng thái",
+    "col_image": "Hình ảnh",
+    "col_actions": "Hành động",
+    "no_image_text": "Không có ảnh",
+    "add_dish_dialog_title": "Thêm món ăn",
+    "update_dish_dialog_title": "Cập nhật món ăn",
+    "name_label": "Tên món",
+    "price_label": "Giá",
+    "switch_selling": "Đang bán",
+    "switch_out": "Ngưng",
+    "change_image": "Đổi ảnh",
+    "choose_image": "Chọn ảnh",
+    "cancel": "Hủy",
+    "add_btn": "Thêm",
+    "update_btn": "Cập nhật",
+    "confirm_delete_title": "Xác nhận xoá",
+    "confirm_delete_text": "Bạn có chắc chắn muốn xoá món ăn này không?",
+    "assign_voucher_title": "Gán voucher cho món",
+    "dish_label": "Món",
+    "voucher_applied_title": "Voucher đang áp dụng",
+    "choose_promotion_label": "Chọn khuyến mãi",
+    "voucher_select": "-- Chọn --",
+    "assign_btn": "Gán",
+    "cancel_voucher": "Hủy voucher",
+    "assign_voucher_btn_title": "Gán voucher",
+    "errors": {
+      "missing_restaurant": "Tài khoản chưa có nhà hàng!",
+      "enter_name": "Vui lòng nhập tên món",
+      "invalid_price": "Giá không hợp lệ",
+      "upload_image": "Vui lòng tải ảnh món ăn",
+      "operation_failed": "Thao tác thất bại. Vui lòng thử lại!",
+      "missing_dish": "Thiếu món ăn",
+      "select_promotion": "Vui lòng chọn khuyến mãi",
+      "add_voucher_success": "Gán voucher cho món thành công",
+      "add_success": "Thêm món ăn thành công",
+      "update_success": "Cập nhật món ăn thành công",
+      "delete_success": "Xóa món ăn thành công",
+      "delete_failed": "Xóa món ăn thất bại",
+      "assign_voucher_failed": "Gán voucher thất bại",
+      "remove_voucher_failed": "Hủy voucher thất bại",
+      "remove_voucher_success": "Đã hủy voucher cho món"
+    }
   }
 }

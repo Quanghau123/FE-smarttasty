@@ -1,0 +1,200 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+import axiosInstance from "@/lib/axios/axiosInstance";
+import { Recipe, RecipeRequest } from "@/types/recipes";
+
+interface RecipesState {
+	items: Recipe[];
+	allItems?: Recipe[];
+	loading: boolean;
+	error: string | null;
+}
+
+const initialState: RecipesState = {
+	items: [],
+	loading: false,
+	error: null,
+};
+
+// Helper lấy message từ error
+const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): string => {
+	if (axios.isAxiosError(err)) {
+		const responseData = err.response?.data as { message?: string; errMessage?: string } | undefined;
+		return responseData?.message ?? responseData?.errMessage ?? fallback;
+	}
+	return fallback;
+};
+
+const normalizeRecipe = (r: Recipe): Recipe => ({
+	...r,
+	imageUrl: r.imageUrl || (r.image ? r.image : ""),
+});
+
+// ================== ASYNC ACTIONS ==================
+
+export const fetchRecipesByUser = createAsyncThunk<
+	Recipe[],
+	number,
+	{ rejectValue: string }
+>("recipes/fetchByUser", async (userId, { rejectWithValue }) => {
+	try {
+		const res = await axiosInstance.get(`/api/Recipes/user/${userId}`);
+		// Backend may return either `data` or `Data` (depending on serializer).
+		const body = res.data ?? {};
+		const payload = (body.data ?? body.Data ?? body) as unknown;
+		const list = Array.isArray(payload) ? (payload as Recipe[]) : [];
+		return list.map(normalizeRecipe);
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải công thức"));
+	}
+});
+
+export const fetchAllRecipes = createAsyncThunk<
+	Recipe[],
+	void,
+	{ rejectValue: string }
+>("recipes/fetchAll", async (_void, { rejectWithValue }) => {
+	try {
+		const res = await axiosInstance.get(`/api/Recipes`);
+		const body = res.data ?? {};
+		const payload = (body.data ?? body.Data ?? body) as unknown;
+		const list = Array.isArray(payload) ? (payload as Recipe[]) : [];
+		return list.map(normalizeRecipe);
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách công thức"));
+	}
+});
+
+export const addRecipe = createAsyncThunk<
+	Recipe,
+	RecipeRequest,
+	{ rejectValue: string }
+>("recipes/add", async (payload, { rejectWithValue }) => {
+	try {
+		const form = new FormData();
+		form.append("UserId", String(payload.userId));
+		form.append("Title", payload.title);
+		form.append("Category", String(payload.category));
+		form.append("Ingredients", payload.ingredients);
+		form.append("Steps", payload.steps);
+		if (payload.description) form.append("Description", payload.description);
+		if (payload.image && payload.image instanceof File) {
+			form.append("file", payload.image);
+		}
+
+		const res = await axiosInstance.post(`/api/Recipes`, form, {
+			headers: { "Content-Type": "multipart/form-data" },
+		});
+
+	const body = res.data ?? {};
+	const respPayload = (body.data ?? body.Data ?? body) as unknown;
+	const dto = (respPayload && typeof respPayload === "object") ? (respPayload as Recipe) : (res.data as Recipe);
+		return normalizeRecipe(dto);
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi thêm công thức"));
+	}
+});
+
+export const updateRecipe = createAsyncThunk<
+	Recipe,
+	{ id: number; payload: RecipeRequest },
+	{ rejectValue: string }
+>("recipes/update", async ({ id, payload }, { rejectWithValue }) => {
+	try {
+		const form = new FormData();
+		form.append("UserId", String(payload.userId));
+		form.append("Title", payload.title);
+		form.append("Category", String(payload.category));
+		form.append("Ingredients", payload.ingredients);
+		form.append("Steps", payload.steps);
+		if (payload.description) form.append("Description", payload.description);
+		if (payload.image && payload.image instanceof File) {
+			form.append("file", payload.image);
+		}
+
+		const res = await axiosInstance.put(`/api/Recipes/${id}`, form, {
+			headers: { "Content-Type": "multipart/form-data" },
+		});
+
+	const body = res.data ?? {};
+	const respPayload = (body.data ?? body.Data ?? body) as unknown;
+	const dto = (respPayload && typeof respPayload === "object") ? (respPayload as Recipe) : (res.data as Recipe);
+		return normalizeRecipe(dto);
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi cập nhật công thức"));
+	}
+});
+
+export const deleteRecipe = createAsyncThunk<
+	number,
+	number,
+	{ rejectValue: string }
+>("recipes/delete", async (id, { rejectWithValue }) => {
+	try {
+		await axiosInstance.delete(`/api/Recipes/${id}`);
+		return id;
+	} catch (err: unknown) {
+		return rejectWithValue(getErrorMessage(err, "Lỗi khi xóa công thức"));
+	}
+});
+
+// ================== SLICE ==================
+
+const recipesSlice = createSlice({
+	name: "recipes",
+	initialState,
+	reducers: {},
+	extraReducers: (builder) => {
+		builder
+			// FETCH
+			.addCase(fetchRecipesByUser.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchRecipesByUser.fulfilled, (state, action) => {
+				state.items = action.payload;
+				state.loading = false;
+			})
+			.addCase(fetchRecipesByUser.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload ?? "Lỗi tải công thức";
+			})
+			.addCase(fetchAllRecipes.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchAllRecipes.fulfilled, (state, action) => {
+				state.allItems = action.payload;
+				state.loading = false;
+			})
+			.addCase(fetchAllRecipes.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload ?? "Lỗi tải danh sách công thức";
+			})
+			// ADD
+			.addCase(addRecipe.fulfilled, (state, action) => {
+				state.items.push(action.payload);
+			})
+			.addCase(addRecipe.rejected, (state, action) => {
+				state.error = action.payload ?? "Lỗi thêm công thức";
+			})
+			// UPDATE
+			.addCase(updateRecipe.fulfilled, (state, action) => {
+				const idx = state.items.findIndex((r) => r.id === action.payload.id);
+				if (idx !== -1) state.items[idx] = action.payload;
+			})
+			.addCase(updateRecipe.rejected, (state, action) => {
+				state.error = action.payload ?? "Lỗi cập nhật công thức";
+			})
+			// DELETE
+			.addCase(deleteRecipe.fulfilled, (state, action) => {
+				state.items = state.items.filter((r) => r.id !== action.payload);
+			})
+			.addCase(deleteRecipe.rejected, (state, action) => {
+				state.error = action.payload ?? "Lỗi xóa công thức";
+			});
+	},
+});
+
+export default recipesSlice.reducer;
+

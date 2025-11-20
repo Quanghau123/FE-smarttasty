@@ -1,114 +1,146 @@
+// import { useTranslations } from "next-intl";
+
+// const Test = () => {
+//   const t_home = useTranslations("header");
+
+//   return (
+//     <div>
+//       <h1 className="p-4 border-4 border-red-500 bg-background-phs">
+//         Test Theme And Locale
+//       </h1>
+//       <h2 className="text-lg font-semibold">
+//         {t_home("category_btn_title")} / {t_home("account_btn_title")}
+//       </h2>
+//     </div>
+//   );
+// };
+
+// export default Test;
 "use client";
-import React, { useEffect, useState } from "react";
+
+import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
+import { HubConnection } from "@microsoft/signalr";
+import { getAccessToken, getUser } from "@/lib/utils/tokenHelper";
 
-interface RatingData {
-  restaurantId: string;
-  averageRating: number;
-  totalReviews: number;
-}
+type Notification = {
+  title: string;
+  message: string;
+  time: Date;
+};
 
-interface RestaurantRatingUpdate {
-  restaurantId: number;
-  averageRating: number;
-  totalReviews: number;
-}
+export default function NotificationTest() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [open, setOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [connection, setConnection] = useState<HubConnection | null>(null);
 
-interface SignalRMessage<T> {
-  type: string;
-  data: T;
-}
-
-export default function RestaurantRating({
-  restaurantId,
-}: {
-  restaurantId: string;
-}) {
-  const [rating, setRating] = useState<RatingData>({
-    restaurantId,
-    averageRating: 0,
-    totalReviews: 0,
-  });
+  // Join user's personal room based on userId
+  const joinRoom = async (conn: HubConnection) => {
+    const user = getUser();
+    if (conn && user) {
+      try {
+        await conn.invoke("JoinRestaurantRoom", user.userId.toString());
+        console.log("Joined room for user:", user.userId);
+      } catch (err) {
+        console.error("Failed to join room:", err);
+      }
+    }
+  };
 
   useEffect(() => {
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl("https://socket.smart-tasty.io.vn/hubs/notification")
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl("http://localhost:5275/hubs/notification", {
+        accessTokenFactory: () => getAccessToken() ?? "",
+      })
       .withAutomaticReconnect()
       .build();
 
-    const fetchInitialRating = async () => {
-  try {
-    const res = await fetch(
-      `https://api.smart-tasty.io.vn/api/Restaurant/${restaurantId}`
-    );
-    const json = await res.json();
-
-    // check json.data và json.data.restaurant có tồn tại
-    if (json.errCode === "success" && json.data?.restaurant) {
-      setRating({
-        restaurantId: restaurantId,
-        averageRating: json.data.restaurant.averageRating ?? 0,
-        totalReviews: json.data.totalReviews ?? 0,
-      });
-    } else {
-      console.warn("Restaurant data not found", json);
-      setRating({
-        restaurantId,
-        averageRating: 0,
-        totalReviews: 0,
-      });
-    }
-  } catch (err) {
-    console.error("Lỗi khi tải rating ban đầu:", err);
-  }
-};
-
-    fetchInitialRating();
-
+    // Start connection
     const startConnection = async () => {
       try {
-        await connection.start();
+        await conn.start();
         console.log("Connected to SignalR hub");
-        await connection.invoke("JoinRestaurantRoom", restaurantId);
+
+        await joinRoom(conn);
+
+        // --- Heartbeat every 30s ---
+        setInterval(() => {
+          conn.invoke("PingHeartbeat").catch((err) => console.error(err));
+        }, 30000);
       } catch (err) {
-        console.error("Connection error:", err);
+        console.error("Connection error, retrying in 3s:", err);
         setTimeout(startConnection, 3000);
       }
     };
-
     startConnection();
 
-    connection.on(
-      "ReceiveRestaurantUpdate",
-      (message: SignalRMessage<RestaurantRatingUpdate>) => {
-        if (message?.type === "restaurant_rating_update") {
-          const data = message.data;
-          if (data.restaurantId.toString() === restaurantId) {
-            setRating({
-              restaurantId,
-              averageRating: data.averageRating,
-              totalReviews: data.totalReviews,
-            });
-          }
-        }
-      }
-    );
+    // Handle incoming notifications
+    conn.on("ReceiveNotification", (title: string, message: string) => {
+      setNotifications((prev) => [
+        { title, message, time: new Date() },
+        ...prev,
+      ]);
+    });
+
+    setConnection(conn);
 
     return () => {
-      connection.off("ReceiveRestaurantUpdate");
-      connection.stop();
+      conn.off("ReceiveNotification");
+      conn.stop().catch((err) => console.error(err));
     };
-  }, [restaurantId]);
+  }, []);
 
   return (
-    <div className="p-4 border rounded-2xl shadow-md bg-white text-center w-72">
-      <h2 className="text-xl font-semibold mb-2">⭐ Đánh giá nhà hàng</h2>
-      <p className="text-yellow-500 text-2xl font-bold">
-        {rating.averageRating.toFixed(1)} / 5
-      </p>
-      <p className="text-gray-500 text-sm">
-        {rating.totalReviews} lượt đánh giá
-      </p>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 20,
+        }}
+      >
+        <div>
+          <h1>Notification Test</h1>
+        </div>
+        <div style={{ position: "relative", display: "inline-block" }}>
+          <button onClick={() => setOpen(!open)} style={{ fontSize: 20 }}>
+            🔔 {notifications.length}
+          </button>
+          {open && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                width: 300,
+                maxHeight: 400,
+                overflowY: "auto",
+                background: "white",
+                border: "1px solid gray",
+                borderRadius: 8,
+                zIndex: 100,
+              }}
+            >
+              {notifications.length === 0 && (
+                <p style={{ padding: 10 }}>No notifications</p>
+              )}
+              {notifications.map((notif, idx) => (
+                <div
+                  key={idx}
+                  style={{ padding: 10, borderBottom: "1px solid #eee" }}
+                >
+                  <strong>{notif.title}</strong>
+                  <p>{notif.message}</p>
+                  <small>{notif.time.toLocaleTimeString()}</small>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

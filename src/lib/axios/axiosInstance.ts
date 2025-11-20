@@ -104,23 +104,65 @@ axiosInstance.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    try {
-      const refreshResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`,
-        {},
-        { withCredentials: true }
-      );
+ try {
+  const refreshUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/User/refresh-token`;
+  
+  // ✅ Lấy access token cũ (đã hết hạn) để gửi lên BE
+  const oldAccessToken = getAccessToken();
 
-      const newAccessToken =
-        refreshResponse.data?.access_token ??
-        refreshResponse.data?.data?.access_token ??
-        refreshResponse.data?.Data?.access_token;
+  // debug logs removed
+
+  // ✅ Gửi cả 2 dữ liệu: 
+  // 1. Refresh token qua cookie (withCredentials: true)
+  // 2. Access token qua Authorization header
+  const refreshResponse = await axios.post(
+    refreshUrl, 
+    {}, 
+    { 
+      withCredentials: true,  // Gửi cookie refresh_token
+      headers: {
+        'Authorization': `Bearer ${oldAccessToken}`  // Gửi access token cũ
+      }
+    }
+  );
+
+  // debug logs removed
+
+      // 🔎 Try to extract new access token from various common shapes
+      const body: unknown = refreshResponse.data;
+      const pickToken = (o: unknown): string | undefined => {
+        if (!o || typeof o !== "object") return undefined;
+        const obj = o as Record<string, unknown>;
+        return (
+          (obj["access_token"] as string | undefined) ||
+          (obj["accessToken"] as string | undefined) ||
+          (obj["AccessToken"] as string | undefined) ||
+          (obj["token"] as string | undefined) ||
+          (obj["Token"] as string | undefined) ||
+          (obj["jwt"] as string | undefined) ||
+          (obj["jwtToken"] as string | undefined) ||
+          (obj["JwtToken"] as string | undefined)
+        );
+      };
+
+      const obj = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : undefined;
+      const newAccessToken: string | undefined =
+        pickToken(body) ||
+        pickToken(obj?.["data"]) ||
+        pickToken(obj?.["Data"]);
 
       if (!newAccessToken) {
         throw new Error("No new access token from refresh endpoint");
       }
 
+      // Persist new token for subsequent requests
       setAccessToken(newAccessToken);
+      // Also update axios default header immediately to avoid any race with callers
+      try {
+        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+      } catch {
+        // ignore
+      }
 
       processQueue(null, newAccessToken);
 

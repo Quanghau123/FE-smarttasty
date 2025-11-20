@@ -22,7 +22,12 @@ import {
   ExpandMore,
 } from "@mui/icons-material";
 
-const Sidebar = () => {
+type SidebarProps = {
+  inDrawer?: boolean;
+  onNavigate?: () => void;
+};
+
+const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -30,7 +35,8 @@ const Sidebar = () => {
     if (
       pathname?.startsWith("/products") ||
       pathname?.startsWith("/promotion") ||
-      pathname?.startsWith("/restaurant")
+      pathname?.startsWith("/restaurant") ||
+      pathname?.startsWith("/orderall")
     ) {
       setOpen(true);
     }
@@ -41,10 +47,9 @@ const Sidebar = () => {
       elevation={2}
       sx={{
         width: 260,
-        // keep sidebar below header (header marginTop typically 80px in admin layouts)
-        minHeight: "calc(100vh - 80px)",
-        position: "sticky",
-        top: 80,
+        minHeight: inDrawer ? "auto" : "calc(100vh - 72px)",
+        position: inDrawer ? "static" : "sticky",
+        top: inDrawer ? undefined : 72,
         p: 2,
         borderRadius: 2,
         bgcolor: "background.paper",
@@ -68,6 +73,7 @@ const Sidebar = () => {
           href="/dashboard"
           selected={pathname === "/dashboard"}
           sx={{ borderRadius: 1, mb: 1 }}
+          onClick={onNavigate}
         >
           <ListItemIcon>
             <DashboardIcon />
@@ -93,6 +99,7 @@ const Sidebar = () => {
               href="/restaurant"
               selected={pathname === "/restaurant"}
               sx={{ borderRadius: 1, mb: 0.5 }}
+              onClick={onNavigate}
             >
               <ListItemText primary="Thông Tin Nhà Hàng" />
             </ListItemButton>
@@ -101,6 +108,7 @@ const Sidebar = () => {
               href="/products"
               selected={pathname === "/products"}
               sx={{ borderRadius: 1, mb: 0.5 }}
+              onClick={onNavigate}
             >
               <ListItemText primary="Quản lý" />
             </ListItemButton>
@@ -109,6 +117,7 @@ const Sidebar = () => {
               href="/promotion"
               selected={pathname === "/promotion"}
               sx={{ borderRadius: 1, mb: 0.5 }}
+              onClick={onNavigate}
             >
               <ListItemText primary="Các Ưu Đãi" />
             </ListItemButton>
@@ -117,8 +126,27 @@ const Sidebar = () => {
               href="/tablebooking"
               selected={pathname === "/tablebooking"}
               sx={{ borderRadius: 1 }}
+              onClick={onNavigate}
             >
               <ListItemText primary="Bàn đã đặt" />
+            </ListItemButton>
+            <ListItemButton
+              component={Link}
+              href="/orderall"
+              selected={pathname === "/orderall"}
+              sx={{ borderRadius: 1 }}
+              onClick={onNavigate}
+            >
+              <ListItemText primary="Tất cả đơn hàng" />
+            </ListItemButton>
+            <ListItemButton
+              component={Link}
+              href="/staffs"
+              selected={pathname === "/staffs"}
+              sx={{ borderRadius: 1, mt: 0.5 }}
+              onClick={onNavigate}
+            >
+              <ListItemText primary="Tài khoản con" />
             </ListItemButton>
           </List>
         </Collapse>

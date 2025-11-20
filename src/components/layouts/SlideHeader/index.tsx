@@ -1,73 +1,113 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import styles from "./styles.module.scss";
+import { Box } from "@mui/material";
 
-import anh4 from "@/assets/Image/SlideHeader/anh5.jpg";
+import anh4 from "@/assets/Image/SlideHeader/banner5.png";
 
 const images = [anh4, anh4, anh4, anh4];
 
-const Index = () => {
+const SlideHeader: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const sliderRef = useRef<HTMLDivElement>(null);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (sliderRef.current) {
-      // use percentage relative to the slider container so each slide
-      // shifts by exactly one slide width (works when container is not full viewport)
-      sliderRef.current.style.transform = `translateX(-${currentIndex * 100}%)`;
-      sliderRef.current.style.transition = "transform 0.5s ease-in-out";
-    }
+    const el = sliderRef.current;
+    if (!el) return;
+    el.style.transform = `translateX(-${currentIndex * 100}%)`;
+    el.style.transition = "transform 0.5s ease-in-out";
   }, [currentIndex]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.imageWrapper} ref={sliderRef}>
+    <Box
+      component="section"
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: { xs: "18vh", sm: "28vh", md: "48vh" },
+        maxHeight: 420,
+        overflow: "hidden",
+      }}
+    >
+      <Box
+        ref={sliderRef as unknown as React.RefObject<HTMLDivElement>}
+        sx={{ display: "flex", width: "100%", height: "100%" }}
+      >
         {images.map((img, idx) => (
-          <div key={idx} className={styles.slideImage}>
+          <Box
+            key={idx}
+            sx={{ position: "relative", flex: "0 0 100%", height: "100%" }}
+          >
             <Image
               src={img}
               alt={`Slide ${idx + 1}`}
               fill
-              priority={idx === 0} // slide đầu load trước
+              priority={idx === 0}
               draggable={false}
-              className="object-cover" // giống như background-size: cover
+              style={{ objectFit: "cover" }}
             />
-          </div>
+          </Box>
         ))}
-      </div>
+      </Box>
 
-      <div className={styles.overlay}></div>
+      {/* subtle overlay if needed */}
+      {/* <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.12))",
+          pointerEvents: "none",
+        }}
+      /> */}
 
-      <div className={styles.dotWrapper}>
+      {/* dots */}
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: { xs: 8, sm: 12 },
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: 1,
+          zIndex: 10,
+        }}
+        role="tablist"
+        aria-label="Slide navigation"
+      >
         {images.map((_, idx) => (
-          <span
+          <Box
             key={idx}
-            className={`${styles.dot} ${
-              idx === currentIndex ? styles.active : ""
-            }`}
             onClick={() => setCurrentIndex(idx)}
-            role="button"
-            tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") setCurrentIndex(idx);
             }}
-            style={{ cursor: "pointer" }}
+            role="tab"
+            tabIndex={0}
+            aria-selected={idx === currentIndex}
             aria-label={`Chuyển đến slide ${idx + 1}`}
+            sx={{
+              width: { xs: 6, sm: 8, md: 10 },
+              height: { xs: 6, sm: 8, md: 10 },
+              borderRadius: "50%",
+              bgcolor:
+                idx === currentIndex ? "#fff" : "rgba(255, 255, 255, 0.8)",
+              cursor: "pointer",
+              boxShadow: idx === currentIndex ? 2 : "none",
+            }}
           />
         ))}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
-export default Index;
+export default SlideHeader;

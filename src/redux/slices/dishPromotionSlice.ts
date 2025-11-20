@@ -72,15 +72,17 @@ export const fetchDishPromotionById = createAsyncThunk<
 
 /* -------------------------------------------
    🔹 3. POST /api/DishPromotions
+   Request chỉ cần dishId và promotionId
+   BE sẽ tự tính toán originalPrice, discountedPrice, discountType, discountValue
 ------------------------------------------- */
 export const createDishPromotion = createAsyncThunk<
   DishPromotion,
-  Omit<DishPromotion, "id">,
+  { dishId: number; promotionId: number },
   { rejectValue: string }
 >("dishPromotion/create", async (payload, { rejectWithValue }) => {
   try {
     const token = getToken();
-    const res = await axiosInstance.post("/api/DishPromotions", payload, {
+    const res = await axiosInstance.post("/api/DishPromotions/apply", payload, {
       headers: token
         ? {
             Authorization: `Bearer ${token}`,

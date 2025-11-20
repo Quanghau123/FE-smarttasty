@@ -14,6 +14,7 @@ import {
   OrderStatus,
   DeliveryStatus,
 } from "@/types/order";
+import { RestaurantRevenue } from "@/types/order";
 
 /* -------------------------------------------------------------------------- */
 /*                                 STATE TYPE                                 */
@@ -25,6 +26,7 @@ interface OrderState {
   loading: boolean;
   error: string | null;
   activeOrderByRestaurant: Record<number, number>;
+  revenueByRestaurant: Record<number, RestaurantRevenue | null>;
 }
 
 const initialState: OrderState = {
@@ -33,6 +35,7 @@ const initialState: OrderState = {
   loading: false,
   error: null,
   activeOrderByRestaurant: {},
+  revenueByRestaurant: {},
 };
 
 /* -------------------------------------------------------------------------- */
@@ -368,8 +371,8 @@ export const updateOrderStatus = createAsyncThunk<
   { rejectValue: string }
 >("order/updateStatus", async ({ id, status }, { rejectWithValue }) => {
   try {
-    const res = await axiosInstance.patch(`/api/Order/${id}/status`, {
-      status,
+    const res = await axiosInstance.patch(`/api/Order/${id}/status`, undefined, {
+      params: { newStatus: status },
     });
 
     const envelope = resolveApiData(res.data);
@@ -397,7 +400,8 @@ export const updateDeliveryStatus = createAsyncThunk<
     try {
       const res = await axiosInstance.patch(
         `/api/Order/${id}/delivery-status`,
-        { deliveryStatus }
+        undefined,
+        { params: { newStatus: deliveryStatus } }
       );
 
       const envelope = resolveApiData(res.data);
@@ -409,6 +413,29 @@ export const updateDeliveryStatus = createAsyncThunk<
         (isApiEnvelope(envelope) && envelope.errMessage) ||
           "Cập nhật trạng thái giao hàng thất bại"
       );
+    } catch (e: unknown) {
+      return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
+    }
+  }
+);
+
+// 11️⃣ GET /api/Order/restaurant/{restaurantId}/revenue?year=&month=
+export const fetchRestaurantRevenue = createAsyncThunk<
+  RestaurantRevenue | null,
+  { restaurantId: number; year?: number; month?: number },
+  { rejectValue: string }
+>(
+  "order/fetchRestaurantRevenue",
+  async ({ restaurantId, year, month }, { rejectWithValue }) => {
+    try {
+      const params: Record<string, unknown> = {};
+      if (year) params.year = year;
+      if (month) params.month = month;
+      const res = await axiosInstance.get(
+        `/api/Order/restaurant/${restaurantId}/revenue`,
+        { params }
+      );
+      return res.data?.data ?? res.data ?? null;
     } catch (e: unknown) {
       return rejectWithValue((e as Error)?.message ?? "Lỗi không xác định");
     }
@@ -473,6 +500,42 @@ const orderSlice = createSlice({
       .addCase(updateDeliveryStatus.fulfilled, (state, action) => {
         const idx = state.orders.findIndex((o) => o.id === action.payload.id);
         if (idx !== -1) state.orders[idx] = action.payload;
+      })
+      .addCase(fetchRestaurantRevenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchRestaurantRevenue.fulfilled,
+        (
+          state,
+          action: PayloadAction<
+            RestaurantRevenue | null,
+            string,
+            { arg: { restaurantId: number; year?: number; month?: number } }
+          >
+        ) => {
+          state.loading = false;
+          // action.payload may not include restaurantId if BE returns a bare object
+          // use the original thunk arg (action.meta.arg.restaurantId) as fallback
+          const argRestaurantId = action.meta?.arg?.restaurantId;
+
+          const payload = action.payload;
+          if (payload) {
+            const key = (payload.restaurantId ?? argRestaurantId) as number;
+            if (typeof key === "number") {
+              // ensure stored object contains restaurantId for later lookups
+              state.revenueByRestaurant[key] = {
+                ...(payload as RestaurantRevenue),
+                restaurantId: (payload as RestaurantRevenue).restaurantId ?? key,
+              };
+            }
+          }
+        }
+      )
+      .addCase(fetchRestaurantRevenue.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Không lấy được doanh thu";
       })
       .addMatcher(
         (a) => a.type.startsWith("order/") && a.type.endsWith("/pending"),

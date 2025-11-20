@@ -8,14 +8,38 @@
     "logout_btn_title": "Logout",
     "welcome_text": "Hello",
     "register_btn_title": "Register",
-    "login_btn_title": "Login"
+    "login_btn_title": "Login",
+    "my_purchase_btn_title": "My Purchase",
+    "my_booking_btn_title": "My Booking",
+    "logo_alt": "SmartTasty logo",
+    "search_placeholder": "Location, dish, category...",
+    "category_all": "Eat & Drink",
+    "category_buffet": "Buffet",
+    "category_nhahang": "Restaurant",
+    "category_anvatviahe": "Street Food",
+    "category_anchay": "Vegetarian",
+    "category_cafenuocuong": "Cafe / Drinks",
+    "category_quanan": "Eatery",
+    "category_bar": "Bar",
+    "category_quannhau": "Pub",
+    "no_notifications": "No notifications",
+    "notifications_title": "Notifications"
   },
   "footer": {
     "contactus_btn_title": "Contact us",
     "aboutus_btn_title": "About us",
     "followme_btn_title": "Follow me",
     "openinghours_btn_title": "Opening hours",
-    "daily_btn_title": "Daily"
+    "daily_btn_title": "Daily",
+    "tagline": "Delicious, fast delivery",
+    "description": "SmartTasty — order food and get it delivered fast. Find nearby restaurants and order your favorite dishes in a few steps.",
+    "subscribe_text": "Subscribe for offers and the latest news",
+    "subscribe_placeholder": "Your email",
+    "subscribe_button": "Subscribe",
+    "privacy_policy": "Privacy Policy",
+    "link_intro": "About",
+    "link_careers": "Careers",
+    "link_contact": "Contact"
   },
   "account": {
     "accountinformation_btn_title": "Account Information",
@@ -59,5 +83,314 @@
     "register_btn_title": "Register Business",
     "have_account_text": "Already have an account?",
     "login_btn_title": "Login"
+  }
+  ,
+  "dashboard": {
+    "title": "Overview of users & restaurants",
+    "summary": "Summary report — data updated {lastUpdated}",
+    "no_data": "no data",
+    "no_date": "No date",
+    "total_normal_users": "Total Normal Users",
+    "total_business_users": "Total Business Users",
+    "total_restaurants": "Total Restaurants",
+    "compare_label": "Compared to last month",
+    "users_by_month": "Users by month",
+    "business_by_month": "Business users by month",
+    "restaurants_by_month": "Restaurants by month",
+    "no_chart_data": "No data",
+    "series_users": "Users",
+    "series_business": "Business",
+    "series_restaurants": "Restaurants"
+    ,
+    "revenue_title": "Revenue report",
+    "revenue_compare_chart": "Revenue comparison chart",
+    "previous_month": "Previous month",
+    "current_month": "Current month",
+    "month_label": "Month",
+    "year_label": "Year",
+    "all_label": "All",
+    "month": "Month",
+    "reset_btn": "Reset",
+    "kpi_revenue_month": "Revenue (month)",
+    "kpi_compare": "Compare",
+    "kpi_paid_orders": "Paid orders",
+    "kpi_avg_order": "Avg. order value",
+    "series_dish_count": "Dish counts",
+    "series_promotion_count": "Promotions",
+    "series_count": "Count",
+    "series_created": "Created",
+    "category": {
+      "food": "Food",
+      "drink": "Beverages",
+      "extraFood": "Extra food"
+    },
+    "promotion": {
+      "dish": "Dish",
+      "order": "Order"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dishes_promotions_title": "Dishes & Promotions",
+    "dishes_by_category_title": "Dishes by category",
+    "promotions_by_type_title": "Promotions by type",
+    "bookings_and_staff_title": "Bookings & staff accounts",
+    "reservations_by_status_title": "Reservations by status",
+    "staff_accounts_title": "Staff accounts"
+  }
+  ,
+  "tableBooking": {
+    "page_title": "Table bookings management",
+    "booking_number": "Booking # {id}",
+    "customer_info_title": "Customer information",
+    "reservation_details_title": "Reservation details",
+    "no_reservations": "No reservations yet.",
+    "no_reservations_with_status": "No reservations with status \"{status}\".",
+    "created_at": "Created at: {time}",
+    "btn": {
+      "update_status": "Update status",
+      "cancel_booking": "Cancel booking"
+    },
+    "warnings": {
+      "select_new_status": "Please select a new status"
+    },
+    "success": {
+      "update_status": "Status updated successfully",
+      "cancelled_by_business": "Reservation cancelled by business"
+    },
+    "errors": {
+      "update_failed": "Update failed",
+      "cancel_failed": "Cancel failed"
+    },
+    "confirm": {
+      "cancel_by_business": "Are you sure you want to cancel this reservation (cancelled by business)?"
+    },
+    "label": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "adults": "Adults",
+      "children": "Children",
+      "arrival_date": "Arrival date",
+      "time": "Time",
+      "note": "Note"
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "statusCards": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dialog": {
+      "title": "Update reservation status",
+      "current_status": "Current status",
+      "select_new_status": "Select new status",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  }
+
+  ,
+  "dialog": {
+    "title": "Update reservation status",
+    "current_status": "Current status",
+    "select_new_status": "Select new status",
+    "cancel": "Cancel",
+    "save": "Save"
+  }
+  ,
+  "sidebarAdmin": {
+    "title": "Admin",
+    "dashboard": "Dashboard",
+    "management": "Management",
+    "user": "User",
+    "business": "Business"
+  }
+  ,
+  "adminUser": {
+    "title": "User Information",
+    "search_label": "Search users",
+    "col_delete": "Delete",
+    "col_username": "Username",
+    "col_email": "Email",
+    "col_phone": "Phone",
+    "col_role": "Role",
+    "col_created_at": "Created At",
+    "confirm_title": "Confirm deletion",
+    "confirm_text": "Are you sure you want to delete this user?",
+    "cancel": "Cancel",
+    "delete_btn": "Delete",
+    "delete_success": "Deleted successfully!",
+    "delete_failed": "Delete failed"
+  }
+  ,
+  "adminBusiness": {
+    "title": "Business Users",
+    "search_label": "Search business users",
+    "col_delete": "Delete",
+    "col_username": "Username",
+    "col_email": "Email",
+    "col_role": "Role",
+    "col_restaurants": "Restaurants",
+    "col_created_at": "Created At",
+    "tooltip_delete": "Delete business user",
+    "confirm_title": "Confirm deletion",
+    "confirm_text": "Are you sure you want to delete this business user?",
+    "cancel": "Cancel",
+    "delete_btn": "Delete",
+    "delete_success": "Deleted successfully!",
+    "delete_failed": "Delete failed",
+    "no_restaurants": "No restaurants"
+  },
+  "restaurantDetails": {
+    "info": "Info",
+    "menu": "Menu",
+    "map": "Map",
+    "reviews": "Reviews",
+    "reserve": "Reserve",
+    "no_image": "No restaurant image",
+    "address": "Address",
+    "status": "Status",
+    "open": "Open",
+    "closed": "Closed",
+    "hours": "Operating hours",
+    "rating": "Rating",
+    "promotions_title": "Restaurant Promotions",
+    "loading_promotions": "Loading promotions...",
+    "valid_until": "Valid until",
+    "summary": "Summary",
+    "menu_title": "Menu",
+    "no_dishes": "No dishes available.",
+    "no_dish_image": "No image",
+    "out_of_stock": "Out of stock",
+    "decrease_quantity": "Decrease quantity",
+    "increase_quantity": "Increase quantity",
+    "add_to_cart": "Add to cart",
+    "map_title": "Location on map",
+    "open_google_maps": "Open Google Maps",
+    "no_coordinates": "No coordinates to display map",
+    "location": "Location",
+    "error_missing_info": "Missing delivery information (address/name/phone). Please update before ordering.",
+    "error_no_restaurant": "Restaurant not found",
+    "error_add_to_cart": "Cannot add item to cart!",
+    "error_occurred": "An error occurred. Please try again.",
+    "success_added": "Item added to cart!",
+    "loading": "Loading...",
+    "restaurant_not_found": "Restaurant not found"
+    ,
+    "follow_label": "Follow",
+    "following_label": "Following",
+    "followers_label": "Followers"
+  },
+  "review": {
+    "form_title": "Rate this restaurant",
+    "comment_label": "Your comment",
+    "submit_button": "Submit review",
+    "error_missing_info": "Missing user or restaurant information!",
+    "success_message": "Review submitted successfully!",
+    "error_message": "Failed to submit review. Please try again!",
+    "list_title": "Customer reviews",
+    "no_reviews": "No reviews yet.",
+    "loading": "Loading..."
+    ,
+    "filter_by_rating": "Filter by rating",
+    "clear": "Clear",
+    "reviews_count_text": "reviews shown",
+    "star": "star"
+  }
+  ,
+  "reservation": {
+    "title": "Reserve a table (get a spot before arriving)",
+    "adults_label": "Adults",
+    "children_label": "Children",
+    "arrival_date": "Arrival date",
+    "arrival_time": "Arrival time",
+    "contact_name": "Contact name",
+    "phone": "Phone",
+    "email": "Email",
+    "note": "Note",
+    "login_required": "You need to log in to make a reservation!",
+    "success_message": "Reservation successful!",
+    "loading": "Reserving...",
+    "reserve_button": "Reserve now"
+  }
+  ,
+  "products": {
+    "title": "Manage dishes",
+    "add": "Add dish",
+    "search": "Search dishes",
+    "category_label": "Category",
+    "category_all": "All",
+    "category": {
+      "ThucAn": "Food",
+      "NuocUong": "Beverages",
+      "ThucAnThem": "Extra food"
+    },
+    "status": {
+      "selling": "Selling",
+      "out": "Out"
+    },
+    "edit": "Edit",
+    "voucher": "Voucher",
+    "delete": "Delete",
+    "col_name": "Dish name",
+    "col_price": "Price",
+    "col_category": "Category",
+    "col_status": "Status",
+    "col_image": "Image",
+    "col_actions": "Actions",
+    "no_image_text": "No image",
+    "add_dish_dialog_title": "Add dish",
+    "update_dish_dialog_title": "Update dish",
+    "name_label": "Name",
+    "price_label": "Price",
+    "switch_selling": "Selling",
+    "switch_out": "Out",
+    "change_image": "Change image",
+    "choose_image": "Choose image",
+    "cancel": "Cancel",
+    "add_btn": "Add",
+    "update_btn": "Update",
+    "confirm_delete_title": "Confirm delete",
+    "confirm_delete_text": "Are you sure you want to delete this dish?",
+    "assign_voucher_title": "Assign voucher to dish",
+    "dish_label": "Dish",
+    "voucher_applied_title": "Applied vouchers",
+    "choose_promotion_label": "Choose promotion",
+    "voucher_select": "-- Choose --",
+    "assign_btn": "Assign",
+    "cancel_voucher": "Remove voucher",
+    "assign_voucher_btn_title": "Assign voucher",
+    "errors": {
+      "missing_restaurant": "Account has no restaurant!",
+      "enter_name": "Please enter dish name",
+      "invalid_price": "Invalid price",
+      "upload_image": "Please upload a dish image",
+      "operation_failed": "Operation failed. Please try again!",
+      "missing_dish": "Missing dish",
+      "select_promotion": "Please select a promotion",
+      "add_voucher_success": "Assign voucher success",
+      "add_success": "Add dish success",
+      "update_success": "Update dish success",
+      "delete_success": "Delete dish success",
+      "delete_failed": "Delete dish failed",
+      "assign_voucher_failed": "Assign voucher failed",
+      "remove_voucher_failed": "Remove voucher failed",
+      "remove_voucher_success": "Voucher removed from dish"
+    }
   }
 }

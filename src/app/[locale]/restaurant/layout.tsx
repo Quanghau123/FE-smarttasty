@@ -5,10 +5,19 @@ import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import Sidebar from "@/components/features/AdminRestaurant/SideBar";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { Drawer, IconButton, Box, Typography } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 
 interface JwtPayload {
+  sub: string; // userId
+  nameid: string; // userId (duplicate)
+  unique_name: string; // username
+  email: string;
   role: string;
   exp: number;
+  iat: number;
+  nbf: number;
 }
 
 export default function RestaurantLayout({
@@ -18,9 +27,11 @@ export default function RestaurantLayout({
 }) {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
-    // ✅ Lấy token từ cookie
+    // ✅ Lấy token từ localStorage (không phải từ user object)
     const token = getAccessToken();
 
     if (!token) {
@@ -31,10 +42,15 @@ export default function RestaurantLayout({
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log("✅ Token decode thành công:", decoded.Userid);
-      if (decoded.role !== "business") {
+      console.log("✅ Token decode thành công:");
+      console.log("  - User ID:", decoded.sub || decoded.nameid);
+      console.log("  - Username:", decoded.unique_name);
+      console.log("  - Role:", decoded.role);
+      console.log("  - Email:", decoded.email);
+
+      if (decoded.role !== "business" ){
         console.warn("⛔ Sai role:", decoded.role);
-        router.replace("/ErrorPages/notfound");
+        router.replace("/ErrorPages/notfound"); 
       } else {
         setAuthorized(true);
       }
@@ -48,11 +64,41 @@ export default function RestaurantLayout({
   if (!authorized) return null;
 
   return (
-    <div style={{ display: "flex", marginTop: "80px" }}>
-      <div>
-        <Sidebar />
+    <div style={{ display: "flex", marginTop: "20px" }}>
+      {!isMobile && (
+        <div>
+          <Sidebar />
+        </div>
+      )}
+      <div style={{ width: "100%" }}>
+        {isMobile && (
+          <Box sx={{ px: 2, mb: 1, display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={() => setOpenDrawer(true)}
+              aria-label="Mở menu"
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ ml: 1 }}>
+              Menu quản lý
+            </Typography>
+          </Box>
+        )}
+        {children}
       </div>
-      <div style={{ width: "100%" }}>{children}</div>
+
+      {/* Drawer mobile */}
+      <Drawer
+        anchor="left"
+        open={openDrawer}
+        onClose={() => setOpenDrawer(false)}
+        ModalProps={{ keepMounted: true }}
+        PaperProps={{ sx: { width: 280 } }}
+      >
+        <Box sx={{ pt: 2, px: 1 }}>
+          <Sidebar inDrawer onNavigate={() => setOpenDrawer(false)} />
+        </Box>
+      </Drawer>
     </div>
   );
 }

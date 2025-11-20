@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import { Box, IconButton, Drawer } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import Sidebar from "@/components/features/Admin/SideBar";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
@@ -18,6 +21,8 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width:768px)");
 
   useEffect(() => {
     // ✅ Lấy token từ cookie
@@ -48,11 +53,45 @@ export default function AdminLayout({
   if (!authorized) return null;
 
   return (
-    <div style={{ display: "flex", marginTop: "80px" }}>
-      <div>
-        <Sidebar />
-      </div>
-      <div style={{ width: "100%" }}>{children}</div>
-    </div>
+    <Box sx={{ display: "flex", mt: "20px", position: "relative" }}>
+      {/* Mobile menu button */}
+      {isMobile && (
+        <IconButton
+          onClick={() => setDrawerOpen(true)}
+          sx={{
+            position: "fixed",
+            top: 80,
+            left: 10,
+            zIndex: 1100,
+            bgcolor: "background.paper",
+            boxShadow: 2,
+            "&:hover": {
+              bgcolor: "action.hover",
+            },
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Box>
+          <Sidebar />
+        </Box>
+      )}
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <Sidebar inDrawer={true} onNavigate={() => setDrawerOpen(false)} />
+      </Drawer>
+
+      {/* Main content */}
+      <Box sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>{children}</Box>
+    </Box>
   );
 }

@@ -1,5 +1,6 @@
 .productPage {
   padding: 24px;
+  padding-top: 0;
 
   .card {
     // background: #fff;
@@ -27,10 +28,19 @@
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
 
     .searchInput,
     .categorySelect {
       min-width: 200px;
+    }
+
+    @media (max-width: 600px) {
+      .searchInput,
+      .categorySelect {
+        min-width: 0;
+        flex: 1 1 100%;
+      }
     }
   }
 

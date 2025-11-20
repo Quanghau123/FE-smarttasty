@@ -21,12 +21,23 @@ const getInitialTheme = (): ThemeMode => {
     localStorage.setItem(LOCAL_STORAGE_THEME_KEY, theme);
   }
 
-  document.documentElement.setAttribute("data-theme", theme);
+  // Không set data-theme ở đây để tránh hydration mismatch
+  // Sẽ set trong useEffect của component
   return theme;
 };
 
 const initialState: ThemeState = {
-  themeMode: typeof window !== "undefined" ? getInitialTheme() : "light",
+  themeMode: "light", // Luôn bắt đầu với "light" để khớp với server
+};
+
+// Export hàm này để gọi trong useEffect
+export const initializeTheme = () => {
+  if (typeof window !== "undefined") {
+    const theme = getInitialTheme();
+    document.documentElement.setAttribute("data-theme", theme);
+    return theme;
+  }
+  return "light";
 };
 
 const themeSlice = createSlice({

@@ -1,4 +1,5 @@
 import { NextIntlClientProvider, hasLocale } from "next-intl";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Roboto } from "next/font/google";
@@ -25,7 +26,11 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale} className={`${roboto.variable} font-sans`}>
+    <html
+      lang={locale}
+      className={`${roboto.variable} font-sans`}
+      suppressHydrationWarning
+    >
       <body>
         <NextIntlClientProvider locale={locale}>
           <LayoutClient>
@@ -36,3 +41,13 @@ export default async function LocaleLayout({
     </html>
   );
 }
+
+// Thiết lập tiêu đề (title) tab trình duyệt mặc định và mẫu hiển thị cho toàn bộ nhánh [locale]
+// - default: tiêu đề mặc định khi trang không đặt title riêng
+// - template: khi trang đặt title, sẽ chèn vào mẫu này. Ví dụ: "Trang chủ | SmartTasty"
+export const metadata: Metadata = {
+  title: {
+    default: "SmartTasty",
+    template: "SmartTasty/%s",
+  },
+};

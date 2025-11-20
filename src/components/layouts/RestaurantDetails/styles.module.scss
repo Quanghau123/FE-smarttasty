@@ -6,6 +6,10 @@
   padding: 20px;
 }
 
+.mobileToggle {
+  margin-bottom: 12px;
+}
+
 .leftContent {
   flex: 3;
   display: flex;
@@ -13,12 +17,6 @@
   gap: 24px;
 }
 
-.rightContent {
-  flex: 1;
-  position: sticky;
-  top: 20px; // giữ form cố định khi cuộn
-  align-self: flex-start;
-}
 
 .restaurantCard {
   display: flex;
@@ -32,7 +30,7 @@
 
 .restaurantImage {
   position: relative;
-  width: 300px; // cố định khung ảnh
+  width: 300px; // khung ảnh mặc định trên desktop
   height: 200px; // chiều cao ảnh
   border-radius: 12px;
   overflow: hidden;
@@ -91,10 +89,10 @@
   }
 }
 
-.price {
-  font-weight: bold;
-  color: #e53935;
-}
+// .price {
+//   font-weight: bold;
+//   color: #e53935;
+// }
 
 .chip {
   margin-left: 8px;
@@ -112,7 +110,7 @@
 .rightContent {
   flex: 1;
   position: sticky;
-  top: 20px;
+  top: 50px; // 72px (header height) + 20px (spacing)
   align-self: flex-start;
 
   // Style riêng cho form đặt chỗ
@@ -143,6 +141,49 @@
         background: #b71c1c;
       }
     }
+  }
+}
+
+/* ===================== Responsive ===================== */
+/* Stack columns and remove sticky behavior on small screens */
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+
+  /* Make both columns full-width and remove sticky on mobile */
+  .leftContent,
+  .rightContent {
+    width: 100%;
+    flex: none;
+    align-self: stretch;
+  }
+
+  .rightContent {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .restaurantCard {
+    flex-direction: column;
+  }
+
+  .restaurantImage {
+    width: 100%;
+    height: 220px; // ảnh full-width trên mobile
+  }
+
+  /* Center the reservation form and constrain its max width for better layout */
+  .rightContent form {
+    max-width: 720px;
+    margin: 12px auto 0 auto;
+  }
+}
+
+/* Extra-small phones: ensure single-column grid */
+@media (max-width: 480px) {
+  .dishGrid {
+    grid-template-columns: 1fr;
   }
 }
 /* ReviewForm */

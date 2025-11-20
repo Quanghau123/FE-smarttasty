@@ -1,14 +1,19 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { createReview } from "@/redux/slices/reviewSlice";
+import {
+  createReview,
+  getReviewsByRestaurant,
+} from "@/redux/slices/reviewSlice";
 import { Box, Button, TextField, Rating, Typography } from "@mui/material";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 const ReviewForm = () => {
   const dispatch = useAppDispatch();
   const { current: restaurant } = useAppSelector((state) => state.restaurant);
+  const t = useTranslations("review");
 
   const [userId, setUserId] = useState<number | null>(null);
   const [rating, setRating] = useState<number | null>(null);
@@ -31,7 +36,7 @@ const ReviewForm = () => {
     e.preventDefault();
 
     if (!userId || !restaurant?.id) {
-      toast.error("Thiếu thông tin người dùng hoặc nhà hàng!");
+      toast.error(t("error_missing_info"));
       return;
     }
 
@@ -44,12 +49,19 @@ const ReviewForm = () => {
 
     try {
       await dispatch(createReview(payload)).unwrap();
-      toast.success("🎉 Đánh giá thành công!");
+      toast.success(t("success_message"));
       setRating(null);
       setComment("");
+
+      // 🔄 Reload reviews list để hiển thị review mới
+      await dispatch(getReviewsByRestaurant(restaurant.id));
+
+      // 🔄 KHÔNG reload restaurant info - để socket tự động update
+      // Backend sẽ gửi event qua Kafka → Socket broadcast →
+      // → Tất cả users (kể cả user vừa submit) nhận realtime update
     } catch (err) {
       console.error("❌ Lỗi khi gửi review:", err);
-      toast.error("Gửi đánh giá thất bại. Vui lòng thử lại!");
+      toast.error(t("error_message"));
     }
   };
 
@@ -60,12 +72,12 @@ const ReviewForm = () => {
       mt={4}
       sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}
     >
-      <Typography variant="h6">Đánh giá nhà hàng</Typography>
+      <Typography variant="h6">{t("form_title")}</Typography>
 
       <Rating value={rating} onChange={(_, newValue) => setRating(newValue)} />
 
       <TextField
-        label="Nhận xét của bạn"
+        label={t("comment_label")}
         multiline
         rows={3}
         value={comment}
@@ -77,7 +89,7 @@ const ReviewForm = () => {
         variant="contained"
         disabled={!userId || !restaurant}
       >
-        Gửi đánh giá
+        {t("submit_button")}
       </Button>
     </Box>
   );

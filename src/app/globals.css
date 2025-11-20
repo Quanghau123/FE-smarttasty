@@ -23,11 +23,23 @@
   --link-dark: #a9a9a9;
   --primary-light: #e80000;
   --secondary-light: #ffa500;
+  --star-color: #ED710A; /* color for review stars (same in light/dark) */
+  --footer-bg-light: #fbfbfb; /* slightly off-white for footer in light theme */
+  --footer-bg-dark: #0f1720; /* slightly different dark for footer in dark theme */
+
+  /* Recipes header (hero) color variables - used only for the Recipes layout */
+  --recipes-primary: #FF4500; /* main orange-red */
+  --recipes-primary-light: #FF7043; /* lighter shade for gradient */
+  /* RGB and RGBA helpers for components */
+  --recipes-primary-rgb: 255,69,0; /* FF4500 */
+  --recipes-primary-rgba: rgba(255,69,0,0.05);
+  --recipes-primary-rgba-08: rgba(255,69,0,0.08);
 }
 
 [data-theme="light"] {
   --background: var(--background-light);
   --background-phs: var(--background-light-phs);
+  --footer-bg: var(--footer-bg-light);
   --text-color: var(--text-light);
   --text-title-color: var(--text-title-light);
   --button-bg: var(--button-light);
@@ -42,6 +54,7 @@
 [data-theme="dark"] {
   --background: var(--background-dark);
   --background-phs: var(--background-dark-phs);
+  --footer-bg: var(--footer-bg-dark);
   --text-color: var(--text-dark);
   --text-title-color: var(--text-title-dark);
   --button-bg: var(--button-dark);
@@ -75,4 +88,53 @@ button {
 
 button:hover {
   background-color: var(--button-hover-bg);
+}
+
+/* Scoped class for Recipes page hero/header. Use this instead of inline colors in components. */
+.recipes-hero {
+  background: linear-gradient(135deg, var(--recipes-primary-light) 0%, var(--recipes-primary) 100%);
+  color: var(--text-dark, #ffffff);
+  position: relative;
+  overflow: hidden;
+}
+
+.recipes-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+  opacity: 0.08;
+}
+
+/* Menu button base + active styles. Uses the recipes primary color variables so
+   the global orange-red color highlights the active section automatically. */
+.menu-button {
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--text-color);
+}
+
+.menu-button:hover {
+  transform: translateY(-1px);
+}
+
+/* When a menu item is active we give it a subtle orange-red background and
+   a soft shadow using the global recipes color variables. */
+.menu-active {
+  background: var(--recipes-primary-rgba); /* subtle tint */
+  box-shadow: 0 6px 18px rgba(var(--recipes-primary-rgb), 0.12);
+  border: 1px solid rgba(var(--recipes-primary-rgb), 0.14);
+  color: #fff !important;
+}
+
+/* Stronger highlighted variant for prominent sections */
+.menu-active--strong {
+  background: linear-gradient(90deg, var(--recipes-primary-light), var(--recipes-primary));
+  color: #fff !important;
+  box-shadow: 0 8px 28px rgba(var(--recipes-primary-rgb), 0.18);
 }

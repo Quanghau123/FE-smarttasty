@@ -5,7 +5,7 @@ import {
   AnyAction,
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
-import { Promotion } from "@/types/promotion";
+import { Promotion, DiscountType, TargetType } from "@/types/promotion";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
 interface PromotionState {
@@ -48,22 +48,63 @@ export const fetchPromotions = createAsyncThunk<
   }
 });
 
-export const addPromotion = createAsyncThunk<
-  Promotion,
-  Omit<Promotion, "id" | "isActive">,
+// Lấy toàn bộ promotions (GET /api/Promotions/all)
+export const fetchAllPromotions = createAsyncThunk<
+  Promotion[],
+  void,
   { rejectValue: string }
->("promotion/addPromotion", async (payload, { rejectWithValue }) => {
+>("promotion/fetchAllPromotions", async (_, { rejectWithValue }) => {
   try {
     const token = getToken();
-    const res = await axiosInstance.post("/api/Promotions", payload, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
+    const res = await axiosInstance.get(`/api/Promotions/all`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
 
+    const body = res.data;
+    if (body?.errCode === "success" && Array.isArray(body.data)) {
+      return body.data as Promotion[];
+    }
+    return rejectWithValue(
+      body?.errMessage || "Không thể lấy danh sách khuyến mãi"
+    );
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Lỗi không xác định");
+  }
+});
+
+// Payload types for create/update (align to BE [FromForm])
+type CreatePromotionInput = {
+  restaurantId: number;
+  title: string;
+  description?: string;
+  startDate: string; // ISO string
+  endDate: string; // ISO string
+  discountType: DiscountType;
+  discountValue: number;
+  targetType: TargetType;
+  voucherCode?: string;
+};
+
+export const addPromotion = createAsyncThunk<
+  Promotion,
+  { data: CreatePromotionInput; file?: File | null },
+  { rejectValue: string }
+>("promotion/addPromotion", async ({ data, file }, { rejectWithValue }) => {
+  try {
+    const form = new FormData();
+    form.append("RestaurantId", String(data.restaurantId));
+    form.append("Title", data.title);
+    form.append("Description", data.description ?? "");
+    form.append("StartDate", data.startDate);
+    form.append("EndDate", data.endDate);
+    form.append("DiscountType", data.discountType);
+    form.append("DiscountValue", String(data.discountValue));
+    form.append("TargetType", data.targetType);
+    if (data.voucherCode) form.append("VoucherCode", data.voucherCode);
+    if (file) form.append("file", file);
+
+    const res = await axiosInstance.post("/api/Promotions", form);
     const body = res.data;
     if (body?.errCode === "success") return body.data as Promotion;
     return rejectWithValue(body?.errMessage || "Tạo khuyến mãi thất bại");
@@ -73,30 +114,41 @@ export const addPromotion = createAsyncThunk<
   }
 });
 
+type UpdatePromotionInput = CreatePromotionInput; // same required fields on BE
+
 export const updatePromotion = createAsyncThunk<
   Promotion,
-  { id: number; data: Partial<Promotion> },
+  { id: number; data: UpdatePromotionInput; file?: File | null },
   { rejectValue: string }
->("promotion/updatePromotion", async ({ id, data }, { rejectWithValue }) => {
-  try {
-    const token = getToken();
-    const res = await axiosInstance.put(`/api/Promotions/${id}`, data, {
-      headers: token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    });
+>(
+  "promotion/updatePromotion",
+  async ({ id, data, file }, { rejectWithValue }) => {
+    try {
+      const form = new FormData();
+      // BE expects [FromForm] Promotion, include RestaurantId as well
+      form.append("RestaurantId", String(data.restaurantId));
+      form.append("Title", data.title);
+      form.append("Description", data.description ?? "");
+      form.append("StartDate", data.startDate);
+      form.append("EndDate", data.endDate);
+      form.append("DiscountType", data.discountType);
+      form.append("DiscountValue", String(data.discountValue));
+      form.append("TargetType", data.targetType);
+        if (data.voucherCode) form.append("VoucherCode", data.voucherCode);
+      if (file) form.append("file", file);
 
-    const body = res.data;
-    if (body?.errCode === "success") return body.data as Promotion;
-    return rejectWithValue(body?.errMessage || "Cập nhật khuyến mãi thất bại");
-  } catch (err: unknown) {
-    if (err instanceof Error) return rejectWithValue(err.message);
-    return rejectWithValue("Lỗi không xác định");
+      const res = await axiosInstance.put(`/api/Promotions/${id}`, form);
+      const body = res.data;
+      if (body?.errCode === "success") return body.data as Promotion;
+      return rejectWithValue(
+        body?.errMessage || "Cập nhật khuyến mãi thất bại"
+      );
+    } catch (err: unknown) {
+      if (err instanceof Error) return rejectWithValue(err.message);
+      return rejectWithValue("Lỗi không xác định");
+    }
   }
-});
+);
 
 export const deletePromotion = createAsyncThunk<
   number,
@@ -135,6 +187,12 @@ const promotionSlice = createSlice({
     builder
       .addCase(
         fetchPromotions.fulfilled,
+        (state, action: PayloadAction<Promotion[]>) => {
+          state.promotions = action.payload;
+        }
+      )
+      .addCase(
+        fetchAllPromotions.fulfilled,
         (state, action: PayloadAction<Promotion[]>) => {
           state.promotions = action.payload;
         }

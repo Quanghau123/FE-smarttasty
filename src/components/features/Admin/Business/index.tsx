@@ -33,6 +33,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
 import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
 import { User } from "@/types/user";
+import { useTranslations } from "next-intl";
 
 interface ExtendedUser extends User {
   restaurants?: string;
@@ -42,6 +43,8 @@ const BusinessUserPage = () => {
   const dispatch = useAppDispatch();
   const { users, loading, error } = useAppSelector((state) => state.user);
   const { restaurants } = useAppSelector((state) => state.restaurant);
+
+  const t = useTranslations("adminBusiness");
 
   const [search, setSearch] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
@@ -58,13 +61,13 @@ const BusinessUserPage = () => {
     if (!selectedUserId) return;
     try {
       await dispatch(deleteUser(selectedUserId)).unwrap();
-      toast.success("Xoá thành công!");
+      toast.success(t("delete_success"));
       setOpenDialog(false);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        toast.error(err.message || "Xoá thất bại!");
+        toast.error(err.message || t("delete_failed"));
       } else {
-        toast.error("Xoá thất bại!");
+        toast.error(t("delete_failed"));
       }
     }
   };
@@ -78,9 +81,9 @@ const BusinessUserPage = () => {
           .filter((r) => r.ownerId === user.userId)
           .map((r) => r.name)
           .join(", ");
-        return { ...user, restaurants: userRestaurants || "Chưa có" };
+        return { ...user, restaurants: userRestaurants || t("no_restaurants") };
       });
-  }, [users, restaurants]);
+  }, [users, restaurants, t]);
 
   // 🔹 Filter + Search
   const filteredData = businessUsers.filter(
@@ -118,7 +121,7 @@ const BusinessUserPage = () => {
   // 🔹 Error UI
   if (error) {
     return (
-      <Box sx={{ textAlign: "center", mt: 5 }}>
+      <Box sx={{ textAlign: "center", mt: 5, }} >
         <Typography color="error" variant="h6">
           {error}
         </Typography>
@@ -127,7 +130,7 @@ const BusinessUserPage = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ pt: 0 }}>
       <Typography
         variant="h5"
         sx={{
@@ -136,13 +139,13 @@ const BusinessUserPage = () => {
           color: (theme) => theme.palette.text.primary,
         }}
       >
-        Danh Sách Business User
+        {t("title")}
       </Typography>
 
       <Box sx={{ mb: 3, maxWidth: 400 }}>
         <TextField
           fullWidth
-          label="Tìm kiếm người dùng"
+          label={t("search_label")}
           variant="outlined"
           value={search}
           onChange={(e) => {
@@ -163,19 +166,19 @@ const BusinessUserPage = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell align="center">Xoá</TableCell>
-              <TableCell align="left">UserName</TableCell>
-              <TableCell align="center">Email</TableCell>
-              <TableCell align="center">Role</TableCell>
-              <TableCell align="center">Nhà hàng</TableCell>
-              <TableCell align="center">Ngày tạo</TableCell>
+              <TableCell align="center">{t("col_delete")}</TableCell>
+              <TableCell align="left">{t("col_username")}</TableCell>
+              <TableCell align="center">{t("col_email")}</TableCell>
+              <TableCell align="center">{t("col_role")}</TableCell>
+              <TableCell align="center">{t("col_restaurants")}</TableCell>
+              <TableCell align="center">{t("col_created_at")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedData.map((user: ExtendedUser) => (
               <TableRow key={user.userId}>
                 <TableCell align="center">
-                  <Tooltip title="Xoá người dùng">
+                  <Tooltip title={t("tooltip_delete")}>
                     <IconButton
                       onClick={() => {
                         setSelectedUserId(user.userId);
@@ -216,16 +219,14 @@ const BusinessUserPage = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogTitle>{t("confirm_title")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xoá người dùng này không?
-          </DialogContentText>
+          <DialogContentText>{t("confirm_text")}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t("cancel")}</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
-            Xoá
+            {t("delete_btn")}
           </Button>
         </DialogActions>
       </Dialog>

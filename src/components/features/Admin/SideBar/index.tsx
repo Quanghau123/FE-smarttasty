@@ -15,19 +15,34 @@ import SpaceDashboardIcon from "@mui/icons-material/SpaceDashboard";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
-const Sidebar = () => {
+interface SidebarProps {
+  inDrawer?: boolean;
+  onNavigate?: () => void;
+}
+
+const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("sidebarAdmin");
+
+  const handleNavigate = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
 
   return (
     <Box
       sx={(theme) => ({
-        width: 240,
-        height: "100vh",
+        width: inDrawer ? "100%" : 240,
+        minHeight: inDrawer ? "auto" : "calc(100vh - 72px)",
+        position: inDrawer ? "static" : "sticky",
+        top: inDrawer ? "auto" : 72,
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-        borderRight: `1px solid ${theme.palette.divider}`,
+        borderRight: inDrawer ? "none" : `1px solid ${theme.palette.divider}`,
       })}
     >
       <Box
@@ -38,7 +53,7 @@ const Sidebar = () => {
           py: 2,
         }}
       >
-        Admin
+        {t("title")}
       </Box>
       <List>
         {/* Dashboard */}
@@ -46,11 +61,12 @@ const Sidebar = () => {
           component={Link}
           href="/admin"
           selected={pathname === "/admin"}
+          onClick={handleNavigate}
         >
           <ListItemIcon>
             <SpaceDashboardIcon />
           </ListItemIcon>
-          <ListItemText primary="Dashboard" />
+          <ListItemText primary={t("dashboard")} />
         </ListItemButton>
 
         {/* Management with Collapse */}
@@ -58,7 +74,7 @@ const Sidebar = () => {
           <ListItemIcon>
             <PersonIcon />
           </ListItemIcon>
-          <ListItemText primary="Management" />
+          <ListItemText primary={t("management")} />
           {open ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
 
@@ -69,16 +85,18 @@ const Sidebar = () => {
               href="/admin/users"
               sx={{ pl: 4 }}
               selected={pathname === "/admin/users"}
+              onClick={handleNavigate}
             >
-              <ListItemText primary="User" />
+              <ListItemText primary={t("user")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
               href="/admin/business"
               sx={{ pl: 4 }}
               selected={pathname === "/admin/business"}
+              onClick={handleNavigate}
             >
-              <ListItemText primary="Business" />
+              <ListItemText primary={t("business")} />
             </ListItemButton>
           </List>
         </Collapse>

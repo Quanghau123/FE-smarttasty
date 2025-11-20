@@ -92,7 +92,7 @@ const RegisterBusiness = () => {
       );
 
       if (createUser.fulfilled.match(resultAction)) {
-        toast.success("✅ " + t("register_btn_title") + " thành công!");
+        toast.success(t("register_btn_title") + " thành công!");
         router.push("/login");
       } else {
         toast.error(resultAction.payload as string);

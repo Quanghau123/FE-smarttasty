@@ -3,7 +3,10 @@ import { User, CreateUserDto } from "@/types/user";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import {
   setAccessToken,
+  getAccessToken,
+  clearTokens,
   setUser as saveUserToStorage,
+  logTokenExpiry,
 } from "@/lib/utils/tokenHelper";
 
 interface ChangePasswordPayload {
@@ -45,7 +48,13 @@ export const loginUser = createAsyncThunk<
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post("/api/User/login", data);
+    // Transform to PascalCase for C# backend
+    const loginPayload = {
+      Email: data.email,
+      UserPassword: data.userPassword,
+    };
+    
+    const response = await axiosInstance.post("/api/User/login", loginPayload);
     const payload = response.data ?? {};
 
     // support both wrapper shapes
@@ -66,7 +75,19 @@ export const loginUser = createAsyncThunk<
 
     if (accessToken && userObj) {
       setAccessToken(accessToken);
+      try {
+        axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+      } catch {
+        // ignore
+      }
       saveUserToStorage(userObj);
+
+      // Log token expiry info
+      if (typeof window !== "undefined") {
+        setTimeout(() => {
+          logTokenExpiry();
+        }, 100);
+      }
 
       if (data.remember) {
         localStorage.setItem(
@@ -93,6 +114,26 @@ export const loginUser = createAsyncThunk<
   }
 });
 
+// Forgot password
+export const forgotPassword = createAsyncThunk<
+  { success: boolean; message?: string },
+  string,
+  { rejectValue: string }
+>("user/forgotPassword", async (email, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.post("/api/User/forgot-password", { email });
+    const body = res.data ?? {};
+    const ok = body?.errCode === 0 || body?.errCode === "success" || body?.status === "success";
+    if (ok) {
+      return { success: true, message: body?.message || body?.errMessage };
+    }
+    return rejectWithValue(body?.errMessage || "Email không tồn tại trong hệ thống.");
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Đã có lỗi xảy ra. Vui lòng thử lại.");
+  }
+});
+
 // Fetch users
 export const fetchUsers = createAsyncThunk<
   User[],
@@ -105,6 +146,27 @@ export const fetchUsers = createAsyncThunk<
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Lỗi lấy danh sách người dùng");
+  }
+});
+
+// Fetch user detail by id (server source of truth)
+export const fetchUserById = createAsyncThunk<
+  User,
+  number,
+  { rejectValue: string }
+>("user/fetchUserById", async (userId, { rejectWithValue }) => {
+  try {
+    const res = await axiosInstance.get(`/api/User/${userId}`);
+    const body = res.data ?? {};
+    // Support both wrapped and raw responses
+    const data = (body.data ?? body) as User;
+    if (!data || typeof data !== "object") {
+      return rejectWithValue("Không nhận được thông tin người dùng");
+    }
+    return data as User;
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Lỗi lấy thông tin người dùng");
   }
 });
 
@@ -133,7 +195,7 @@ export const updateUser = createAsyncThunk<
   { rejectValue: string }
 >("user/updateUser", async (updatedUser, { rejectWithValue }) => {
   try {
-    const token = getToken();
+    const token = getAccessToken();
     await axiosInstance.put("/api/User", updatedUser, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -177,7 +239,7 @@ export const changePassword = createAsyncThunk<
   { rejectValue: string }
 >("user/changePassword", async (payload, { rejectWithValue }) => {
   try {
-    const token = getToken();
+    const token = getAccessToken();
     const res = await axiosInstance.post("/api/User/change-password", payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -187,6 +249,29 @@ export const changePassword = createAsyncThunk<
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Đổi mật khẩu thất bại!");
+  }
+});
+
+// Logout - Gọi API BE để revoke refresh tokens
+export const logoutUser = createAsyncThunk<
+  void,
+  number, // userId
+  { rejectValue: string }
+>("user/logoutUser", async (userId, { rejectWithValue }) => {
+  try {
+    // ✅ Gọi API BE để revoke tất cả refresh tokens
+    await axiosInstance.post(`/api/User/logout/${userId}`);
+    
+    // ✅ Xóa tokens và user data ở client
+    clearTokens();
+    
+    return;
+  } catch (err: unknown) {
+    // Dù lỗi vẫn xóa tokens ở client để đảm bảo logout
+    clearTokens();
+    
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Lỗi đăng xuất");
   }
 });
 
@@ -212,8 +297,8 @@ const userSlice = createSlice({
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      // ✅ Cập nhật access token trong cookie
-      setTokens(action.payload, state.refreshToken || "");
+      // ✅ Cập nhật access token trong localStorage
+      setAccessToken(action.payload);
     },
     resetChangePasswordState: (state) => {
       state.changePasswordLoading = false;
@@ -232,7 +317,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.accessToken = action.payload.access_token;
-        state.refreshToken = action.payload.refresh_token;
+        state.refreshToken = action.payload.refresh_token ?? null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -251,6 +336,20 @@ const userSlice = createSlice({
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Lỗi lấy danh sách người dùng";
+      })
+
+      // Fetch user detail
+      .addCase(fetchUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<User>) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Lỗi lấy thông tin người dùng";
       })
 
       // Create user
@@ -297,14 +396,32 @@ const userSlice = createSlice({
         state.changePasswordLoading = false;
         state.changePasswordError = action.payload ?? "Đổi mật khẩu thất bại";
         state.changePasswordSuccess = false;
+      })
+
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        // ✅ Clear tất cả user data
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        // ✅ Dù lỗi vẫn clear user data
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.loading = false;
+        state.error = action.payload ?? "Lỗi đăng xuất";
       });
   },
 });
 
-export const {
-  setUser,
-  clearUser,
-  updateAccessToken,
-  resetChangePasswordState,
-} = userSlice.actions;
+export const { setUser, clearUser, updateAccessToken, resetChangePasswordState } =
+  userSlice.actions;
+
 export default userSlice.reducer;

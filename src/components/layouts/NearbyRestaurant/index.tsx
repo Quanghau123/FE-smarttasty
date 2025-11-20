@@ -15,12 +15,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchNearbyRestaurants } from "@/redux/slices/restaurantSlice";
 import { Restaurant } from "@/types/restaurant";
 import StarIcon from "@mui/icons-material/Star";
 import styles from "./styles.module.scss";
+import nhahang from "@/assets/Image/MapView/nhahang.png";
 
 import {
   MapContainer,
@@ -54,7 +58,7 @@ const userIcon = new L.Icon({
 
 // Icon cho restaurant
 const restaurantIcon = new L.Icon({
-  iconUrl: "/marker-icon-blue.png",
+  iconUrl: (nhahang as { src: string }).src,
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   iconSize: [25, 41],
@@ -67,6 +71,8 @@ const NearbyRestaurantsPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { nearby, loadingNearby } = useAppSelector((state) => state.restaurant);
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
   const [userPosition, setUserPosition] = useState<{
     lat: number;
@@ -155,196 +161,242 @@ const NearbyRestaurantsPage = () => {
           Không tìm thấy nhà hàng gần bạn hoặc bạn chưa cho phép sử dụng vị trí.
         </Typography>
       ) : (
-        <Box className={styles.mainContent}>
-          {/* Danh sách nhà hàng */}
-          <Box className={styles.list}>
-            {nearby.map((restaurant: Restaurant) => (
-              <Card
-                key={restaurant.id}
-                className={styles.card}
-                onClick={() =>
-                  router.push(`/RestaurantDetails/${restaurant.id}`)
-                }
-                sx={{ cursor: "pointer" }} // để hiện dấu tay khi hover
+        <>
+          {isMobile && (
+            <Box className={styles.mobileToggle}>
+              <ToggleButtonGroup
+                value={mobileView}
+                exclusive
+                onChange={(_, v) => v && setMobileView(v)}
+                sx={{ width: "100%" }}
+                aria-label="Chuyển chế độ xem"
               >
-                <Box
-                  component="img"
-                  src={restaurant.imageUrl}
-                  alt={restaurant.name}
-                  sx={{
-                    width: "100%",
-                    height: { xs: 150, sm: 180, md: 200 },
-                    objectFit: "cover",
-                    borderTopLeftRadius: "4px",
-                    borderTopRightRadius: "4px",
-                  }}
-                />
+                <ToggleButton value="list" aria-label="Danh sách">
+                  Danh sách
+                </ToggleButton>
+                <ToggleButton value="map" aria-label="Bản đồ">
+                  Bản đồ
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          )}
 
-                <CardContent className={styles.content}>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight="bold"
-                    gutterBottom
-                    noWrap
-                    title={restaurant.name}
+          <Box className={styles.mainContent}>
+            {/* Danh sách nhà hàng */}
+            {(!isMobile || mobileView === "list") && (
+              <Box className={styles.list}>
+                {nearby.map((restaurant: Restaurant) => (
+                  <Card
+                    key={restaurant.id}
+                    className={styles.card}
+                    onClick={() =>
+                      router.push(`/RestaurantDetails/${restaurant.id}`)
+                    }
+                    sx={{ cursor: "pointer" }}
                   >
-                    {restaurant.name}
-                  </Typography>
+                    <Box
+                      component="img"
+                      src={restaurant.imageUrl}
+                      alt={restaurant.name}
+                      sx={{
+                        width: "100%",
+                        height: { xs: 160, sm: 180, md: 200 },
+                        objectFit: "cover",
+                        borderTopLeftRadius: "4px",
+                        borderTopRightRadius: "4px",
+                      }}
+                    />
 
-                  <Box display="flex" alignItems="center" mb={1}>
-                    {Array.from({ length: 5 }).map((_, idx) => (
-                      <StarIcon
-                        key={idx}
-                        fontSize="small"
-                        color={idx < restaurant.rating ? "warning" : "disabled"}
-                      />
-                    ))}
-                  </Box>
+                    <CardContent className={styles.content}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        gutterBottom
+                        noWrap
+                        title={restaurant.name}
+                      >
+                        {restaurant.name}
+                      </Typography>
 
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    noWrap
-                    title={restaurant.address}
-                    mb={1}
-                  >
-                    {restaurant.address}
-                  </Typography>
+                      <Box display="flex" alignItems="center" mb={1}>
+                        {(() => {
+                          const avg =
+                            restaurant.averageRating ?? restaurant.rating ?? 0;
+                          return (
+                            <>
+                              {Array.from({ length: 5 }).map((_, idx) => (
+                                <StarIcon
+                                  key={idx}
+                                  fontSize="small"
+                                  color={idx < avg ? "warning" : "disabled"}
+                                />
+                              ))}
+                            </>
+                          );
+                        })()}
+                      </Box>
 
-                  {restaurant.distanceKm && (
-                    <Typography variant="body2" color="text.secondary" mb={1}>
-                      Cách bạn {restaurant.distanceKm.toFixed(2)} km
-                    </Typography>
-                  )}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        noWrap
+                        title={restaurant.address}
+                        mb={1}
+                      >
+                        {restaurant.address}
+                      </Typography>
 
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation(); // tránh click button cũng chạy click Card
-                      router.push(`/RestaurantDetails/${restaurant.id}`);
-                    }}
-                  >
-                    Đặt chỗ ngay
-                  </Button>
-                  <Box mt={1}>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      fullWidth
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // show route from userPosition to this restaurant
-                        if (!userPosition) {
-                          setError("Vui lòng cho phép vị trí để xem đường đi.");
-                          return;
-                        }
-                        setSelectedRestaurantId(restaurant.id);
-                        const userLon = userPosition.lng;
-                        const userLat = userPosition.lat;
-                        const destLon = restaurant.longitude;
-                        const destLat = restaurant.latitude;
+                      {restaurant.distanceKm && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          mb={1}
+                        >
+                          Cách bạn {restaurant.distanceKm.toFixed(2)} km
+                        </Typography>
+                      )}
 
-                        // try OSRM route
-                        fetch(
-                          `https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson`
-                        )
-                          .then((r) => r.json())
-                          .then((data) => {
-                            if (data && data.routes && data.routes.length > 0) {
-                              const coords: Array<[number, number]> =
-                                data.routes[0].geometry.coordinates.map(
-                                  (c: [number, number]) => [c[1], c[0]]
-                                );
-                              setRouteCoords(coords);
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/RestaurantDetails/${restaurant.id}`);
+                        }}
+                      >
+                        Đặt chỗ ngay
+                      </Button>
+                      <Box mt={1}>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          fullWidth
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!userPosition) {
+                              setError(
+                                "Vui lòng cho phép vị trí để xem đường đi."
+                              );
                               return;
                             }
-                            // fallback straight line
-                            setRouteCoords([
-                              [userLat, userLon],
-                              [destLat, destLon],
-                            ]);
-                          })
-                          .catch(() => {
-                            setRouteCoords([
-                              [userLat, userLon],
-                              [destLat, destLon],
-                            ]);
-                          });
-                      }}
-                    >
-                      Chỉ đường
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+                            setSelectedRestaurantId(restaurant.id);
+                            const userLon = userPosition.lng;
+                            const userLat = userPosition.lat;
+                            const destLon = restaurant.longitude;
+                            const destLat = restaurant.latitude;
 
-          {/* Bản đồ */}
-          <Box className={styles.map}>
-            <MapContainer
-              center={
-                userPosition
-                  ? [userPosition.lat, userPosition.lng]
-                  : [10.7769, 106.7009]
-              }
-              zoom={14}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {userPosition && (
-                <Marker
-                  position={[userPosition.lat, userPosition.lng]}
-                  icon={userIcon}
-                >
-                  <Popup>Bạn đang ở đây</Popup>
-                </Marker>
-              )}
-              {nearby.map((restaurant) => (
-                <Marker
-                  key={restaurant.id}
-                  position={[restaurant.latitude, restaurant.longitude]}
-                  icon={restaurantIcon}
-                >
-                  <Popup>
-                    <Typography fontWeight="bold">{restaurant.name}</Typography>
-                    <Typography variant="body2">
-                      {restaurant.address}
-                    </Typography>
-                  </Popup>
-                </Marker>
-              ))}
-              {routeCoords && (
-                <>
-                  <Polyline positions={routeCoords} color="blue" />
-                  {/* show destination marker for the selected restaurant */}
-                  {selectedRestaurantId &&
-                    (() => {
-                      const r = nearby.find(
-                        (x) => x.id === selectedRestaurantId
-                      );
-                      if (!r) return null;
-                      return (
-                        <Marker
-                          position={[r.latitude, r.longitude]}
-                          icon={restaurantIcon}
+                            fetch(
+                              `https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson`
+                            )
+                              .then((r) => r.json())
+                              .then((data) => {
+                                if (
+                                  data &&
+                                  data.routes &&
+                                  data.routes.length > 0
+                                ) {
+                                  const coords: Array<[number, number]> =
+                                    data.routes[0].geometry.coordinates.map(
+                                      (c: [number, number]) => [c[1], c[0]]
+                                    );
+                                  setRouteCoords(coords);
+                                  return;
+                                }
+                                setRouteCoords([
+                                  [userLat, userLon],
+                                  [destLat, destLon],
+                                ]);
+                              })
+                              .catch(() => {
+                                setRouteCoords([
+                                  [userLat, userLon],
+                                  [destLat, destLon],
+                                ]);
+                              });
+                            if (isMobile) setMobileView("map");
+                          }}
                         >
-                          <Popup>
-                            <Typography fontWeight="bold">{r.name}</Typography>
-                            <Typography variant="body2">{r.address}</Typography>
-                          </Popup>
-                        </Marker>
-                      );
-                    })()}
-                </>
-              )}
-            </MapContainer>
+                          Chỉ đường
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
+
+            {/* Bản đồ */}
+            {(!isMobile || mobileView === "map") && (
+              <Box className={styles.map}>
+                <MapContainer
+                  center={
+                    userPosition
+                      ? [userPosition.lat, userPosition.lng]
+                      : [10.7769, 106.7009]
+                  }
+                  zoom={14}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {userPosition && (
+                    <Marker
+                      position={[userPosition.lat, userPosition.lng]}
+                      icon={userIcon}
+                    >
+                      <Popup>Bạn đang ở đây</Popup>
+                    </Marker>
+                  )}
+                  {nearby.map((restaurant) => (
+                    <Marker
+                      key={restaurant.id}
+                      position={[restaurant.latitude, restaurant.longitude]}
+                      icon={restaurantIcon}
+                    >
+                      <Popup>
+                        <Typography fontWeight="bold">
+                          {restaurant.name}
+                        </Typography>
+                        <Typography variant="body2">
+                          {restaurant.address}
+                        </Typography>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  {routeCoords && (
+                    <>
+                      <Polyline positions={routeCoords} color="blue" />
+                      {selectedRestaurantId &&
+                        (() => {
+                          const r = nearby.find(
+                            (x) => x.id === selectedRestaurantId
+                          );
+                          if (!r) return null;
+                          return (
+                            <Marker
+                              position={[r.latitude, r.longitude]}
+                              icon={restaurantIcon}
+                            >
+                              <Popup>
+                                <Typography fontWeight="bold">
+                                  {r.name}
+                                </Typography>
+                                <Typography variant="body2">
+                                  {r.address}
+                                </Typography>
+                              </Popup>
+                            </Marker>
+                          );
+                        })()}
+                    </>
+                  )}
+                </MapContainer>
+              </Box>
+            )}
           </Box>
-        </Box>
+        </>
       )}
 
       {/* Snackbar báo lỗi */}

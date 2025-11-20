@@ -31,10 +31,13 @@ import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
 import { User } from "@/types/user";
+import { useTranslations } from "next-intl";
 
 const UserPage = () => {
   const dispatch = useAppDispatch();
   const { users, loading, error } = useAppSelector((state) => state.user);
+
+  const t = useTranslations("adminUser");
 
   const [search, setSearch] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,14 +53,14 @@ const UserPage = () => {
     if (!selectedUserId) return;
     try {
       await dispatch(deleteUser(selectedUserId)).unwrap();
-      toast.success("Xoá thành công!");
+      toast.success(t("delete_success"));
       setOpenDialog(false);
     } catch (err: unknown) {
       // Kiểm tra err là Error
       if (err instanceof Error) {
-        toast.error(err.message || "Xoá thất bại!");
+        toast.error(err.message || t("delete_failed"));
       } else {
-        toast.error("Xoá thất bại!");
+        toast.error(t("delete_failed"));
       }
     }
   };
@@ -111,7 +114,7 @@ const UserPage = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ pt: 0 }}>
       <Typography
         variant="h5"
         sx={{
@@ -120,13 +123,13 @@ const UserPage = () => {
           color: (theme) => theme.palette.text.primary,
         }}
       >
-        Thông Tin User
+        {t("title")}
       </Typography>
 
       <Box sx={{ mb: 3, maxWidth: 400 }}>
         <TextField
           fullWidth
-          label="Tìm kiếm người dùng"
+          label={t("search_label")}
           variant="outlined"
           value={search}
           onChange={(e) => {
@@ -147,12 +150,12 @@ const UserPage = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell align="center">Xoá</TableCell>
-              <TableCell align="left">UserName</TableCell>
-              <TableCell align="center">Email</TableCell>
-              <TableCell align="center">Phone</TableCell>
-              <TableCell align="center">Role</TableCell>
-              <TableCell align="center">Ngày tạo</TableCell>
+              <TableCell align="center">{t("col_delete")}</TableCell>
+              <TableCell align="left">{t("col_username")}</TableCell>
+              <TableCell align="center">{t("col_email")}</TableCell>
+              <TableCell align="center">{t("col_phone")}</TableCell>
+              <TableCell align="center">{t("col_role")}</TableCell>
+              <TableCell align="center">{t("col_created_at")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -198,16 +201,16 @@ const UserPage = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogTitle>{t("confirm_title")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Bạn có chắc chắn muốn xoá người dùng này không?
+            {t("confirm_text")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t("cancel")}</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
-            Xoá
+            {t("delete_btn")}
           </Button>
         </DialogActions>
       </Dialog>

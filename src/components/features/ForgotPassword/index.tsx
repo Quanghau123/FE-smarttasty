@@ -8,13 +8,15 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import axiosInstance from "@/lib/axios/axiosInstance";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import { useAppDispatch } from "@/redux/hook";
+import { forgotPassword as forgotPasswordThunk } from "@/redux/slices/userSlice";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,21 +27,12 @@ const ForgotPasswordPage = () => {
 
     setLoading(true);
     try {
-      const res = await axiosInstance.post("/api/User/forgot-password", {
-        email,
-      });
-
-      if (res.data.errCode === 0 || res.data.errCode === "success") {
-        toast.success(
-          "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn."
-        );
-      } else {
-        toast.error(
-          res.data.errMessage || "Email không tồn tại trong hệ thống."
-        );
-      }
-    } catch {
-      toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      await dispatch(forgotPasswordThunk(email)).unwrap();
+      toast.success("Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.");
+    } catch (err) {
+      const message =
+        typeof err === "string" ? err : "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

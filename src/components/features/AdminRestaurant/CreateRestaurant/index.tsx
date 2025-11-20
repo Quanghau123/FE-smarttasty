@@ -4,13 +4,16 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
   MenuItem,
   Select,
   TextField,
   Typography,
   InputLabel,
   FormControl,
+  Paper,
+  Stepper,
+  Step,
+  StepLabel,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -151,121 +154,266 @@ const RestaurantCreatePage = () => {
     }
   };
 
+  const [activeStep, setActiveStep] = useState(0);
+
+  const steps = [
+    "Thông tin cơ bản",
+    "Vị trí",
+    "Ảnh đại diện",
+    "Lịch & Mô tả",
+    "Xác nhận",
+  ];
+
+  const handleNextStep = () =>
+    setActiveStep((s) => Math.min(s + 1, steps.length - 1));
+  const handleBackStep = () => setActiveStep((s) => Math.max(s - 1, 0));
+
   return (
-    <Box display="flex" justifyContent="center" p={3}>
-      <Card sx={{ width: 600 }}>
-        <CardContent>
+    <Box display="flex" justifyContent="center" p={{ xs: 2, md: 3 }}>
+      <Box sx={{ width: "100%", maxWidth: 980 }}>
+        <Card sx={{ p: { xs: 2, md: 3 } }}>
           <Typography variant="h5" align="center" gutterBottom>
             Tạo nhà hàng mới
           </Typography>
-          <form onSubmit={handleSubmit} encType="multipart/form-data">
-            <TextField
-              fullWidth
-              label="Tên nhà hàng"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              margin="normal"
-              required
-            />
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Danh mục</InputLabel>
-              <Select
-                value={form.category}
-                onChange={handleSelectChange}
-                label="Danh mục"
-              >
-                <MenuItem value="Buffet">Buffet</MenuItem>
-                <MenuItem value="NhaHang">Nhà hàng</MenuItem>
-                <MenuItem value="AnVatViaHe">Ăn vặt/vỉa hè</MenuItem>
-                <MenuItem value="AnChay">Ăn chay</MenuItem>
-                <MenuItem value="CafeNuocuong">Cafe/Nuocuong</MenuItem>
-                <MenuItem value="QuanAn">Quán ăn</MenuItem>
-                <MenuItem value="Bar">Bar</MenuItem>
-                <MenuItem value="QuanNhau">Quán nhậu</MenuItem>
-              </Select>
-            </FormControl>
 
-            <AddressAutocomplete
-              value={form.address}
-              onChange={handleAddressChange}
-              onSelect={handleAddressSelect}
-              placeholder="Địa chỉ"
-            />
+          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
 
-            {/* house number input removed per request — address will be truncated to Ho Chi Minh on selection */}
+          <Box>
+            {activeStep === 0 && (
+              <Box>
+                <TextField
+                  fullWidth
+                  label="Tên nhà hàng"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  margin="normal"
+                  required
+                />
 
-            {mounted && (
-              <Box mt={2}>
-                <MapView lat={latitude} lng={longitude} />
-
-                <Typography variant="body2" mt={1}>
-                  Vĩ độ: {latitude.toFixed(6)} | Kinh độ: {longitude.toFixed(6)}
-                </Typography>
+                <FormControl fullWidth margin="normal" required>
+                  <InputLabel>Danh mục</InputLabel>
+                  <Select
+                    value={form.category}
+                    onChange={handleSelectChange}
+                    label="Danh mục"
+                  >
+                    <MenuItem value="Buffet">Buffet</MenuItem>
+                    <MenuItem value="NhaHang">Nhà hàng</MenuItem>
+                    <MenuItem value="AnVatViaHe">Ăn vặt/vỉa hè</MenuItem>
+                    <MenuItem value="AnChay">Ăn chay</MenuItem>
+                    <MenuItem value="CafeNuocuong">Cafe/Nuocuong</MenuItem>
+                    <MenuItem value="QuanAn">Quán ăn</MenuItem>
+                    <MenuItem value="Bar">Bar</MenuItem>
+                    <MenuItem value="QuanNhau">Quán nhậu</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
             )}
 
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Mô tả"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              margin="normal"
-              required
-            />
-
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <Box display="flex" gap={2} mt={2}>
-                <TimePicker
-                  label="Giờ mở cửa"
-                  value={form.openTime}
-                  onChange={(val) => handleTimeChange("openTime", val)}
-                />
-                <TimePicker
-                  label="Giờ đóng cửa"
-                  value={form.closeTime}
-                  onChange={(val) => handleTimeChange("closeTime", val)}
-                />
-              </Box>
-            </LocalizationProvider>
-
-            <Box mt={2}>
-              <Button variant="outlined" component="label">
-                Chọn ảnh đại diện
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      setFile(e.target.files[0]);
-                    }
-                  }}
-                />
-              </Button>
-              {file && (
-                <Typography variant="body2" mt={1}>
-                  Đã chọn: {file.name}
+            {activeStep === 1 && (
+              <Box>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Nhập địa chỉ hoặc chọn trên bản đồ
                 </Typography>
+                <AddressAutocomplete
+                  value={form.address}
+                  onChange={handleAddressChange}
+                  onSelect={handleAddressSelect}
+                  placeholder="Địa chỉ"
+                />
+
+                {mounted && (
+                  <Box
+                    mt={2}
+                    sx={{
+                      width: "100%",
+                      height: 300,
+                      borderRadius: 1,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <MapView lat={latitude} lng={longitude} />
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {activeStep === 2 && (
+              <Box>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Tải lên ảnh đại diện
+                </Typography>
+                <Box display="flex" gap={2} alignItems="center">
+                  <Button variant="outlined" component="label">
+                    Chọn ảnh
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {file && <Typography>{file.name}</Typography>}
+                </Box>
+
+                <Box
+                  mt={2}
+                  sx={{
+                    width: "100%",
+                    height: 220,
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    bgcolor: "grey.100",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {file ? (
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Typography color="text.secondary">
+                      Chưa chọn ảnh
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            {activeStep === 3 && (
+              <Box>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Mô tả"
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  margin="normal"
+                  required
+                />
+
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <Box
+                    display="flex"
+                    gap={2}
+                    mt={2}
+                    flexDirection={{ xs: "column", sm: "row" }}
+                  >
+                    <TimePicker
+                      label="Giờ mở cửa"
+                      value={form.openTime}
+                      onChange={(val) => handleTimeChange("openTime", val)}
+                    />
+                    <TimePicker
+                      label="Giờ đóng cửa"
+                      value={form.closeTime}
+                      onChange={(val) => handleTimeChange("closeTime", val)}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
+            )}
+
+            {activeStep === 4 && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Xác nhận thông tin
+                </Typography>
+                <Paper sx={{ p: 2, mb: 2 }}>
+                  <Typography variant="subtitle2">Tên:</Typography>
+                  <Typography>{form.name || "-"}</Typography>
+                  <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                    Danh mục:
+                  </Typography>
+                  <Typography>{form.category || "-"}</Typography>
+                  <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                    Địa chỉ:
+                  </Typography>
+                  <Typography>{form.address || "-"}</Typography>
+                </Paper>
+
+                <Paper sx={{ p: 2, mb: 2 }}>
+                  <Typography variant="subtitle2">Ảnh:</Typography>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 180,
+                      mt: 1,
+                      overflow: "hidden",
+                      borderRadius: 1,
+                    }}
+                  >
+                    {file ? (
+                      <Box
+                        component="img"
+                        src={URL.createObjectURL(file)}
+                        alt="preview"
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <Typography color="text.secondary">
+                        Chưa chọn ảnh
+                      </Typography>
+                    )}
+                  </Box>
+                </Paper>
+
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle2">Lịch hoạt động:</Typography>
+                  <Typography>
+                    {form.openTime.format("HH:mm")} -{" "}
+                    {form.closeTime.format("HH:mm")}
+                  </Typography>
+                </Paper>
+              </Box>
+            )}
+          </Box>
+
+          <Box display="flex" justifyContent="space-between" mt={3}>
+            <Button disabled={activeStep === 0} onClick={handleBackStep}>
+              Quay lại
+            </Button>
+            <Box>
+              {activeStep < steps.length - 1 ? (
+                <Button variant="contained" onClick={handleNextStep}>
+                  Tiếp theo
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "Đang tạo..." : "Tạo nhà hàng"}
+                </Button>
               )}
             </Box>
-
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ mt: 3 }}
-              disabled={loading}
-            >
-              {loading ? "Đang tạo..." : "Tạo nhà hàng"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </Box>
+        </Card>
+      </Box>
     </Box>
   );
 };
