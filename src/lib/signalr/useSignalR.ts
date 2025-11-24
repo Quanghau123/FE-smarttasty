@@ -13,7 +13,7 @@ interface UseSignalROptions {
 
 /**
  * Custom hook để sử dụng SignalR trong React components
- * 
+ *
  * @example
  * ```tsx
  * const { isConnected, joinRoom } = useSignalR({
@@ -53,7 +53,10 @@ export function useSignalR(options: UseSignalROptions = {}) {
     const initConnection = async () => {
       try {
         const accessToken = getAccessToken();
-        console.log("[useSignalR] Retrieved accessToken:", accessToken ? `${accessToken.slice(0,10)}...` : "null");
+        console.log(
+          "[useSignalR] Retrieved accessToken:",
+          accessToken ? `${accessToken.slice(0, 10)}...` : "null"
+        );
         await signalRService.connect(accessToken || undefined);
         isInitializedRef.current = true;
 
@@ -63,8 +66,9 @@ export function useSignalR(options: UseSignalROptions = {}) {
         }
 
         if (onNotification) {
-          signalRService.onNotification(onNotification);
+          signalRService.onNotification(onNotification); // bind trước connect
         }
+        await signalRService.connect(accessToken || undefined);
 
         // Auto-join restaurant room if provided
         if (restaurantId) {
@@ -75,7 +79,10 @@ export function useSignalR(options: UseSignalROptions = {}) {
           // If no restaurantId, join user's personal room for notifications
           const user = getUser();
           if (user?.userId) {
-            console.log("[useSignalR] Joining user's personal room:", user.userId);
+            console.log(
+              "[useSignalR] Joining user's personal room:",
+              user.userId
+            );
             await signalRService.joinRestaurantRoom(String(user.userId));
             restaurantIdRef.current = String(user.userId);
           }
@@ -90,7 +97,8 @@ export function useSignalR(options: UseSignalROptions = {}) {
 
     // Cleanup on unmount
     return () => {
-      signalRService.offAllHandlers();
+      // Intentionally do not clear service callbacks here; service preserves callbacks
+      // until a real disconnect. If you want to disconnect on unmount, call disconnect().
     };
   }, [enabled, restaurantId, onRatingUpdate, onNotification]);
 

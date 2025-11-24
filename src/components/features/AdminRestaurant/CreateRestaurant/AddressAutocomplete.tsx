@@ -115,9 +115,17 @@ const AddressAutocomplete: React.FC<Props> = ({
             {suggestions.map((s, idx) => {
               // Try to build a nicer label that includes house number and road when available
               const house = s.address?.house_number;
-              const road = s.address?.road || s.address?.pedestrian || s.address?.residential || "";
-              const city = s.address?.city || s.address?.town || s.address?.village || "";
-              const label = house && road ? `${house} ${road}${city ? `, ${city}` : ""}` : s.display_name;
+              const road =
+                s.address?.road ||
+                s.address?.pedestrian ||
+                s.address?.residential ||
+                "";
+              const city =
+                s.address?.city || s.address?.town || s.address?.village || "";
+              const label =
+                house && road
+                  ? `${house} ${road}${city ? `, ${city}` : ""}`
+                  : s.display_name;
 
               return (
                 <ListItemButton
