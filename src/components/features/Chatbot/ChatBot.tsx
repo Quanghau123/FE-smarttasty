@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // ======= axiosInstance =======
 const axiosInstance = axios.create({
@@ -66,7 +68,10 @@ export default function ChatBox() {
 
     try {
       const res = await sendChatMessage(input, image || undefined);
-      setMessages((prev) => [...prev, { sender: "bot", text: res.bot }]);
+      let botText = res.bot || "";
+      botText = botText.replace(/\\([*_|`])/g, "$1");
+      botText = botText.replace(/\\n/g, "\n");
+      setMessages((prev) => [...prev, { sender: "bot", text: botText }]);
     } catch (error) {
       console.error(error);
       setMessages((prev) => [
@@ -92,7 +97,13 @@ export default function ChatBox() {
                 : "bg-gray-200 text-black self-start"
             }`}
           >
-            {m.text}
+            {m.sender === "bot" ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {m.text}
+              </ReactMarkdown>
+            ) : (
+              m.text
+            )}
           </div>
         ))}
       </div>
