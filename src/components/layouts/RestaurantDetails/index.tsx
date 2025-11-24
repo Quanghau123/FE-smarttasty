@@ -14,6 +14,7 @@ import {
   Grid,
   Card,
   CardContent,
+  Pagination,
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
@@ -123,9 +124,19 @@ const RestaurantDetailPage = () => {
   const { restaurants: allRestaurants = [] } = useAppSelector(
     (state) => state.restaurant
   );
-  const { items: dishes, loading: dishesLoading } = useAppSelector(
-    (state) => state.dishes
-  );
+  const {
+    items: dishes,
+    loading: dishesLoading,
+    totalRecords,
+  } = useAppSelector((state) => state.dishes);
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 9;
+
+  const totalPages =
+    totalRecords && totalRecords > 0
+      ? Math.ceil(totalRecords / itemsPerPage)
+      : Math.ceil(dishes.length / itemsPerPage);
   const { items: dishPromotions } = useAppSelector(
     (state) => state.dishpromotion
   );
@@ -247,13 +258,19 @@ const RestaurantDetailPage = () => {
     if (!id) return;
     const rid = Number(id);
     dispatch(fetchRestaurantById(rid));
-    dispatch(fetchDishes(rid));
+    dispatch(
+      fetchDishes({
+        restaurantId: rid,
+        pageNumber: currentPage,
+        pageSize: itemsPerPage,
+      })
+    );
     dispatch(getReviewsByRestaurant(rid));
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
     // Load favorites for this restaurant (refresh-token handled by axiosInstance)
     dispatch(fetchFavoritesByRestaurant(rid));
-  }, [dispatch, id]);
+  }, [dispatch, id, currentPage]);
 
   // Ensure we have restaurants list to show suggestions
   useEffect(() => {
@@ -936,19 +953,28 @@ const RestaurantDetailPage = () => {
                       gap: 1,
                     }}
                   >
-                    <Box className={styles.dishImage}>
+                    <Box
+                      className={styles.dishImage}
+                      sx={{
+                        position: "relative",
+                        width: "100%",
+                        height: 160,
+                        borderRadius: 1,
+                        overflow: "hidden",
+                      }}
+                    >
                       {dish.imageUrl ? (
                         <Image
                           src={dish.imageUrl}
                           alt={dish.name}
-                          width={300}
-                          height={160}
+                          fill
+                          style={{ objectFit: "cover" }}
                         />
                       ) : (
                         <Box
                           sx={{
-                            width: 300,
-                            height: 160,
+                            width: "100%",
+                            height: "100%",
                             backgroundColor: "#f5f5f5",
                             display: "flex",
                             alignItems: "center",
@@ -1050,6 +1076,16 @@ const RestaurantDetailPage = () => {
                   </Box>
                 );
               })}
+            </Box>
+          )}
+          {dishes.length > 0 && (
+            <Box display="flex" justifyContent="center" mt={3}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(_, page) => setCurrentPage(page)}
+                color="primary"
+              />
             </Box>
           )}
         </Box>

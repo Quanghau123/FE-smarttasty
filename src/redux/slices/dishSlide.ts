@@ -15,12 +15,18 @@ interface DishState {
   items: Dish[];
   loading: boolean;
   error: string | null;
+  totalRecords: number;
+  pageNumber: number;
+  pageSize: number;
 }
 
 const initialState: DishState = {
   items: [],
   loading: false,
   error: null,
+  totalRecords: 0,
+  pageNumber: 1,
+  pageSize: 10,
 };
 
 // Helper lấy message từ error
@@ -34,14 +40,47 @@ const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): 
 
 // ================== ASYNC ACTIONS ==================
 
+interface FetchDishesParams {
+  restaurantId: number;
+  pageNumber?: number;
+  pageSize?: number;
+  keyword?: string;
+  category?: string;
+}
+
+interface PagedResponse {
+  data: Dish[];
+  totalRecords: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
 export const fetchDishes = createAsyncThunk<
-  Dish[],
-  number,
+  PagedResponse,
+  FetchDishesParams,
   { rejectValue: string }
->("dishes/fetch", async (restaurantId, { rejectWithValue }) => {
+>("dishes/fetch", async ({ restaurantId, pageNumber = 1, pageSize = 10, category }, { rejectWithValue }) => {
   try {
-    const res = await axiosInstance.get(`/api/Dishes/restaurant/${restaurantId}`);
-    return (res.data?.data || []).map(normalizeDish);
+    const params: Record<string, unknown> = { 
+      pageNumber, 
+      pageSize
+    };
+    
+    // Chỉ gửi category filter lên server (exact match)
+    if (category) {
+      params['Filters[Category]'] = category;
+    }
+    
+    const res = await axiosInstance.get(`/api/Dishes/restaurant/${restaurantId}`, {
+      params
+    });
+    const pagedData = res.data?.data;
+    return {
+      data: (pagedData?.data || []).map(normalizeDish),
+      totalRecords: pagedData?.totalRecords || 0,
+      pageNumber: pagedData?.pageNumber || 1,
+      pageSize: pagedData?.pageSize || 10,
+    };
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách món ăn"));
   }
@@ -104,7 +143,10 @@ const dishSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDishes.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.items = action.payload.data;
+        state.totalRecords = action.payload.totalRecords;
+        state.pageNumber = action.payload.pageNumber;
+        state.pageSize = action.payload.pageSize;
         state.loading = false;
       })
       .addCase(fetchDishes.rejected, (state, action) => {

@@ -8,6 +8,11 @@ interface RecipesState {
 	allItems?: Recipe[];
 	loading: boolean;
 	error: string | null;
+	// Pagination metadata returned by backend PagedDto
+	totalRecords?: number;
+	pageNumber?: number;
+	pageSize?: number;
+	totalPages?: number;
 }
 
 const initialState: RecipesState = {
@@ -33,7 +38,7 @@ const normalizeRecipe = (r: Recipe): Recipe => ({
 // ================== ASYNC ACTIONS ==================
 
 export const fetchRecipesByUser = createAsyncThunk<
-	Recipe[],
+	{ items: Recipe[]; meta?: { totalRecords?: number; pageNumber?: number; pageSize?: number } },
 	number,
 	{ rejectValue: string }
 >("recipes/fetchByUser", async (userId, { rejectWithValue }) => {
@@ -41,25 +46,51 @@ export const fetchRecipesByUser = createAsyncThunk<
 		const res = await axiosInstance.get(`/api/Recipes/user/${userId}`);
 		// Backend may return either `data` or `Data` (depending on serializer).
 		const body = res.data ?? {};
-		const payload = (body.data ?? body.Data ?? body) as unknown;
-		const list = Array.isArray(payload) ? (payload as Recipe[]) : [];
-		return list.map(normalizeRecipe);
+		const payload = body.data ?? body.Data ?? body;
+
+		// payload may be a paged object: { Data: [...], TotalRecords, PageNumber, PageSize }
+		const dataList = payload && (payload.Data || payload.data) ? (payload.Data ?? payload.data) : null;
+		const list = Array.isArray(dataList) ? dataList : Array.isArray(payload) ? payload : [];
+		const items = list.map(normalizeRecipe);
+		const meta = {
+			totalRecords: payload?.TotalRecords ?? payload?.totalRecords ?? payload?.total ?? undefined,
+			pageNumber: payload?.PageNumber ?? payload?.pageNumber ?? payload?.page ?? undefined,
+			pageSize: payload?.PageSize ?? payload?.pageSize ?? undefined,
+		};
+		return { items, meta };
 	} catch (err: unknown) {
 		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải công thức"));
 	}
 });
 
 export const fetchAllRecipes = createAsyncThunk<
-	Recipe[],
-	void,
+	{ items: Recipe[]; meta?: { totalRecords?: number; pageNumber?: number; pageSize?: number } },
+	{ pageNumber?: number; pageSize?: number } | void,
 	{ rejectValue: string }
->("recipes/fetchAll", async (_void, { rejectWithValue }) => {
+>("recipes/fetchAll", async (params, { rejectWithValue }) => {
 	try {
-		const res = await axiosInstance.get(`/api/Recipes`);
+		// If pagination params provided, send as query string
+		let url = `/api/Recipes`;
+		if (params && (params as { pageNumber?: number }).pageNumber) {
+			const p = params as { pageNumber?: number; pageSize?: number };
+			const qp = new URLSearchParams();
+			if (p.pageNumber) qp.append("PageNumber", String(p.pageNumber));
+			if (p.pageSize) qp.append("PageSize", String(p.pageSize));
+			url = `/api/Recipes?${qp.toString()}`;
+		}
+		const res = await axiosInstance.get(url);
 		const body = res.data ?? {};
-		const payload = (body.data ?? body.Data ?? body) as unknown;
-		const list = Array.isArray(payload) ? (payload as Recipe[]) : [];
-		return list.map(normalizeRecipe);
+		const payload = body.data ?? body.Data ?? body;
+
+		const dataList = payload && (payload.Data || payload.data) ? (payload.Data ?? payload.data) : null;
+		const list = Array.isArray(dataList) ? dataList : Array.isArray(payload) ? payload : [];
+		const items = list.map(normalizeRecipe);
+		const meta = {
+			totalRecords: payload?.TotalRecords ?? payload?.totalRecords ?? payload?.total ?? undefined,
+			pageNumber: payload?.PageNumber ?? payload?.pageNumber ?? payload?.page ?? undefined,
+			pageSize: payload?.PageSize ?? payload?.pageSize ?? undefined,
+		};
+		return { items, meta };
 	} catch (err: unknown) {
 		return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách công thức"));
 	}
@@ -152,7 +183,17 @@ const recipesSlice = createSlice({
 				state.error = null;
 			})
 			.addCase(fetchRecipesByUser.fulfilled, (state, action) => {
-				state.items = action.payload;
+				state.items = action.payload.items;
+				// Chỉ cập nhật metadata nếu backend thực sự trả về giá trị
+				if (action.payload.meta) {
+					const { totalRecords, pageNumber, pageSize } = action.payload.meta;
+					if (totalRecords !== undefined) state.totalRecords = totalRecords;
+					if (pageNumber !== undefined) state.pageNumber = pageNumber;
+					if (pageSize !== undefined) state.pageSize = pageSize;
+					if (state.pageSize && state.totalRecords !== undefined) {
+						state.totalPages = Math.ceil(state.totalRecords / state.pageSize);
+					}
+				}
 				state.loading = false;
 			})
 			.addCase(fetchRecipesByUser.rejected, (state, action) => {
@@ -164,7 +205,15 @@ const recipesSlice = createSlice({
 				state.error = null;
 			})
 			.addCase(fetchAllRecipes.fulfilled, (state, action) => {
-				state.allItems = action.payload;
+				state.allItems = action.payload.items;
+				if (action.payload.meta) {
+					state.totalRecords = action.payload.meta.totalRecords;
+					state.pageNumber = action.payload.meta.pageNumber;
+					state.pageSize = action.payload.meta.pageSize;
+					if (state.pageSize && state.totalRecords !== undefined) {
+						state.totalPages = Math.ceil(state.totalRecords / state.pageSize);
+					}
+				}
 				state.loading = false;
 			})
 			.addCase(fetchAllRecipes.rejected, (state, action) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Box,
@@ -129,7 +129,15 @@ const ProductPage = () => {
   useEffect(() => {
     if (restaurant?.id) {
       setRestaurantId(restaurant.id);
-      dispatch(fetchDishes(restaurant.id));
+      // Fetch từ server với category filter và pagination
+      dispatch(
+        fetchDishes({
+          restaurantId: restaurant.id,
+          pageNumber: currentPage,
+          pageSize: itemsPerPage,
+          category: selectedCategory !== "All" ? selectedCategory : undefined,
+        })
+      );
       // load promotions to attach in dialog
       dispatch(fetchPromotions(restaurant.id));
       // ✅ load toàn bộ dish promotions để hiển thị giá giảm
@@ -137,7 +145,7 @@ const ProductPage = () => {
     } else if (restaurant) {
       toast.warning(t("errors.missing_restaurant"));
     }
-  }, [restaurant, dispatch, t]);
+  }, [restaurant, dispatch, t, selectedCategory, currentPage]);
 
   useEffect(() => {
     if (promotions) console.debug("promotions in store:", promotions);
@@ -193,7 +201,15 @@ const ProductPage = () => {
         toast.success(t("errors.add_success"));
       }
       handleCloseModal();
-      dispatch(fetchDishes(restaurantId));
+      // Reload current page after change
+      if (restaurantId)
+        dispatch(
+          fetchDishes({
+            restaurantId,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+          })
+        );
       // Sau khi thêm/cập nhật món, có thể giá trị khuyến mãi áp dụng thay đổi theo danh sách món
       dispatch(fetchDishPromotions());
     } catch {
@@ -266,7 +282,14 @@ const ProductPage = () => {
     try {
       await dispatch(deleteDish(selectedDishId)).unwrap();
       toast.success(t("errors.delete_success"));
-      if (restaurantId) dispatch(fetchDishes(restaurantId));
+      if (restaurantId)
+        dispatch(
+          fetchDishes({
+            restaurantId,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+          })
+        );
       // Xoá món xong reload promotions để tránh hiển thị dư
       dispatch(fetchDishPromotions());
     } catch (error: unknown) {
@@ -281,27 +304,23 @@ const ProductPage = () => {
     }
   };
 
-  const filteredDishes = useMemo(() => {
-    return dishes.filter((dish) => {
-      const matchKeyword = dish.name
-        .toLowerCase()
-        .includes(searchKeyword.toLowerCase());
-      const matchCategory =
-        selectedCategory === "All" || dish.category === selectedCategory;
-      return matchKeyword && matchCategory;
-    });
-  }, [dishes, searchKeyword, selectedCategory]);
+  // Lọc keyword trên client từ dữ liệu đã được server phân trang
+  const filteredDishes = dishes.filter((dish) => {
+    const matchKeyword = dish.name
+      .toLowerCase()
+      .includes(searchKeyword.toLowerCase());
+    return matchKeyword;
+  });
 
-  const paginatedDishes = useMemo(
-    () =>
-      filteredDishes.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      ),
-    [filteredDishes, currentPage]
-  );
+  // Sử dụng dishes từ server (đã phân trang sẵn)
+  const paginatedDishes = filteredDishes;
 
-  const totalPages = Math.ceil(filteredDishes.length / itemsPerPage);
+  // Lấy totalPages từ Redux state nếu có, fallback về tính từ items
+  const { totalRecords } = useAppSelector((state) => state.dishes);
+  const totalPages =
+    totalRecords && totalRecords > 0
+      ? Math.ceil(totalRecords / itemsPerPage)
+      : Math.ceil(dishes.length / itemsPerPage);
 
   /**
    * ✅ Helper: Lấy giá tốt nhất (thấp nhất) từ danh sách khuyến mãi

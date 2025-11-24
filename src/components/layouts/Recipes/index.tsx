@@ -42,6 +42,7 @@ import {
   RestaurantMenu as MenuIcon,
 } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import Pagination from "@/components/commons/pagination";
 import { toast } from "react-toastify";
 import {
   fetchRecipesByUser,
@@ -72,6 +73,7 @@ const RecipesLayout: React.FC = () => {
     items: myRecipes,
     allItems,
     loading,
+    totalRecords: recipesTotal = 0,
   } = useAppSelector((s) => s.recipes);
   const { reviews: allReviews } = useAppSelector((s) => s.recipeReviews);
   const userFromRedux = useAppSelector((s) => s.user.user);
@@ -131,13 +133,34 @@ const RecipesLayout: React.FC = () => {
     }
   }, []);
 
+  // Local pagination state for the All Recipes tab
+  const [page, setPage] = useState<number>(1);
+  const pageSize = 12;
+  // Local pagination state for My Recipes tab (client-side)
+  const [myRecipesPage, setMyRecipesPage] = useState<number>(1);
+
+  // Fetch reviews once on mount
   useEffect(() => {
-    dispatch(fetchAllRecipes());
     dispatch(fetchRecipeReviews());
+  }, [dispatch]);
+
+  // Fetch all recipes when page changes
+  useEffect(() => {
+    dispatch(fetchAllRecipes({ pageNumber: page, pageSize }));
+  }, [page, dispatch]);
+
+  // Fetch user's recipes when userId is available
+  useEffect(() => {
     if (effectiveUserId && typeof effectiveUserId === "number") {
       dispatch(fetchRecipesByUser(effectiveUserId));
     }
   }, [effectiveUserId, dispatch]);
+
+  // Reset page when filters or tab change
+  useEffect(() => {
+    setPage(1);
+    setMyRecipesPage(1);
+  }, [tabValue, searchQuery, categoryFilter]);
 
   useEffect(() => {
     return () => {
@@ -145,7 +168,7 @@ const RecipesLayout: React.FC = () => {
     };
   }, [preview]);
 
-  // Filtered recipes
+  // Filtered recipes with pagination
   const displayedRecipes = useMemo(() => {
     const source = tabValue === 0 ? allItems || [] : myRecipes;
     let filtered = source;
@@ -164,8 +187,22 @@ const RecipesLayout: React.FC = () => {
       filtered = filtered.filter((r) => r.category === categoryFilter);
     }
 
+    // For My Recipes tab (client-side pagination)
+    if (tabValue === 1) {
+      const startIndex = (myRecipesPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      return filtered.slice(startIndex, endIndex);
+    }
+
     return filtered;
-  }, [tabValue, allItems, myRecipes, searchQuery, categoryFilter]);
+  }, [
+    tabValue,
+    allItems,
+    myRecipes,
+    searchQuery,
+    categoryFilter,
+    myRecipesPage,
+  ]);
 
   // Recipe reviews grouped by recipeId
   const reviewsByRecipe = useMemo(() => {
@@ -256,7 +293,8 @@ const RecipesLayout: React.FC = () => {
         toast.success("Tạo công thức thành công");
       }
       setOpen(false);
-      dispatch(fetchAllRecipes());
+      // refresh current page
+      dispatch(fetchAllRecipes({ pageNumber: page, pageSize }));
       if (effectiveUserId) dispatch(fetchRecipesByUser(effectiveUserId));
     } catch (error: unknown) {
       let msg = "Thao tác thất bại";
@@ -273,11 +311,20 @@ const RecipesLayout: React.FC = () => {
     try {
       await dispatch(deleteRecipe(id)).unwrap();
       toast.success("Xóa công thức thành công");
-      dispatch(fetchAllRecipes());
+      // refresh current page
+      dispatch(fetchAllRecipes({ pageNumber: page, pageSize }));
       dispatch(fetchRecipesByUser(effectiveUserId));
     } catch (error: unknown) {
       console.error(error);
       toast.error("Xóa thất bại");
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (tabValue === 0) {
+      setPage(newPage);
+    } else {
+      setMyRecipesPage(newPage);
     }
   };
 
@@ -566,24 +613,28 @@ const RecipesLayout: React.FC = () => {
                       }}
                       onClick={() => openDetail(recipe)}
                     >
-                      {/* Image container uses background-image to avoid layout shifts
-                          and ensure large images don't break the card sizing. */}
+                      {/* Image container with img tag for proper image display */}
                       <Box
                         sx={{
-                          height: 180,
-                          width: "300",
+                          height: 200,
+                          width: "100%",
                           backgroundColor: "grey.200",
-                          backgroundImage: `url(${
-                            recipe.imageUrl || "/placeholder-recipe.jpg"
-                          })`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center center",
-                          backgroundRepeat: "no-repeat",
+                          overflow: "hidden",
                           flexShrink: 0,
                         }}
-                        role="img"
-                        aria-label={recipe.title}
-                      />
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={recipe.imageUrl || "/placeholder-recipe.jpg"}
+                          alt={recipe.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      </Box>
                       <CardContent
                         sx={{
                           flexGrow: 1,
@@ -746,6 +797,57 @@ const RecipesLayout: React.FC = () => {
             })}
           </Box>
         )}
+
+        {/* Pagination */}
+        {!loading && displayedRecipes.length > 0 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3, pb: 4 }}>
+            {tabValue === 0 ? (
+              // Server-side pagination for All Recipes
+              <Pagination
+                page={page}
+                onPageChange={handlePageChange}
+                totalRecords={recipesTotal}
+                pageSize={pageSize}
+                size="medium"
+              />
+            ) : (
+              // Client-side pagination for My Recipes
+              (() => {
+                // Calculate total filtered my recipes before pagination
+                const source = myRecipes;
+                let filtered = source;
+
+                if (searchQuery.trim()) {
+                  const q = searchQuery.toLowerCase();
+                  filtered = filtered.filter(
+                    (r) =>
+                      r.title.toLowerCase().includes(q) ||
+                      r.description?.toLowerCase().includes(q) ||
+                      r.ingredients?.toLowerCase().includes(q)
+                  );
+                }
+
+                if (categoryFilter !== "all") {
+                  filtered = filtered.filter(
+                    (r) => r.category === categoryFilter
+                  );
+                }
+
+                const totalMyRecords = filtered.length;
+
+                return totalMyRecords > pageSize ? (
+                  <Pagination
+                    page={myRecipesPage}
+                    onPageChange={handlePageChange}
+                    totalRecords={totalMyRecords}
+                    pageSize={pageSize}
+                    size="medium"
+                  />
+                ) : null;
+              })()
+            )}
+          </Box>
+        )}
       </Container>
 
       {/* Create/Edit Dialog */}
@@ -884,39 +986,69 @@ const RecipesLayout: React.FC = () => {
         {selectedRecipe && (
           <>
             <DialogTitle sx={{ p: 0, position: "relative" }}>
-              <Box sx={{ position: "relative", height: 300 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedRecipe.imageUrl || "/placeholder-recipe.jpg"}
-                  alt={selectedRecipe.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
+              <IconButton
+                onClick={closeDetail}
+                sx={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  bgcolor: "rgba(0,0,0,0.5)",
+                  color: "white",
+                  zIndex: 10,
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  height: { xs: "auto", sm: 300 },
+                }}
+              >
+                {/* Image Section - 50% */}
                 <Box
                   sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background:
-                      "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-                    color: "white",
-                    p: 3,
+                    width: { xs: "100%", sm: "50%" },
+                    height: { xs: 250, sm: 300 },
+                    position: "relative",
+                    overflow: "hidden",
+                    flexShrink: 0,
                   }}
                 >
-                  <Typography variant="h4" fontWeight="bold">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedRecipe.imageUrl || "/placeholder-recipe.jpg"}
+                    alt={selectedRecipe.title}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </Box>
+
+                {/* Title & Info Section - 50% */}
+                <Box
+                  sx={{
+                    width: { xs: "100%", sm: "50%" },
+                    height: { xs: "auto", sm: 300 },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    p: 3,
+                    bgcolor: "var(--recipes-primary-rgba)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Typography variant="h4" fontWeight="bold" gutterBottom>
                     {selectedRecipe.title}
                   </Typography>
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    alignItems="center"
-                    sx={{ mt: 1 }}
-                  >
+
+                  <Stack spacing={2}>
                     <Chip
                       label={
                         RecipeCategoryDisplayNames[
@@ -924,32 +1056,34 @@ const RecipesLayout: React.FC = () => {
                         ] ?? selectedRecipe.category
                       }
                       sx={{
-                        bgcolor: "rgba(255,255,255,0.2)",
-                        color: "white",
+                        width: "fit-content",
                         fontWeight: "bold",
+                        bgcolor: "var(--recipes-primary)",
+                        color: "white",
                       }}
                     />
+
                     <Stack direction="row" spacing={0.5} alignItems="center">
-                      <PersonIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">
+                      <PersonIcon
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
                         {selectedRecipe.user?.userName || "Ẩn danh"}
+                      </Typography>
+                    </Stack>
+
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <TimeIcon
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(selectedRecipe.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
                       </Typography>
                     </Stack>
                   </Stack>
                 </Box>
-                <IconButton
-                  onClick={closeDetail}
-                  sx={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    bgcolor: "rgba(0,0,0,0.5)",
-                    color: "white",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
               </Box>
             </DialogTitle>
 

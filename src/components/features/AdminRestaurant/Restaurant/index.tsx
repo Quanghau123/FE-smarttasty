@@ -9,6 +9,7 @@ import {
   Typography,
   Chip,
   CircularProgress,
+  Pagination,
   TextField,
   Dialog,
   DialogTitle,
@@ -44,9 +45,25 @@ const RestaurantPage = () => {
 
   const { current: restaurantInfo, loading: restaurantLoading } =
     useAppSelector((state) => state.restaurant);
-  const { items: dishes, loading: dishLoading } = useAppSelector(
-    (state) => state.dishes
-  );
+  const {
+    items: dishes,
+    loading: dishLoading,
+    totalRecords,
+  } = useAppSelector((state) => state.dishes);
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 10;
+
+  // calculate total pages from server-provided totalRecords; fallback to client length
+  const totalPages =
+    totalRecords && totalRecords > 0
+      ? Math.ceil(totalRecords / itemsPerPage)
+      : Math.ceil(dishes.length / itemsPerPage);
+
+  // Reset to page 1 when switching restaurant
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [restaurantInfo?.id]);
 
   // ✅ danh sách DishPromotions toàn trang (id, dishId, promotionId, discountType, discountValue, ...)
   const { items: dishPromotions } = useAppSelector(
@@ -102,7 +119,13 @@ const RestaurantPage = () => {
 
   useEffect(() => {
     if (restaurantInfo?.id) {
-      dispatch(fetchDishes(restaurantInfo.id));
+      dispatch(
+        fetchDishes({
+          restaurantId: restaurantInfo.id,
+          pageNumber: currentPage,
+          pageSize: itemsPerPage,
+        })
+      );
       // ✅ lấy toàn bộ khuyến mãi món để tính giá hiển thị
       dispatch(fetchDishPromotions());
       // Load favorites for this restaurant
@@ -119,7 +142,7 @@ const RestaurantPage = () => {
         file: null,
       });
     }
-  }, [restaurantInfo, dispatch]);
+  }, [restaurantInfo, dispatch, currentPage]);
 
   const handleUpdate = async () => {
     if (!restaurantInfo) return;
@@ -841,48 +864,58 @@ const RestaurantPage = () => {
               </Typography>
             </Paper>
           ) : (
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: { xs: 2, sm: 2.5, md: 3 },
-              }}
-            >
-              {dishes.map((dish) => {
-                const discounted = bestDiscountByDishId.get(dish.id) ?? null;
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: { xs: 2, sm: 2.5, md: 3 },
+                }}
+              >
+                {dishes.map((dish) => {
+                  const discounted = bestDiscountByDishId.get(dish.id) ?? null;
 
-                return (
-                  <Box
-                    key={dish.id}
-                    sx={{
-                      // Responsive columns: 1 / 2 / 3 / 4 / 5 (xl)
-                      flex: {
-                        xs: "1 1 100%",
-                        sm: "1 1 calc(50% - 10px)",
-                        md: "1 1 calc(33.333% - 16px)",
-                        lg: "1 1 calc(25% - 19px)",
-                        xl: "1 1 calc(20% - 22px)",
-                      },
-                      // Allow items to shrink enough for 5 columns on wide screens
-                      minWidth: { xs: "100%", sm: "220px", md: "200px" },
-                      maxWidth: {
-                        xs: "100%",
-                        sm: "calc(50% - 10px)",
-                        md: "calc(33.333% - 16px)",
-                        lg: "calc(25% - 19px)",
-                        xl: "calc(20% - 22px)",
-                      },
-                      display: "flex",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <DishCard
-                      dish={dish}
-                      discountedPrice={discounted ?? null}
-                    />
-                  </Box>
-                );
-              })}
+                  return (
+                    <Box
+                      key={dish.id}
+                      sx={{
+                        // Responsive columns: 1 / 2 / 3 / 4 / 5 (xl)
+                        flex: {
+                          xs: "1 1 100%",
+                          sm: "1 1 calc(50% - 10px)",
+                          md: "1 1 calc(33.333% - 16px)",
+                          lg: "1 1 calc(25% - 19px)",
+                          xl: "1 1 calc(20% - 22px)",
+                        },
+                        // Allow items to shrink enough for 5 columns on wide screens
+                        minWidth: { xs: "100%", sm: "220px", md: "200px" },
+                        maxWidth: {
+                          xs: "100%",
+                          sm: "calc(50% - 10px)",
+                          md: "calc(33.333% - 16px)",
+                          lg: "calc(25% - 19px)",
+                          xl: "calc(20% - 22px)",
+                        },
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <DishCard
+                        dish={dish}
+                        discountedPrice={discounted ?? null}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(_, page) => setCurrentPage(page)}
+                  color="primary"
+                />
+              </Box>
             </Box>
           )}
         </Box>

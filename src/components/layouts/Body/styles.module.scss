@@ -56,6 +56,16 @@
   overflow: hidden;
 }
 
+/* Two-line title block with reserved height to avoid layout shift when text wraps */
+.titleTwoLines {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  /* Reserve approx two lines of type so cards keep equal heights */
+  min-height: 3.4em;
+}
+
 /* Helpers for consistent card content spacing on mobile */
 .cardContentCompact {
   padding: 12px;

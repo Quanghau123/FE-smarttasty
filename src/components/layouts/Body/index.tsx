@@ -55,13 +55,18 @@ const BodyPage = () => {
     loading: restLoading,
     error,
     totalRecords,
-    pageNumber: storePageNumber,
-    pageSize: storePageSize,
   } = useAppSelector((state) => state.restaurant);
 
-  // Local pagination state
-  const [page, setPage] = useState<number>(storePageNumber ?? 1);
-  const itemsPerPage = storePageSize ?? 12;
+  // Current page stored by restaurant slice (server-side pagination)
+  const pageNumber = useAppSelector(
+    (state) => state.restaurant.pageNumber ?? 1
+  );
+
+  // Pagination: use server-side paging via the shared `Pagination` component.
+  // Do not keep a separate local `page` state here — rely on the store's
+  // `pageNumber` and let the pagination component request data when user
+  // changes page.
+  const itemsPerPage = 10;
   const { allItems: allRecipes = [], loading: recipesLoading } = useAppSelector(
     (state) => state.recipes
   );
@@ -77,16 +82,14 @@ const BodyPage = () => {
   const searchParams = useSearchParams();
   const q = searchParams?.get("q") ?? "";
 
-  // Load danh sách nhà hàng khi mở trang
+  // Load danh sách nhà hàng khi mở trang (initial load / when search changes)
   useEffect(() => {
     if (q && q.trim().length > 0) {
       // Search mode: server returns full list for search endpoint
       dispatch(searchRestaurants(q));
-      // reset to first page for UX
-      setPage(1);
     } else {
-      // Fetch paged restaurants from server
-      dispatch(fetchRestaurants({ pageNumber: page, pageSize: itemsPerPage }));
+      // Fetch paged restaurants from server (initial page = 1)
+      dispatch(fetchRestaurants({ pageNumber: 1, pageSize: itemsPerPage }));
     }
 
     dispatch(fetchAllPromotions());
@@ -94,7 +97,7 @@ const BodyPage = () => {
     // Load recipes and their reviews so we can show top-rated recipes on the home page
     dispatch(fetchAllRecipes());
     dispatch(fetchRecipeReviews());
-  }, [dispatch, q, page, itemsPerPage]);
+  }, [dispatch, q, itemsPerPage]);
 
   // Lọc nhà hàng đề xuất: từ 4 sao trở lên
   const visibleRestaurants = useMemo(() => {
@@ -403,8 +406,7 @@ const BodyPage = () => {
               variant="subtitle1"
               fontWeight="bold"
               gutterBottom
-              className={styles.textClamp}
-              sx={{ WebkitLineClamp: 2 }}
+              className={styles.titleTwoLines}
               title={restaurant.name}
             >
               {restaurant.name}
@@ -1236,13 +1238,12 @@ const BodyPage = () => {
             {/* Pagination for restaurant listing (server-side) */}
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Pagination
-                page={page}
-                onPageChange={(p) => {
-                  setPage(p);
+                page={pageNumber}
+                onPageChange={(p) =>
                   dispatch(
                     fetchRestaurants({ pageNumber: p, pageSize: itemsPerPage })
-                  );
-                }}
+                  )
+                }
                 totalRecords={totalRecords ?? restaurants.length}
                 pageSize={itemsPerPage}
                 size="small"

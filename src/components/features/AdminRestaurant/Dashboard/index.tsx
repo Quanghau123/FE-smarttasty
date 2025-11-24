@@ -107,7 +107,13 @@ const DashboardChart = () => {
   // Lấy món ăn & khuyến mãi khi có nhà hàng
   useEffect(() => {
     if (restaurant?.id) {
-      dispatch(fetchDishes(restaurant.id));
+      dispatch(
+        fetchDishes({
+          restaurantId: restaurant.id,
+          pageNumber: 1,
+          pageSize: 9999,
+        })
+      );
       dispatch(fetchPromotions(restaurant.id.toString()));
       // fetch revenue for the restaurant (month/year optional)
       dispatch(fetchRestaurantRevenue({ restaurantId: restaurant.id }));
