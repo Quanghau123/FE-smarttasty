@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import axios from "axios";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 // ======= axiosInstance =======
 const axiosInstance = axios.create({
@@ -98,9 +96,7 @@ export default function ChatBox() {
             }`}
           >
             {m.sender === "bot" ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {m.text}
-              </ReactMarkdown>
+              <div className="whitespace-pre-wrap">{m.text}</div>
             ) : (
               m.text
             )}

@@ -7,7 +7,6 @@ import {
   Button,
   CircularProgress,
   Divider,
-  Grid,
   Stack,
   Chip,
   IconButton,
@@ -166,8 +165,14 @@ const VNPayReturnPage: React.FC = () => {
 
           <Divider sx={{ my: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+            }}
+          >
+            <Box sx={{ flex: 1 }}>
               <Typography sx={{ mb: 1 }}>
                 <strong>Mã đơn hàng:</strong>
               </Typography>
@@ -186,9 +191,9 @@ const VNPayReturnPage: React.FC = () => {
                 <strong>Phương thức:</strong>
               </Typography>
               <Typography variant="body1">{payment.method ?? "-"}</Typography>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={6}>
+            <Box sx={{ flex: 1 }}>
               <Typography sx={{ mb: 1 }}>
                 <strong>Mã giao dịch:</strong>
               </Typography>
@@ -239,8 +244,8 @@ const VNPayReturnPage: React.FC = () => {
                   </Typography>
                 </Box>
               )}
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Stack
             direction={{ xs: "column", sm: "row" }}
