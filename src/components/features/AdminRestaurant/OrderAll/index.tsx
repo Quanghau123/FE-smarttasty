@@ -156,6 +156,7 @@ export default function AdminRestaurantOrdersPage() {
   const { current: restaurant, loading: restLoading } = useAppSelector(
     (s) => s.restaurant
   );
+  const { items: dishes = [] } = useAppSelector((s) => s.dishes);
   const {
     restaurantPayments,
     loading: paymentLoading,
@@ -376,7 +377,11 @@ export default function AdminRestaurantOrdersPage() {
                           <ListItemAvatar>
                             <Avatar
                               variant="rounded"
-                              src={it.image || undefined}
+                              src={
+                                it.image ??
+                                dishes.find((d) => d.id === it.dishId)?.image ??
+                                undefined
+                              }
                               alt={it.dishName}
                               sx={{ width: 40, height: 40 }}
                             >

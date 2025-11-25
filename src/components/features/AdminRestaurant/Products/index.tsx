@@ -61,6 +61,7 @@ type FormState = {
   price: string;
   category: "ThucAn" | "NuocUong" | "ThucAnThem";
   isActive: boolean;
+  description: string;
 };
 
 const defaultForm: FormState = {
@@ -68,6 +69,7 @@ const defaultForm: FormState = {
   price: "",
   category: "ThucAn",
   isActive: true,
+  description: "",
 };
 
 const getUserFromLocalStorage = () => {
@@ -159,6 +161,7 @@ const ProductPage = () => {
         price: dish.price.toString(),
         category: dish.category as FormState["category"],
         isActive: dish.isActive,
+        description: dish.description || "",
       });
       setFile(null);
     } else {
@@ -179,6 +182,10 @@ const ProductPage = () => {
   const handleSubmit = async () => {
     if (!restaurantId) return toast.error("Thiếu nhà hàng!");
     if (!formData.name.trim()) return toast.warning(t("errors.enter_name"));
+    if (!formData.description.trim())
+      return toast.warning(
+        t("errors.enter_description") || "Vui lòng nhập mô tả"
+      );
     const priceNum = Number(formData.price);
     if (!Number.isFinite(priceNum) || priceNum <= 0)
       return toast.warning("Giá không hợp lệ");
@@ -186,6 +193,7 @@ const ProductPage = () => {
 
     const form = new FormData();
     form.append("name", formData.name.trim());
+    form.append("description", formData.description.trim());
     form.append("price", String(Math.round(priceNum)));
     form.append("category", formData.category);
     form.append("isActive", String(formData.isActive));
@@ -702,6 +710,20 @@ const ProductPage = () => {
               <MenuItem value="NuocUong">{t("category.NuocUong")}</MenuItem>
               <MenuItem value="ThucAnThem">{t("category.ThucAnThem")}</MenuItem>
             </TextField>
+
+            <TextField
+              label={t("description_label")}
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              fullWidth
+              multiline
+              minRows={3}
+            />
 
             <Box display="flex" alignItems="center" gap={1}>
               <Switch

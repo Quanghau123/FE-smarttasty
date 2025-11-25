@@ -84,6 +84,12 @@
     "login_btn_title": "Đăng nhập"
   }
   ,
+  "menu": {
+    "all_restaurants": "Tất cả nhà hàng",
+    "nearby_restaurants": "Nhà hàng gần bạn",
+    "recipes": "Công thức món ăn"
+  }
+  ,
   "dashboard": {
     "title": "Tổng quan người dùng & nhà hàng",
     "summary": "Báo cáo tóm tắt — số liệu cập nhật {lastUpdated}",
@@ -97,8 +103,8 @@
     "business_by_month": "User Business theo tháng",
     "restaurants_by_month": "Nhà hàng theo tháng",
     "no_chart_data": "Chưa có dữ liệu",
-    "series_users": "Users",
-    "series_business": "Business",
+    "series_users": "Người dùng",
+    "series_business": "Doanh nghiệp",
     "series_restaurants": "Nhà hàng"
     ,
     "revenue_title": "Báo cáo doanh thu",
@@ -213,11 +219,18 @@
   }
   ,
   "sidebarAdmin": {
-    "title": "Admin",
-    "dashboard": "Dashboard",
+    "title": "Quản trị",
+    "dashboard": "Bảng điều khiển",
     "management": "Quản lý",
     "user": "Người dùng",
-    "business": "Doanh nghiệp"
+    "business": "Doanh nghiệp",
+    "admin_restaurant_title": "Quản trị Nhà hàng",
+    "restaurant_info": "Thông tin nhà hàng",
+    "products_management": "Quản lý món",
+    "promotions": "Khuyến mãi",
+    "tablebooking": "Đặt bàn",
+    "orders_all": "Tất cả đơn hàng",
+    "staff_accounts": "Tài khoản nhân viên"
   }
   ,
   "adminUser": {
@@ -357,6 +370,7 @@
     "update_dish_dialog_title": "Cập nhật món ăn",
     "name_label": "Tên món",
     "price_label": "Giá",
+    "description_label": "Mô tả",
     "switch_selling": "Đang bán",
     "switch_out": "Ngưng",
     "change_image": "Đổi ảnh",
@@ -377,6 +391,7 @@
     "errors": {
       "missing_restaurant": "Tài khoản chưa có nhà hàng!",
       "enter_name": "Vui lòng nhập tên món",
+      "enter_description": "Vui lòng nhập mô tả món",
       "invalid_price": "Giá không hợp lệ",
       "upload_image": "Vui lòng tải ảnh món ăn",
       "operation_failed": "Thao tác thất bại. Vui lòng thử lại!",

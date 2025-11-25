@@ -121,6 +121,12 @@ const RecipesLayout: React.FC = () => {
   // Review state
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState("");
+  const [deleteReviewDialogOpen, setDeleteReviewDialogOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<number | null>(null);
+
+  // Delete recipe state
+  const [deleteRecipeDialogOpen, setDeleteRecipeDialogOpen] = useState(false);
+  const [recipeToDelete, setRecipeToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -305,15 +311,26 @@ const RecipesLayout: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const openDeleteRecipeDialog = (id: number) => {
+    setRecipeToDelete(id);
+    setDeleteRecipeDialogOpen(true);
+  };
+
+  const closeDeleteRecipeDialog = () => {
+    setDeleteRecipeDialogOpen(false);
+    setRecipeToDelete(null);
+  };
+
+  const handleDelete = async () => {
     if (!effectiveUserId || typeof effectiveUserId !== "number") return;
-    if (!confirm("Bạn có chắc muốn xóa công thức này?")) return;
+    if (!recipeToDelete) return;
     try {
-      await dispatch(deleteRecipe(id)).unwrap();
+      await dispatch(deleteRecipe(recipeToDelete)).unwrap();
       toast.success("Xóa công thức thành công");
       // refresh current page
       dispatch(fetchAllRecipes({ pageNumber: page, pageSize }));
       dispatch(fetchRecipesByUser(effectiveUserId));
+      closeDeleteRecipeDialog();
     } catch (error: unknown) {
       console.error(error);
       toast.error("Xóa thất bại");
@@ -364,12 +381,23 @@ const RecipesLayout: React.FC = () => {
     }
   };
 
-  const handleDeleteReview = async (reviewId: number) => {
-    if (!confirm("Xóa đánh giá này?")) return;
+  const openDeleteReviewDialog = (reviewId: number) => {
+    setReviewToDelete(reviewId);
+    setDeleteReviewDialogOpen(true);
+  };
+
+  const closeDeleteReviewDialog = () => {
+    setDeleteReviewDialogOpen(false);
+    setReviewToDelete(null);
+  };
+
+  const handleDeleteReview = async () => {
+    if (!reviewToDelete) return;
     try {
-      await dispatch(deleteRecipeReview(reviewId)).unwrap();
+      await dispatch(deleteRecipeReview(reviewToDelete)).unwrap();
       toast.success("Xóa đánh giá thành công");
       dispatch(fetchRecipeReviews());
+      closeDeleteReviewDialog();
     } catch (error: unknown) {
       console.error(error);
       toast.error("Xóa đánh giá thất bại");
@@ -781,7 +809,7 @@ const RecipesLayout: React.FC = () => {
                               startIcon={<DeleteIcon />}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDelete(recipe.id);
+                                openDeleteRecipeDialog(recipe.id);
                               }}
                               fullWidth
                             >
@@ -1280,7 +1308,7 @@ const RecipesLayout: React.FC = () => {
                                     size="small"
                                     color="error"
                                     onClick={() =>
-                                      handleDeleteReview(review.id)
+                                      openDeleteReviewDialog(review.id)
                                     }
                                   >
                                     <DeleteIcon fontSize="small" />
@@ -1301,6 +1329,58 @@ const RecipesLayout: React.FC = () => {
             </DialogContent>
           </>
         )}
+      </Dialog>
+
+      {/* Delete Review Confirmation Dialog */}
+      <Dialog
+        open={deleteReviewDialogOpen}
+        onClose={closeDeleteReviewDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không
+            thể hoàn tác.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteReviewDialog} color="inherit">
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteReview}
+            color="error"
+            variant="contained"
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Recipe Confirmation Dialog */}
+      <Dialog
+        open={deleteRecipeDialogOpen}
+        onClose={closeDeleteRecipeDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Xác nhận xóa công thức</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa công thức này không? Hành động này không
+            thể hoàn tác.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteRecipeDialog} color="inherit">
+            Hủy
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Xóa
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

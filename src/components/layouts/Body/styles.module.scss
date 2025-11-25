@@ -56,6 +56,21 @@
   overflow: hidden;
 }
 
+/* Description clamp for recipe cards: 2 lines with ellipsis and safe wrapping */
+.descClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  min-height: 3em; /* reserve space to avoid layout shift */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 /* Two-line title block with reserved height to avoid layout shift when text wraps */
 .titleTwoLines {
   display: -webkit-box;

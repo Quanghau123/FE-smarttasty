@@ -5,8 +5,11 @@ import Image from "next/image";
 import { Box } from "@mui/material";
 
 import anh4 from "@/assets/Image/SlideHeader/banner5.png";
+import anh5 from "@/assets/Image/SlideHeader/bannerv6.png";
+import anh6 from "@/assets/Image/SlideHeader/bannerv5.jpg";
+import anh7 from "@/assets/Image/SlideHeader/bannerv7.png";
 
-const images = [anh4, anh4, anh4, anh4];
+const images = [anh4, anh5, anh6, anh7];
 
 const SlideHeader: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -32,8 +35,22 @@ const SlideHeader: React.FC = () => {
       sx={{
         position: "relative",
         width: "100%",
-        height: { xs: "18vh", sm: "28vh", md: "48vh" },
-        maxHeight: 420,
+         height: {
+           xs: "18vh",
+           sm: "28vh",
+           md: "calc(48vh + 50px)",
+           lg: "calc(56vh + 50px)",
+           xl: "calc(64vh + 50px)",
+         },
+         // On small devices in landscape the viewport height is much smaller
+         // (so `vh` values look tiny). Increase header height specifically
+         // for mobile landscape using a media query.
+         "@media (orientation: landscape) and (max-width:600px)": {
+           height: "44vh",
+           // keep a reasonable cap so images don't overflow on some devices
+           maxHeight: 520,
+         },
+        maxHeight: 900,
         overflow: "hidden",
       }}
     >
@@ -73,7 +90,7 @@ const SlideHeader: React.FC = () => {
       <Box
         sx={{
           position: "absolute",
-          bottom: { xs: 8, sm: 12 },
+          bottom: { xs: 8, sm: 12, md: 16 },
           left: "50%",
           transform: "translateX(-50%)",
           display: "flex",
@@ -95,8 +112,8 @@ const SlideHeader: React.FC = () => {
             aria-selected={idx === currentIndex}
             aria-label={`Chuyển đến slide ${idx + 1}`}
             sx={{
-              width: { xs: 6, sm: 8, md: 10 },
-              height: { xs: 6, sm: 8, md: 10 },
+              width: { xs: 6, sm: 8, md: 10, lg: 12 },
+              height: { xs: 6, sm: 8, md: 10, lg: 12 },
               borderRadius: "50%",
               bgcolor:
                 idx === currentIndex ? "#fff" : "rgba(255, 255, 255, 0.8)",

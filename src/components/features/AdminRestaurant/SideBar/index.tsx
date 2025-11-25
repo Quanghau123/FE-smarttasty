@@ -15,6 +15,7 @@ import {
   Divider,
   Box,
 } from "@mui/material";
+import { useTranslations } from "next-intl";
 import {
   Person as PersonIcon,
   SpaceDashboard as DashboardIcon,
@@ -30,6 +31,7 @@ type SidebarProps = {
 const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("sidebarAdmin");
 
   useEffect(() => {
     if (
@@ -58,7 +60,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
       <Box display="flex" flexDirection="column" alignItems="center" mb={1}>
         <Avatar sx={{ width: 56, height: 56, mb: 1 }}>AR</Avatar>
         <Typography variant="h6" fontWeight="bold" textAlign="center">
-          Admin Restaurant
+          {t("admin_restaurant_title")}
         </Typography>
         {/* <Typography variant="body2" color="text.secondary">
           Quản lý cửa hàng
@@ -78,7 +80,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
           <ListItemIcon>
             <DashboardIcon />
           </ListItemIcon>
-          <ListItemText primary="Dashboard" />
+          <ListItemText primary={t("dashboard")} />
         </ListItemButton>
 
         <ListItemButton
@@ -88,7 +90,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
           <ListItemIcon>
             <PersonIcon />
           </ListItemIcon>
-          <ListItemText primary="Management" />
+          <ListItemText primary={t("management")} />
           {open ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
 
@@ -101,7 +103,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1, mb: 0.5 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Thông Tin Nhà Hàng" />
+              <ListItemText primary={t("restaurant_info")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
@@ -110,7 +112,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1, mb: 0.5 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Quản lý" />
+              <ListItemText primary={t("products_management")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
@@ -119,7 +121,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1, mb: 0.5 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Các Ưu Đãi" />
+              <ListItemText primary={t("promotions")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
@@ -128,7 +130,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Bàn đã đặt" />
+              <ListItemText primary={t("tablebooking")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
@@ -137,7 +139,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Tất cả đơn hàng" />
+              <ListItemText primary={t("orders_all")} />
             </ListItemButton>
             <ListItemButton
               component={Link}
@@ -146,7 +148,7 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
               sx={{ borderRadius: 1, mt: 0.5 }}
               onClick={onNavigate}
             >
-              <ListItemText primary="Tài khoản con" />
+              <ListItemText primary={t("staff_accounts")} />
             </ListItemButton>
           </List>
         </Collapse>

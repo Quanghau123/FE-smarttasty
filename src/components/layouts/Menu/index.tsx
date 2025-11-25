@@ -2,15 +2,18 @@
 
 import { Box, Button } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const Menu = () => {
   const router = useRouter();
   const pathname = usePathname() || "/";
 
+  const t = useTranslations("menu");
+
   const menuItems = [
-    { label: "Tất cả nhà hàng", path: "/" },
-    { label: "Nhà hàng gần bạn", path: "/NearbyRestaurant" },
-    { label: "Công thức món ăn", path: "/recipes" },
+    { label: t("all_restaurants"), path: "/" },
+    { label: t("nearby_restaurants"), path: "/NearbyRestaurant" },
+    { label: t("recipes"), path: "/recipes" },
   ];
 
   const isActive = (path: string) => {

@@ -246,7 +246,7 @@ export const fetchPendingPayments = createAsyncThunk<
   }
 });
 
-// 7️⃣ GET /api/Payment/history/{userId}
+// 7️⃣ GET /api/Order/user/{userId} (BE changed: use Order endpoint for user's order/payment history)
 export const fetchPaymentHistoryByUser = createAsyncThunk<
   InfoPayment[],
   { userId: number },
@@ -254,7 +254,8 @@ export const fetchPaymentHistoryByUser = createAsyncThunk<
 >("payment/fetchPaymentHistoryByUser", async ({ userId }, { rejectWithValue }) => {
   try {
     const token = getToken();
-    const res = await axiosInstance.get(`/api/Payment/history/${userId}`, {
+    // BE now exposes user's orders (including payment info) at /api/Order/user/{userId}
+    const res = await axiosInstance.get(`/api/Order/user/${userId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     const envelope = resolveApiData<InfoPayment[]>(res.data);

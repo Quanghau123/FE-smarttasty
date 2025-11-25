@@ -31,7 +31,7 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
-import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
+import { fetchAllRestaurants } from "@/redux/slices/restaurantSlice";
 import { User } from "@/types/user";
 import { useTranslations } from "next-intl";
 
@@ -42,7 +42,9 @@ interface ExtendedUser extends User {
 const BusinessUserPage = () => {
   const dispatch = useAppDispatch();
   const { users, loading, error } = useAppSelector((state) => state.user);
-  const { restaurants } = useAppSelector((state) => state.restaurant);
+  const { restaurants, allRestaurants } = useAppSelector(
+    (state) => state.restaurant
+  );
 
   const t = useTranslations("adminBusiness");
 
@@ -53,7 +55,8 @@ const BusinessUserPage = () => {
   const pageSize = 7;
 
   useEffect(() => {
-    dispatch(fetchRestaurants());
+    // Use fetchAllRestaurants so we have the full list (not limited by paging)
+    dispatch(fetchAllRestaurants());
     dispatch(fetchUsers());
   }, [dispatch]);
 
@@ -77,13 +80,17 @@ const BusinessUserPage = () => {
     return users
       .filter((u) => u.role === "business")
       .map((user) => {
-        const userRestaurants = restaurants
+        const source =
+          Array.isArray(allRestaurants) && allRestaurants.length > 0
+            ? allRestaurants
+            : restaurants;
+        const userRestaurants = source
           .filter((r) => r.ownerId === user.userId)
           .map((r) => r.name)
           .join(", ");
         return { ...user, restaurants: userRestaurants || t("no_restaurants") };
       });
-  }, [users, restaurants, t]);
+  }, [users, restaurants, allRestaurants, t]);
 
   // 🔹 Filter + Search
   const filteredData = businessUsers.filter(
@@ -121,7 +128,7 @@ const BusinessUserPage = () => {
   // 🔹 Error UI
   if (error) {
     return (
-      <Box sx={{ textAlign: "center", mt: 5, }} >
+      <Box sx={{ textAlign: "center", mt: 5 }}>
         <Typography color="error" variant="h6">
           {error}
         </Typography>

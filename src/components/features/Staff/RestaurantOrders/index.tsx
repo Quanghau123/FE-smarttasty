@@ -129,6 +129,38 @@ export default function StaffRestaurantOrders() {
       String(value).toLowerCase() === "shipping"
         ? ("Delivering" as unknown as typeof value)
         : value;
+
+    // find associated payment/order to enforce sequential rules
+    const paymentForOrder = (paymentState.restaurantPayments || []).find(
+      (pp) => pp.order?.id === orderId
+    );
+    const currentOrder = paymentForOrder?.order;
+
+    // Prevent setting Delivered unless order is in shipping/delivering and COD (if present) is collected
+    if (
+      mapped === DeliveryStatus.Delivered &&
+      currentOrder // ensure we have the order
+    ) {
+      const isShippingState =
+        String(currentOrder.deliveryStatus || "")
+          .toLowerCase()
+          .includes("ship") ||
+        String(currentOrder.deliveryStatus || "")
+          .toLowerCase()
+          .includes("deliver");
+      const codNotCollected =
+        Boolean(paymentForOrder?.codPayment) &&
+        !paymentForOrder?.codPayment?.isCollected;
+      if (!isShippingState || codNotCollected) {
+        setSnackbar({
+          open: true,
+          message:
+            "Không thể đặt trạng thái 'Đã giao' trước khi đơn ở trạng thái đang giao và COD (nếu có) đã được thu.",
+          severity: "error",
+        });
+        return;
+      }
+    }
     try {
       await dispatch(
         updateDeliveryStatus({ id: orderId, deliveryStatus: mapped })
@@ -525,29 +557,71 @@ export default function StaffRestaurantOrders() {
                                           )
                                         }
                                       >
-                                        {statusOptions.map((s) => (
-                                          <MenuItem
-                                            key={s.value}
-                                            value={s.value}
-                                          >
-                                            {s.label}
-                                          </MenuItem>
-                                        ))}
+                                        {statusOptions.map((s) => {
+                                          const attemptingDelivered =
+                                            s.value ===
+                                            DeliveryStatus.Delivered;
+                                          const isShippingState =
+                                            String(o?.deliveryStatus || "")
+                                              .toLowerCase()
+                                              .includes("ship") ||
+                                            String(o?.deliveryStatus || "")
+                                              .toLowerCase()
+                                              .includes("deliver");
+                                          const codNotCollected =
+                                            Boolean(p.codPayment) &&
+                                            !p.codPayment?.isCollected;
+
+                                          // Disable selecting "Đã giao" unless order is in shipping/delivering
+                                          // and COD (if present) has already been collected.
+                                          const disableDeliveredOption =
+                                            attemptingDelivered &&
+                                            (codNotCollected ||
+                                              !isShippingState);
+
+                                          return (
+                                            <MenuItem
+                                              key={s.value}
+                                              value={s.value}
+                                              disabled={disableDeliveredOption}
+                                            >
+                                              {s.label}
+                                            </MenuItem>
+                                          );
+                                        })}
                                       </Select>
                                     </FormControl>
 
-                                    <Button
-                                      variant="contained"
-                                      size="small"
-                                      onClick={() =>
-                                        openConfirmDialog({
-                                          type: "delivered",
-                                          orderId: o?.id,
-                                        })
-                                      }
-                                    >
-                                      Đánh dấu Đã giao
-                                    </Button>
+                                    {(() => {
+                                      const isShippingState =
+                                        String(o?.deliveryStatus || "")
+                                          .toLowerCase()
+                                          .includes("ship") ||
+                                        String(o?.deliveryStatus || "")
+                                          .toLowerCase()
+                                          .includes("deliver");
+                                      const codNotCollected =
+                                        Boolean(p.codPayment) &&
+                                        !p.codPayment?.isCollected;
+                                      const canMarkDelivered =
+                                        isShippingState && !codNotCollected;
+
+                                      return (
+                                        <Button
+                                          variant="contained"
+                                          size="small"
+                                          onClick={() =>
+                                            openConfirmDialog({
+                                              type: "delivered",
+                                              orderId: o?.id,
+                                            })
+                                          }
+                                          disabled={!canMarkDelivered}
+                                        >
+                                          Đánh dấu Đã giao
+                                        </Button>
+                                      );
+                                    })()}
 
                                     {p.codPayment ? (
                                       p.codPayment.isCollected ? (

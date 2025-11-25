@@ -28,6 +28,7 @@ export interface Dish {
   price: number;
   image?: string;
   imageUrl: string; // dùng cái này thôi
+  description?: string;
   isActive: boolean;
   category: string;
  // description?: string;

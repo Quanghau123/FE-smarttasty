@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchRestaurants,
   searchRestaurants,
+  fetchAllRestaurants,
 } from "@/redux/slices/restaurantSlice";
 import { fetchAllPromotions } from "@/redux/slices/promotionSlice";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice";
@@ -52,6 +53,7 @@ const BodyPage = () => {
         };
   const {
     restaurants,
+    allRestaurants,
     loading: restLoading,
     error,
     totalRecords,
@@ -92,20 +94,22 @@ const BodyPage = () => {
       dispatch(fetchRestaurants({ pageNumber: 1, pageSize: itemsPerPage }));
     }
 
+    // Fetch all restaurants for featured section (>= 4 stars)
+    dispatch(fetchAllRestaurants());
     dispatch(fetchAllPromotions());
     dispatch(fetchDishPromotions());
     // Load recipes and their reviews so we can show top-rated recipes on the home page
-    dispatch(fetchAllRecipes());
+    dispatch(fetchAllRecipes({ pageNumber: 1, pageSize: 1000 }));
     dispatch(fetchRecipeReviews());
   }, [dispatch, q, itemsPerPage]);
 
-  // Lọc nhà hàng đề xuất: từ 4 sao trở lên
+  // Lọc nhà hàng đề xuất: từ 4 sao trở lên từ allRestaurants
   const visibleRestaurants = useMemo(() => {
-    return restaurants.filter((restaurant) => {
+    return allRestaurants.filter((restaurant) => {
       const avg = restaurant.averageRating ?? restaurant.rating ?? 0;
       return avg >= 4;
     });
-  }, [restaurants]);
+  }, [allRestaurants]);
 
   // Ref và hàm scroll cho danh sách đề xuất (1 hàng, kéo ngang)
   const suggestedRef = useRef<HTMLDivElement | null>(null);
@@ -686,145 +690,152 @@ const BodyPage = () => {
   );
 
   // Render card for dish promotions (styled similarly to restaurant card)
-  const renderDishCard = (d: DishPromotion, index: number = 0) => (
-    <motion.div {...getMotionProps(index)}>
-      <Card
-        className={styles.card}
-        sx={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          transition: "transform 0.2s, box-shadow 0.2s",
-          "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
-        }}
-      >
-        <Box
-          onClick={() =>
-            router.push(`/RestaurantDetails/${d.dish?.id ?? d.dishId}`)
-          }
+  const renderDishCard = (d: DishPromotion, index: number = 0) => {
+    // Local helpers: prefer flat API fields, fall back to nested `dish` shape.
+    const flat = d as unknown as { [k: string]: unknown };
+    const imageSrc = (flat["image"] as string | undefined) ?? d.dish?.imageUrl;
+    const name = d.dish?.name ?? (flat["dishName"] as string | undefined) ?? "";
+    const restaurantId =
+      (flat["restaurantId"] as number | string | undefined) ??
+      d.dish?.id ??
+      d.dishId;
+    const discounted =
+      (flat["discountedPrice"] as number | undefined) ?? d.dish?.price;
+    const original =
+      (flat["originalPrice"] as number | undefined) ?? d.dish?.price;
+
+    return (
+      <motion.div {...getMotionProps(index)}>
+        <Card
+          className={styles.card}
           sx={{
+            height: "100%",
             display: "flex",
             flexDirection: "column",
-            flexGrow: 1,
-            cursor: "pointer",
+            transition: "transform 0.2s, box-shadow 0.2s",
+            "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
           }}
         >
-          {d.dish?.imageUrl ? (
-            <Box className={styles.aspectSquare}>
-              <Box
-                component="img"
-                src={d.dish.imageUrl}
-                alt={d.dish.name}
-                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  left: 8,
-                  bgcolor: "error.main",
-                  color: "#fff",
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  boxShadow: 1,
-                }}
-              >
-                Khuyến mãi
+          <Box
+            onClick={() => router.push(`/RestaurantDetails/${restaurantId}`)}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              flexGrow: 1,
+              cursor: "pointer",
+            }}
+          >
+            {/* Support both old nested `dish` shape and new flat shape with `image` */}
+            {imageSrc ? (
+              <Box className={styles.aspectSquare}>
+                <Box
+                  component="img"
+                  src={imageSrc}
+                  alt={name}
+                  sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    bgcolor: "error.main",
+                    color: "#fff",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    boxShadow: 1,
+                  }}
+                >
+                  Khuyến mãi
+                </Box>
               </Box>
-            </Box>
-          ) : (
-            <Box className={styles.aspectSquare}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: "#f5f5f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Không có ảnh
-                </Typography>
+            ) : (
+              <Box className={styles.aspectSquare}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "#f5f5f5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Không có ảnh
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    bgcolor: "error.main",
+                    color: "#fff",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    boxShadow: 1,
+                  }}
+                >
+                  Khuyến mãi
+                </Box>
               </Box>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  left: 8,
-                  bgcolor: "error.main",
-                  color: "#fff",
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  boxShadow: 1,
-                }}
-              >
-                Khuyến mãi
-              </Box>
-            </Box>
-          )}
+            )}
 
-          <CardContent sx={{ flexGrow: 1 }}>
-            <Typography
-              variant="subtitle1"
-              fontWeight="700"
-              gutterBottom
-              noWrap
-              title={d.dish?.name ?? d.dishName}
-            >
-              {d.dish?.name ?? d.dishName}
-            </Typography>
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Typography
+                variant="subtitle1"
+                fontWeight="700"
+                gutterBottom
+                noWrap
+                title={d.dish?.name ?? d.dishName}
+              >
+                {d.dish?.name ?? d.dishName}
+              </Typography>
 
-            {/* <Typography variant="body2" color="text.secondary" mb={1}>
+              {/* <Typography variant="body2" color="text.secondary" mb={1}>
             {d.promotion?.title ?? d.promotionTitle}
           </Typography> */}
 
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="subtitle1" fontWeight={700} color="error">
-                {(
-                  d.discountedPrice ??
-                  d.dish?.price ??
-                  d.discountedPrice
-                )?.toLocaleString()}
-                ₫
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textDecoration: "line-through" }}
-              >
-                {(d.originalPrice ?? d.dish?.price)?.toLocaleString()}₫
-              </Typography>
-            </Box>
-          </CardContent>
-        </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="subtitle1" fontWeight={700} color="error">
+                  {(discounted as number)?.toLocaleString() ?? "0"}₫
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ textDecoration: "line-through" }}
+                >
+                  {(original as number)?.toLocaleString()}₫
+                </Typography>
+              </Box>
+            </CardContent>
+          </Box>
 
-        <Box sx={{ p: 2, pt: 0 }}>
-          <Button
-            variant="outlined"
-            color="primary"
-            fullWidth
-            size="small"
-            onClick={() =>
-              router.push(`/RestaurantDetails/${d.dish?.id ?? d.dishId}`)
-            }
-          >
-            Xem món
-          </Button>
-        </Box>
-      </Card>
-    </motion.div>
-  );
+          <Box sx={{ p: 2, pt: 0 }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              size="small"
+              onClick={() => router.push(`/RestaurantDetails/${restaurantId}`)}
+            >
+              Xem món
+            </Button>
+          </Box>
+        </Card>
+      </motion.div>
+    );
+  };
 
   // --- Top recipes helpers ---
   type EnrichedRecipe = Recipe & {
@@ -941,13 +952,7 @@ const BodyPage = () => {
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                minHeight: 36,
-              }}
+              className={styles.descClamp}
             >
               {recipe.description || "Không có mô tả"}
             </Typography>

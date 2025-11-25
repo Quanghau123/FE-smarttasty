@@ -78,17 +78,17 @@ const Footer = () => {
               <div className="font-semibold mb-3">{t("aboutus_btn_title")}</div>
               <ul className="text-sm opacity-80 space-y-2">
                 <li>
-                  <Link href="/about" className="hover:text-primary">
+                  <Link href="#" className="hover:text-primary">
                     {t("link_intro")}
                   </Link>
                 </li>
                 <li>
-                  <Link href="/careers" className="hover:text-primary">
+                  <Link href="#" className="hover:text-primary">
                     {t("link_careers")}
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-primary">
+                  <Link href="#" className="hover:text-primary">
                     {t("link_contact")}
                   </Link>
                 </li>

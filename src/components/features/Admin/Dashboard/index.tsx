@@ -17,7 +17,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { fetchRestaurants } from "@/redux/slices/restaurantSlice";
+import { fetchAllRestaurants } from "@/redux/slices/restaurantSlice";
 import { fetchUsers } from "@/redux/slices/userSlice";
 import moment from "moment";
 import styles from "./styles.module.scss";
@@ -40,10 +40,12 @@ const Dashboard = () => {
     loading: restaurantLoading,
     error: restaurantError,
   } = useAppSelector((state) => state.restaurant);
+  const { allRestaurants } = useAppSelector((state) => state.restaurant);
 
   useEffect(() => {
     dispatch(fetchUsers());
-    dispatch(fetchRestaurants());
+    // Load all restaurants (no pagination) for admin overview
+    dispatch(fetchAllRestaurants());
   }, [dispatch]);
 
   const t = useTranslations("dashboard");
@@ -79,9 +81,17 @@ const Dashboard = () => {
     () => getChartData(businessUsers),
     [businessUsers, getChartData]
   );
+  // Prefer `allRestaurants` when present (fetchAllRestaurants populates it);
+  // fall back to paged `restaurants` if needed.
+  const restaurantsListMemo = useMemo(() => {
+    const a = allRestaurants ?? [];
+    const p = restaurants ?? [];
+    return Array.isArray(a) && a.length > 0 ? a : p;
+  }, [allRestaurants, restaurants]);
+
   const restaurantChartData = useMemo(
-    () => getChartData(restaurants),
-    [restaurants, getChartData]
+    () => getChartData(restaurantsListMemo),
+    [restaurantsListMemo, getChartData]
   );
 
   const chartOptions = (categories: string[]) => ({
@@ -96,7 +106,7 @@ const Dashboard = () => {
     const userDates = users
       .map((u) => u.updatedAt || u.createdAt)
       .filter(Boolean) as string[];
-    const restDates = restaurants
+    const restDates = restaurantsListMemo
       .map((r) => r.updatedAt || r.createdAt)
       .filter(Boolean) as string[];
 
@@ -105,7 +115,7 @@ const Dashboard = () => {
     );
     if (!dates.length) return null;
     return moment(Math.max(...dates)).fromNow();
-  }, [users, restaurants]);
+  }, [users, restaurantsListMemo]);
 
   const theme = useTheme();
   const prefersReducedMotion = useReducedMotion();
@@ -345,7 +355,7 @@ const Dashboard = () => {
                       variant={isMobile ? "h6" : "h5"}
                       sx={{ color: "white", fontWeight: 700 }}
                     >
-                      {restaurants.length}
+                      {restaurantsListMemo.length}
                     </Typography>
                   </Box>
                 </Box>

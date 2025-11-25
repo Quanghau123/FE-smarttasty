@@ -7,7 +7,14 @@ import {
   Button,
   CircularProgress,
   Divider,
+  Grid,
+  Stack,
+  Chip,
+  IconButton,
 } from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppDispatch } from "@/redux/hook";
 import { handleVNPayReturn } from "@/redux/slices/paymentSlice";
@@ -63,6 +70,16 @@ const VNPayReturnPage: React.FC = () => {
     }).format(value);
   };
 
+  const handleCopy = async (text?: string) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Đã sao chép vào clipboard");
+    } catch {
+      toast.error("Không thể sao chép");
+    }
+  };
+
   if (!query) {
     return (
       <Box sx={{ mt: 8, textAlign: "center" }}>
@@ -81,11 +98,11 @@ const VNPayReturnPage: React.FC = () => {
   return (
     <Box
       sx={{
-        maxWidth: 720,
+        maxWidth: 920,
         mx: "auto",
-        mt: 6,
-        px: 3,
-        py: 4,
+        mt: { xs: 4, md: 8 },
+        px: { xs: 2, md: 4 },
+        py: { xs: 3, md: 5 },
         bgcolor: "background.paper",
         borderRadius: 2,
         boxShadow: 3,
@@ -100,7 +117,8 @@ const VNPayReturnPage: React.FC = () => {
         </Box>
       ) : error ? (
         <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography variant="h6" color="error">
+          <ErrorOutlineIcon color="error" sx={{ fontSize: 48 }} />
+          <Typography variant="h6" color="error" sx={{ mt: 1 }}>
             Không thể xử lý kết quả VNPay
           </Typography>
           <Typography sx={{ mt: 1 }}>{error}</Typography>
@@ -114,47 +132,122 @@ const VNPayReturnPage: React.FC = () => {
         </Box>
       ) : payment ? (
         <Box>
-          <Typography variant="h5" gutterBottom>
-            {String(payment.status).toLowerCase().includes("success")
-              ? "Thanh toán thành công"
-              : "Kết quả thanh toán"}
-          </Typography>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {String(payment.status).toLowerCase().includes("success") ||
+              String(payment.status) === "1" ? (
+                <CheckCircleOutlineIcon color="success" sx={{ fontSize: 40 }} />
+              ) : (
+                <ErrorOutlineIcon color="warning" sx={{ fontSize: 40 }} />
+              )}
+              <Typography variant="h5">
+                {String(payment.status).toLowerCase().includes("success") ||
+                String(payment.status) === "1"
+                  ? "Thanh toán thành công"
+                  : "Kết quả thanh toán"}
+              </Typography>
+            </Stack>
+
+            <Chip
+              label={String(payment.status)}
+              color={
+                String(payment.status).toLowerCase().includes("success") ||
+                String(payment.status) === "1"
+                  ? "success"
+                  : "warning"
+              }
+            />
+          </Stack>
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography>
-            <strong>Mã đơn hàng:</strong> {payment.orderId}
-          </Typography>
-          <Typography>
-            <strong>Số tiền:</strong> {formatCurrency(payment.amount)}
-          </Typography>
-          <Typography>
-            <strong>Phương thức:</strong> {payment.method}
-          </Typography>
-          <Typography>
-            <strong>Trạng thái:</strong> {payment.status}
-          </Typography>
-          <Typography>
-            <strong>Mã giao dịch:</strong>{" "}
-            {payment.transactionId ?? payment.vnpPayPayment?.vnpTxnRef ?? "-"}
-          </Typography>
-          {payment.vnpPayPayment && (
-            <Box sx={{ mt: 1 }}>
-              <Typography>
-                <strong>VNPAY TxnRef:</strong> {payment.vnpPayPayment.vnpTxnRef}
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Typography sx={{ mb: 1 }}>
+                <strong>Mã đơn hàng:</strong>
               </Typography>
-              <Typography>
-                <strong>Ngân hàng:</strong>{" "}
-                {payment.vnpPayPayment.bankCode ?? "-"}
+              <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
+                {payment.orderId}
               </Typography>
-              <Typography>
-                <strong>Mã phản hồi:</strong>{" "}
-                {payment.vnpPayPayment.responseCode ?? "-"}
-              </Typography>
-            </Box>
-          )}
 
-          <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+              <Typography sx={{ mt: 2, mb: 1 }}>
+                <strong>Số tiền:</strong>
+              </Typography>
+              <Typography variant="body1">
+                {formatCurrency(payment.amount)}
+              </Typography>
+
+              <Typography sx={{ mt: 2, mb: 1 }}>
+                <strong>Phương thức:</strong>
+              </Typography>
+              <Typography variant="body1">{payment.method ?? "-"}</Typography>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography sx={{ mb: 1 }}>
+                <strong>Mã giao dịch:</strong>
+              </Typography>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ wordBreak: "break-all" }}
+              >
+                <Typography variant="body1">
+                  {payment.transactionId ??
+                    payment.vnpPayPayment?.vnpTxnRef ??
+                    "-"}
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    handleCopy(
+                      payment.transactionId ?? payment.vnpPayPayment?.vnpTxnRef
+                    )
+                  }
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+
+              {payment.vnpPayPayment && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>VNPAY TxnRef:</strong>
+                  </Typography>
+                  <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
+                    {payment.vnpPayPayment.vnpTxnRef}
+                  </Typography>
+
+                  <Typography sx={{ mt: 2, mb: 1 }}>
+                    <strong>Ngân hàng:</strong>
+                  </Typography>
+                  <Typography variant="body1">
+                    {payment.vnpPayPayment.bankCode ?? "-"}
+                  </Typography>
+
+                  <Typography sx={{ mt: 2, mb: 1 }}>
+                    <strong>Mã phản hồi:</strong>
+                  </Typography>
+                  <Typography variant="body1">
+                    {payment.vnpPayPayment.responseCode ?? "-"}
+                  </Typography>
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{ mt: 4 }}
+            justifyContent={{ xs: "center", sm: "flex-start" }}
+          >
             <Button
               variant="contained"
               color="primary"
@@ -165,7 +258,7 @@ const VNPayReturnPage: React.FC = () => {
             <Button variant="outlined" onClick={() => router.push("/")}>
               Về trang chủ
             </Button>
-          </Box>
+          </Stack>
         </Box>
       ) : (
         <Box sx={{ textAlign: "center", py: 4 }}>

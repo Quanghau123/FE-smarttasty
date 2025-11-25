@@ -1,11 +1,6 @@
-// Types for promotion-related data. These are based on the backend C# model:
-// Promotion { Id, RestaurantId, Restaurant, Title, Description, StartDate, EndDate,
-// DiscountType, DiscountValue, TargetType, DishPromotions, OrderPromotions, Vouchers }
-// Keep shapes friendly to the frontend and avoid circular imports (don't import DishPromotion here).
 
-// Must match backend enums exactly (lowercase)
 export type DiscountType = "percent" | "fixed_amount";
-export type TargetType = "dish" | "order" | "category";
+export type TargetType = "dish" | "order";
 
 // Minimal shape for related restaurant object returned from server.
 export interface RelatedRestaurant {

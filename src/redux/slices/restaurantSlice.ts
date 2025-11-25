@@ -11,6 +11,7 @@ import {
 // INITIAL STATE
 const initialState: RestaurantState = {
   restaurants: [],
+  allRestaurants: [],
   current: null,
   currentTotalReviews: null,
   nearby: [],
@@ -108,7 +109,7 @@ export const fetchRestaurants = createAsyncThunk<
 >("restaurant/fetchAll", async (params, { rejectWithValue }) => {
   try {
     const pageNumber = params?.pageNumber ?? 1;
-    const pageSize = params?.pageSize ?? 12;
+    const pageSize = params?.pageSize ?? 10;
     const res = await axiosInstance.get("/api/Restaurant", {
       params: { PageNumber: pageNumber, PageSize: pageSize },
     });
@@ -120,6 +121,24 @@ export const fetchRestaurants = createAsyncThunk<
       pageNumber: data?.pageNumber ?? pageNumber,
       pageSize: data?.pageSize ?? pageSize,
     } as FetchRestaurantsResult;
+  } catch (err: unknown) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
+
+// Fetch all restaurants without pagination (for featured section)
+export const fetchAllRestaurants = createAsyncThunk<
+  Restaurant[],
+  void,
+  { rejectValue: string }
+>("restaurant/fetchAllRestaurants", async (_, { rejectWithValue }) => {
+  try {
+    // Request with a very large page size to get all restaurants
+    const res = await axiosInstance.get("/api/Restaurant", {
+      params: { PageNumber: 1, PageSize: 1000 },
+    });
+    const data = res.data?.data;
+    return data?.items ?? [];
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err));
   }
@@ -320,6 +339,20 @@ const restaurantSlice = createSlice({
         state.pageSize = action.payload.pageSize ?? 12;
       })
       .addCase(fetchRestaurants.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Lỗi không xác định";
+      })
+
+      // fetchAllRestaurants (no pagination, for featured section)
+      .addCase(fetchAllRestaurants.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllRestaurants.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allRestaurants = action.payload;
+      })
+      .addCase(fetchAllRestaurants.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Lỗi không xác định";
       })

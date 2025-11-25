@@ -42,6 +42,7 @@ export interface Restaurant {
 // State trong Redux store
 export interface RestaurantState {
   restaurants: Restaurant[];
+  allRestaurants: Restaurant[]; // Tất cả nhà hàng để filter cho phần đề xuất
   current: Restaurant | null;
   // Lưu tổng số reviews từ API detail (data.totalReviews)
   currentTotalReviews?: number | null;

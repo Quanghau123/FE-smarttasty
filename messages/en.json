@@ -85,6 +85,12 @@
     "login_btn_title": "Login"
   }
   ,
+  "menu": {
+    "all_restaurants": "All restaurants",
+    "nearby_restaurants": "Nearby restaurants",
+    "recipes": "Recipes"
+  }
+  ,
   "dashboard": {
     "title": "Overview of users & restaurants",
     "summary": "Summary report — data updated {lastUpdated}",
@@ -219,6 +225,14 @@
     "management": "Management",
     "user": "User",
     "business": "Business"
+    ,
+    "admin_restaurant_title": "Admin Restaurant",
+    "restaurant_info": "Restaurant Info",
+    "products_management": "Products",
+    "promotions": "Promotions",
+    "tablebooking": "Table Bookings",
+    "orders_all": "All Orders",
+    "staff_accounts": "Staff accounts"
   }
   ,
   "adminUser": {
@@ -358,6 +372,7 @@
     "update_dish_dialog_title": "Update dish",
     "name_label": "Name",
     "price_label": "Price",
+    "description_label": "Description",
     "switch_selling": "Selling",
     "switch_out": "Out",
     "change_image": "Change image",
@@ -378,6 +393,7 @@
     "errors": {
       "missing_restaurant": "Account has no restaurant!",
       "enter_name": "Please enter dish name",
+      "enter_description": "Please enter a description",
       "invalid_price": "Invalid price",
       "upload_image": "Please upload a dish image",
       "operation_failed": "Operation failed. Please try again!",

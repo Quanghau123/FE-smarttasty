@@ -619,9 +619,25 @@ const PaymentPage = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        overflow: "hidden",
                       }}
                     >
-                      <RestaurantIcon sx={{ color: "primary.main" }} />
+                      {item.image ? (
+                        <Box
+                          component="img"
+                          src={item.image}
+                          alt={item.dishName || "dish"}
+                          sx={{ width: 48, height: 48, objectFit: "cover" }}
+                          onError={(e) => {
+                            // hide broken image so fallback icon shows
+                            (
+                              e.currentTarget as HTMLImageElement
+                            ).style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <RestaurantIcon sx={{ color: "primary.main" }} />
+                      )}
                     </Box>
                     <Box flex={1}>
                       <Typography fontWeight="500">{item.dishName}</Typography>
