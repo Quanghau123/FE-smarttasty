@@ -268,11 +268,7 @@ const Header = () => {
       <Box
         className={styles.headerInner}
         sx={{
-          justifyContent:
-            currentRole === "user"
-              ? "space-between !important"
-              : "flex-start !important",
-          gap: currentRole === "user" ? "inherit" : "2rem !important",
+          justifyContent: "space-between !important",
         }}
       >
         {/* Left: Logo */}
