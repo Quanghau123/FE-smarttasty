@@ -414,6 +414,16 @@ export default function AdminRestaurantOrdersPage() {
                       p.order?.id &&
                       handleChangeOrderStatus(p.order.id, e.target.value)
                     }
+                    renderValue={(selected) => (
+                      <Box
+                        sx={{
+                          fontWeight: 600,
+                          color: "primary.main",
+                        }}
+                      >
+                        {labelOrderStatus(selected)}
+                      </Box>
+                    )}
                   >
                     {(
                       [
@@ -447,6 +457,16 @@ export default function AdminRestaurantOrdersPage() {
                       p.order?.id &&
                       handleChangeDeliveryStatus(p.order.id, e.target.value)
                     }
+                    renderValue={(selected) => (
+                      <Box
+                        sx={{
+                          fontWeight: 600,
+                          color: "success.main",
+                        }}
+                      >
+                        {labelDeliveryStatus(selected)}
+                      </Box>
+                    )}
                   >
                     {(
                       [
