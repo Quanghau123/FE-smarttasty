@@ -15,7 +15,11 @@ export default function LayoutClient({
   const hideChatbot = (() => {
     const p = (pathname || "").toLowerCase();
     return (
-      p.includes("/login") || p.includes("/register") || p.includes("/admin") || p.includes("/staff") || p.includes("/register-business") || p.includes("/restaurant")
+      p.includes("/login") ||
+      p.includes("/register") ||
+      p.includes("/admin") ||
+      p.includes("/staff") ||
+      p.includes("/register-business")
     );
   })();
   return (
