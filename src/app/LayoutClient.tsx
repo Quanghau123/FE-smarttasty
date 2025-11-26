@@ -2,6 +2,7 @@
 
 import Providers from "@/components/commons/Providers/Providers";
 import Chatbot from "@/components/features/Chatbot";
+import { usePathname } from "next/navigation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -10,6 +11,13 @@ export default function LayoutClient({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const hideChatbot = (() => {
+    const p = (pathname || "").toLowerCase();
+    return (
+      p.includes("/login") || p.includes("/register") || p.includes("/admin") || p.includes("/staff") || p.includes("/register-business") || p.includes("/restaurant")
+    );
+  })();
   return (
     <Providers>
       {children}
@@ -26,7 +34,7 @@ export default function LayoutClient({
         theme="colored"
       />
       {/* Chatbot floating button - hiển thị ở mọi trang */}
-      <Chatbot />
+      {!hideChatbot && <Chatbot />}
     </Providers>
   );
 }

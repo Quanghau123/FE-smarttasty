@@ -72,9 +72,22 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      // Chuẩn hoá các thông báo lỗi 400 / sai tài khoản mật khẩu
+      const raw = typeof error === "string" ? error : String(error);
+      const lower = raw.toLowerCase();
+      const isCredentialError =
+        lower.includes("status code 400") ||
+        lower.includes("400") ||
+        lower.includes("unauthorized") ||
+        (lower.includes("invalid") &&
+          (lower.includes("password") || lower.includes("email"))) ||
+        (lower.includes("password") && lower.includes("incorrect"));
+
+      // Nếu muốn đa ngôn ngữ: thêm key vào file messages: login.invalid_credentials
+      const friendly = isCredentialError ? t("invalid_credentials") : raw;
+      toast.error(friendly);
     }
-  }, [error]);
+  }, [error, t]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

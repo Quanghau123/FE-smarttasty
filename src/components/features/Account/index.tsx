@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { updateUser, setUser, fetchUserById } from "@/redux/slices/userSlice";
 import {
@@ -35,6 +36,7 @@ const AccountPage = () => {
   const user = useAppSelector((state) => state.user.user);
   const loading = useAppSelector((state) => state.user.loading);
   const error = useAppSelector((state) => state.user.error);
+  const t = useTranslations("accountPage");
 
   const [editableUser, setEditableUser] = useState<Partial<User>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -98,13 +100,13 @@ const AccountPage = () => {
 
     try {
       await dispatch(updateUser(payload)).unwrap();
-      toast.success("Cập nhật thành công!");
+      toast.success(t("messages.update_success"));
       setIsEditing(false);
     } catch (err: unknown) {
       if (typeof err === "string" && err.includes("email")) {
-        toast.error("Email đã được sử dụng.");
+        toast.error(t("errors.email_in_use"));
       } else {
-        toast.error("Cập nhật thất bại.");
+        toast.error(t("errors.update_failed"));
       }
     }
   };
@@ -128,9 +130,9 @@ const AccountPage = () => {
     return (
       <div className={styles.accountContainer}>
         <div className={styles.contentArea}>
-          <Typography variant="h5">Bạn chưa đăng nhập</Typography>
+          <Typography variant="h5">{t("not_logged_in")}</Typography>
           <Button variant="contained" onClick={() => router.push("/login")}>
-            Đăng nhập
+            {t("btn.login")}
           </Button>
         </div>
       </div>
@@ -138,8 +140,8 @@ const AccountPage = () => {
   }
 
   const tabItems = [
-    { label: "Thông tin tài khoản", value: "info" },
-    { label: "Đổi mật khẩu", value: "password" },
+    { label: t("tabs.info"), value: "info" },
+    { label: t("tabs.password"), value: "password" },
   ];
 
   return (
@@ -221,20 +223,20 @@ const AccountPage = () => {
         {activeTab === "info" && (
           <>
             <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
-              Thông tin tài khoản
+              {t("tabs.info")}
             </Typography>
 
             {isEditing ? (
               <Box display="flex" flexDirection="column" gap={2}>
                 <TextField
-                  label="Tên người dùng"
+                  label={t("form.name")}
                   value={editableUser.userName || ""}
                   onChange={handleChange("userName")}
                   required
                   fullWidth
                 />
                 <TextField
-                  label="Email"
+                  label={t("form.email")}
                   type="email"
                   value={editableUser.email || ""}
                   onChange={handleChange("email")}
@@ -242,17 +244,17 @@ const AccountPage = () => {
                   fullWidth
                   disabled
                   InputProps={{ readOnly: true }}
-                  helperText="Email không thể thay đổi"
+                  helperText={t("form.email_helper")}
                 />
                 <TextField
-                  label="Số điện thoại"
+                  label={t("form.phone")}
                   value={editableUser.phone || ""}
                   onChange={handleChange("phone")}
                   required
                   fullWidth
                 />
                 <TextField
-                  label="Địa chỉ"
+                  label={t("form.address")}
                   value={editableUser.address || ""}
                   onChange={handleChange("address")}
                   fullWidth
@@ -269,34 +271,34 @@ const AccountPage = () => {
                     disabled={loading}
                     fullWidth={isMobile}
                   >
-                    {loading ? <CircularProgress size={24} /> : "Lưu"}
+                    {loading ? <CircularProgress size={24} /> : t("btn.save")}
                   </Button>
                   <Button
                     variant="outlined"
                     onClick={() => setIsEditing(false)}
                     fullWidth={isMobile}
                   >
-                    Hủy
+                    {t("btn.cancel")}
                   </Button>
                 </Box>
               </Box>
             ) : (
               <>
                 <div className={styles.infoRow}>
-                  <span>Tên người dùng:</span>
-                  <strong>{user.userName || "Chưa cập nhật"}</strong>
+                  <span>{t("labels.username")}</span>
+                  <strong>{user.userName || t("labels.not_updated")}</strong>
                 </div>
                 <div className={styles.infoRow}>
-                  <span>Email:</span>
-                  <strong>{user.email || "Chưa cập nhật"}</strong>
+                  <span>{t("labels.email")}</span>
+                  <strong>{user.email || t("labels.not_updated")}</strong>
                 </div>
                 <div className={styles.infoRow}>
-                  <span>Số điện thoại:</span>
-                  <strong>{user.phone || "Chưa cập nhật"}</strong>
+                  <span>{t("labels.phone")}</span>
+                  <strong>{user.phone || t("labels.not_updated")}</strong>
                 </div>
                 <div className={styles.infoRow}>
-                  <span>Địa chỉ:</span>
-                  <strong>{user.address || "Chưa cập nhật"}</strong>
+                  <span>{t("labels.address")}</span>
+                  <strong>{user.address || t("labels.not_updated")}</strong>
                 </div>
 
                 <Button
@@ -305,7 +307,7 @@ const AccountPage = () => {
                   sx={{ mt: 2 }}
                   fullWidth={isMobile}
                 >
-                  Sửa thông tin
+                  {t("btn.edit")}
                 </Button>
               </>
             )}
@@ -315,7 +317,7 @@ const AccountPage = () => {
         {activeTab === "password" && (
           <>
             <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
-              Đổi mật khẩu
+              {t("tabs.password")}
             </Typography>
             <ChangePasswordForm embedded onSuccess={handlePasswordChanged} />
           </>

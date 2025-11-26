@@ -34,6 +34,7 @@ import Image from "next/image";
 import banerV2 from "../../../assets/Image/SlideHeader/banerV2.png";
 import HopTac from "../../../assets/Image/SlideHeader/hoptac.png";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { Promotion } from "@/types/promotion";
 import { DishPromotion } from "@/types/dishpromotion";
 
@@ -41,6 +42,8 @@ const BodyPage = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
+
+  const t = useTranslations("layout.body");
 
   const getMotionProps = (i: number = 0) =>
     prefersReducedMotion
@@ -359,7 +362,7 @@ const BodyPage = () => {
                     boxShadow: 1,
                   }}
                 >
-                  Được đề xuất
+                  {t("badge.suggested")}
                 </Box>
               )}
             </Box>
@@ -379,7 +382,7 @@ const BodyPage = () => {
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  Chưa có ảnh
+                  {t("no_image")}
                 </Typography>
               </Box>
               {showSuggestedBadge && (
@@ -445,7 +448,7 @@ const BodyPage = () => {
               title={restaurant.address}
               mb={1}
             >
-              {restaurant.address || "Đang cập nhật địa chỉ"}
+              {restaurant.address || t("address.updating")}
             </Typography>
           </CardContent>
         </Box>
@@ -462,7 +465,7 @@ const BodyPage = () => {
               router.push(`/RestaurantDetails/${restaurant.id}`);
             }}
           >
-            Đặt chỗ ngay
+            {t("btn.reserve_now")}
           </Button>
         </Box>
       </Card>
@@ -582,7 +585,7 @@ const BodyPage = () => {
                 boxShadow: 1,
               }}
             >
-              Khuyến mãi
+              {t("promotion.badge")}
             </Box>
           </Box>
         ) : (
@@ -601,7 +604,7 @@ const BodyPage = () => {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                Không có ảnh khuyến mãi
+                {t("promotion.no_image")}
               </Typography>
             </Box>
             <Box
@@ -619,7 +622,7 @@ const BodyPage = () => {
                 boxShadow: 1,
               }}
             >
-              Khuyến mãi
+              {t("promotion.badge")}
             </Box>
           </Box>
         )}
@@ -667,10 +670,10 @@ const BodyPage = () => {
 
           {/* 3) Thời gian hiệu lực */}
           <Typography variant="body2" color="text.secondary">
-            Áp dụng đến{" "}
+            {t("promotion.valid_until_prefix")}{" "}
             {dayjs(p.endDate).isValid()
               ? dayjs(p.endDate).format("DD/MM/YYYY")
-              : "khi có thông báo mới"}
+              : t("promotion.valid_until_none")}
           </Typography>
         </CardContent>
 
@@ -682,7 +685,7 @@ const BodyPage = () => {
             size="small"
             onClick={() => router.push(`/RestaurantDetails/${p.restaurantId}`)}
           >
-            Xem ưu đãi
+            {t("promotion.view")}
           </Button>
         </Box>
       </Card>
@@ -749,7 +752,7 @@ const BodyPage = () => {
                     boxShadow: 1,
                   }}
                 >
-                  Khuyến mãi
+                  {t("promotion.badge")}
                 </Box>
               </Box>
             ) : (
@@ -768,7 +771,7 @@ const BodyPage = () => {
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Không có ảnh
+                    {t("no_image")}
                   </Typography>
                 </Box>
                 <Box
@@ -786,7 +789,7 @@ const BodyPage = () => {
                     boxShadow: 1,
                   }}
                 >
-                  Khuyến mãi
+                  {t("promotion.badge")}
                 </Box>
               </Box>
             )}
@@ -829,7 +832,7 @@ const BodyPage = () => {
               size="small"
               onClick={() => router.push(`/RestaurantDetails/${restaurantId}`)}
             >
-              Xem món
+              {t("dish.view")}
             </Button>
           </Box>
         </Card>
@@ -954,7 +957,7 @@ const BodyPage = () => {
               color="text.secondary"
               className={styles.descClamp}
             >
-              {recipe.description || "Không có mô tả"}
+              {recipe.description || t("recipes.no_description")}
             </Typography>
           </CardContent>
         </Box>
@@ -970,7 +973,7 @@ const BodyPage = () => {
               router.push(`/recipes`);
             }}
           >
-            Xem công thức
+            {t("recipes.view")}
           </Button>
         </Box>
       </Card>
@@ -1086,7 +1089,7 @@ const BodyPage = () => {
         </Alert>
       ) : restaurants.length === 0 ? (
         <Typography textAlign="center" mt={4}>
-          Không có nhà hàng nào.
+          {t("errors.no_restaurants")}
         </Typography>
       ) : (
         <>
@@ -1099,7 +1102,7 @@ const BodyPage = () => {
               mb={1}
             >
               <Typography variant="h5" fontWeight={700}>
-                Ưu đãi hiện có trên SmartTasty
+                {t("sections.promotions_title")}
               </Typography>
               {promoLoading && <CircularProgress size={18} />}
             </Box>
@@ -1107,7 +1110,7 @@ const BodyPage = () => {
               <Alert severity="warning">{promoError}</Alert>
             ) : promotions.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                Chưa có khuyến mãi.
+                {t("promotions.empty")}
               </Typography>
             ) : (
               renderPromotionsCarousel()
@@ -1116,7 +1119,7 @@ const BodyPage = () => {
           {visibleRestaurants.length > 0 && (
             <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 4, borderRadius: 2 }}>
               <Typography variant="h5" fontWeight={700} mb={1}>
-                Nhà hàng được đề xuất
+                {t("sections.suggested_restaurants")}
               </Typography>
               {renderSuggestedCarousel()}
             </Paper>
@@ -1130,13 +1133,13 @@ const BodyPage = () => {
               mb={1}
             >
               <Typography variant="h5" fontWeight={700}>
-                Món đang giảm giá
+                {t("sections.dish_promotions")}
               </Typography>
               {dishPromotionsLoading && <CircularProgress size={18} />}
             </Box>
             {dishPromotions.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                Chưa có món nào đang giảm giá.
+                {t("dishPromotions.empty")}
               </Typography>
             ) : (
               <Box position="relative">
@@ -1204,7 +1207,7 @@ const BodyPage = () => {
             >
               <Image
                 src={banerV2}
-                alt="Banner công thức"
+                alt={t("banner.recipes_alt")}
                 fill
                 sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
                 //  style={{ objectFit: "cover" }}
@@ -1221,13 +1224,13 @@ const BodyPage = () => {
                 mb={1}
               >
                 <Typography variant="h5" fontWeight={700}>
-                  Các công thức nổi bật trên SmartTasty
+                  {t("sections.top_recipes")}
                 </Typography>
                 {recipesLoading && <CircularProgress size={18} />}
               </Box>
               {topRecipes.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Chưa có công thức nổi bật.
+                  {t("recipes.empty")}
                 </Typography>
               ) : (
                 renderTopRecipesCarousel()
@@ -1237,7 +1240,7 @@ const BodyPage = () => {
 
           <Paper sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2 }}>
             <Typography variant="h5" fontWeight={700} mb={2}>
-              Tất cả nhà hàng
+              {t("sections.all_restaurants")}
             </Typography>
             {renderRestaurants(restaurants, false)}
             {/* Pagination for restaurant listing (server-side) */}
@@ -1277,7 +1280,7 @@ const BodyPage = () => {
             >
               <Image
                 src={HopTac}
-                alt="Đối tác SmartTasty"
+                alt={t("banner.partners_alt")}
                 fill
                 sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
               />

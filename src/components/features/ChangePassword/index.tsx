@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
@@ -36,6 +37,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   const { changePasswordLoading, changePasswordError, changePasswordSuccess } =
     useAppSelector((state) => state.user);
   const isMobile = useMediaQuery("(max-width:768px)");
+  const t = useTranslations("changePassword");
 
   const [formValues, setFormValues] = useState({
     currentPassword: "",
@@ -46,16 +48,14 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   const validate = (): boolean => {
     const { newPassword, confirmNewPassword } = formValues;
     if (newPassword !== confirmNewPassword) {
-      toast.error("Mật khẩu mới và xác nhận không khớp!");
+      toast.error(t("validation.mismatch"));
       return false;
     }
 
     if (
       !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{6,}$/.test(newPassword)
     ) {
-      toast.error(
-        "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự."
-      );
+      toast.error(t("validation.pattern"));
       return false;
     }
     return true;
@@ -73,7 +73,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
 
   useEffect(() => {
     if (changePasswordSuccess) {
-      toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+      toast.success(t("success.reset"));
 
       // ✅ Xóa tokens từ cookie và Redux user
       clearTokens();
@@ -91,15 +91,24 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     }
 
     if (changePasswordError) {
-      toast.error(changePasswordError);
+      // server returns a message string; show it if present, otherwise a generic message
+      const msg = changePasswordError || t("errors.generic");
+      toast.error(msg);
       dispatch(resetChangePasswordState());
     }
-  }, [changePasswordSuccess, changePasswordError, dispatch, router, onSuccess]);
+  }, [
+    changePasswordSuccess,
+    changePasswordError,
+    dispatch,
+    router,
+    onSuccess,
+    t,
+  ]);
 
   const formContent = (
     <Box component="form" onSubmit={handleSubmit}>
       <TextField
-        label="Mật khẩu hiện tại"
+        label={t("form.current_password")}
         name="currentPassword"
         type="password"
         fullWidth
@@ -109,7 +118,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         onChange={handleChange}
       />
       <TextField
-        label="Mật khẩu mới"
+        label={t("form.new_password")}
         name="newPassword"
         type="password"
         fullWidth
@@ -119,7 +128,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         onChange={handleChange}
       />
       <TextField
-        label="Xác nhận mật khẩu mới"
+        label={t("form.confirm_password")}
         name="confirmNewPassword"
         type="password"
         fullWidth
@@ -140,7 +149,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         {changePasswordLoading ? (
           <CircularProgress size={24} />
         ) : (
-          "Đổi mật khẩu"
+          t("btn.change")
         )}
       </Button>
     </Box>

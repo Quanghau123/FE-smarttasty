@@ -18,6 +18,7 @@ import {
   TextField,
 } from "@mui/material";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   fetchReservationsByUser,
@@ -83,6 +84,8 @@ const BookingTablePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { reservations, loading, error } = useAppSelector((s) => s.reservation);
 
+  const t = useTranslations("tableBooking");
+
   const { user, token } = useMemo(getUserFromLocalStorage, []);
   const userId = user.userId ?? 0;
 
@@ -118,7 +121,7 @@ const BookingTablePage: React.FC = () => {
   const handleOpenEdit = useCallback(
     (row: UserReservationRow) => {
       if (!canUserEdit(row.status)) return;
-      
+
       setEditing({
         id: row.id,
         restaurantId: row.restaurantId,
@@ -141,19 +144,19 @@ const BookingTablePage: React.FC = () => {
   const handleCancel = useCallback(
     async (row: UserReservationRow) => {
       if (!canUserEdit(row.status))
-        return toast.info("Chỉ có thể huỷ khi trạng thái là Pending");
+        return toast.info(t("warnings.cannot_cancel_pending"));
       try {
         await dispatch(
           deleteReservation({ reservationId: row.id, userId: userId })
         ).unwrap();
-        toast.success("Huỷ đặt bàn thành công");
+        toast.success(t("success.cancel"));
         await onRefresh();
       } catch (e: unknown) {
         const err = e as { message?: string };
-        toast.error(err?.message || "Huỷ thất bại");
+        toast.error(err?.message || t("errors.cancel_failed"));
       }
     },
-    [dispatch, onRefresh, userId]
+    [dispatch, onRefresh, userId, t]
   );
 
   const handleSaveEdit = async () => {
@@ -182,7 +185,7 @@ const BookingTablePage: React.FC = () => {
         })
       ).unwrap();
 
-      toast.success("Cập nhật đặt bàn thành công");
+      toast.success(t("success.update"));
       setEditOpen(false);
       setEditing(null);
       await onRefresh();
@@ -201,7 +204,7 @@ const BookingTablePage: React.FC = () => {
       );
     if (error) return <Alert severity="error">{error}</Alert>;
     if (!reservations.length)
-      return <Typography>Chưa có đặt chỗ nào.</Typography>;
+      return <Typography>{t("no_reservations")}</Typography>;
 
     return (
       <Grid container spacing={2}>
@@ -251,22 +254,22 @@ const BookingTablePage: React.FC = () => {
 
                 <Stack spacing={0.5} mb={1}>
                   <Typography variant="body2">
-                    <b>Mã đặt chỗ:</b> #{r.id}
+                    {t("booking_number", { id: r.id })}
                   </Typography>
                   <Typography variant="body2">
-                    <b>Người lớn:</b> {r.adultCount} · <b>Trẻ em:</b>{" "}
-                    {r.childCount}
+                    <b>{t("label.adults")}</b> {r.adultCount} ·{" "}
+                    <b>{t("label.children")}</b> {r.childCount}
                   </Typography>
                   <Typography variant="body2">
-                    <b>Ngày đến:</b>{" "}
+                    <b>{t("label.arrival_date")}</b>{" "}
                     {dayjs(r.arrivalDate).isValid()
                       ? dayjs(r.arrivalDate).format("DD/MM/YYYY")
                       : r.arrivalDate}{" "}
-                    · <b>Giờ:</b> {HHmm(r.reservationTime)}
+                    · <b>{t("label.time")}</b> {HHmm(r.reservationTime)}
                   </Typography>
                   {r.note && (
                     <Typography variant="body2">
-                      <b>Ghi chú:</b> {r.note}
+                      <b>{t("label.note")}</b> {r.note}
                     </Typography>
                   )}
                 </Stack>
@@ -279,7 +282,7 @@ const BookingTablePage: React.FC = () => {
                         variant="outlined"
                         onClick={() => handleOpenEdit(r)}
                       >
-                        Chỉnh sửa
+                        {t("btn.edit")}
                       </Button>
                       <Button
                         size="small"
@@ -287,11 +290,11 @@ const BookingTablePage: React.FC = () => {
                         variant="contained"
                         onClick={() => handleCancel(r)}
                       >
-                        Huỷ
+                        {t("btn.cancel_booking")}
                       </Button>
                     </>
                   ) : (
-                    <Chip size="small" label="Không thể chỉnh sửa" />
+                    <Chip size="small" label={t("errors.cannot_edit")} />
                   )}
                 </Stack>
               </Paper>
@@ -300,12 +303,12 @@ const BookingTablePage: React.FC = () => {
         })}
       </Grid>
     );
-  }, [reservations, loading, error, handleOpenEdit, handleCancel]);
+  }, [reservations, loading, error, handleOpenEdit, handleCancel, t]);
 
   return (
     <Box p={{ xs: 1, sm: 2, md: 3 }} sx={{ maxWidth: 1200, mx: "auto" }}>
       <Typography variant="h5" fontWeight={700} mb={2}>
-        Đặt chỗ của tôi
+        {t("page_title")}
       </Typography>
       {content}
 
@@ -315,14 +318,14 @@ const BookingTablePage: React.FC = () => {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Chỉnh sửa đặt chỗ</DialogTitle>
+        <DialogTitle>{t("dialog.edit_title")}</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <Stack spacing={2}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
                 fullWidth
                 type="number"
-                label="Người lớn"
+                label={t("label.adults")}
                 value={editing?.adultCount ?? 0}
                 onChange={(e) =>
                   setEditing((s) =>
@@ -334,7 +337,7 @@ const BookingTablePage: React.FC = () => {
               <TextField
                 fullWidth
                 type="number"
-                label="Trẻ em"
+                label={t("label.children")}
                 value={editing?.childCount ?? 0}
                 onChange={(e) =>
                   setEditing((s) =>
@@ -349,7 +352,7 @@ const BookingTablePage: React.FC = () => {
               <TextField
                 fullWidth
                 type="date"
-                label="Ngày đến"
+                label={t("label.arrival_date")}
                 value={editing?.arrivalDate ?? ""}
                 onChange={(e) =>
                   setEditing((s) =>
@@ -361,7 +364,7 @@ const BookingTablePage: React.FC = () => {
               <TextField
                 fullWidth
                 type="time"
-                label="Giờ"
+                label={t("label.time")}
                 value={editing?.reservationTime ?? ""}
                 onChange={(e) =>
                   setEditing((s) =>
@@ -374,7 +377,7 @@ const BookingTablePage: React.FC = () => {
 
             <TextField
               fullWidth
-              label="Ghi chú"
+              label={t("label.note")}
               value={editing?.note ?? ""}
               onChange={(e) =>
                 setEditing((s) => (s ? { ...s, note: e.target.value } : s))
@@ -383,10 +386,12 @@ const BookingTablePage: React.FC = () => {
               rows={3}
             />
 
-            <Typography variant="subtitle2">Thông tin liên hệ</Typography>
+            <Typography variant="subtitle2">
+              {t("customer_info_title")}
+            </Typography>
             <TextField
               fullWidth
-              label="Họ và tên"
+              label={t("label.name")}
               value={editing?.contactName ?? ""}
               onChange={(e) =>
                 setEditing((s) =>
@@ -396,7 +401,7 @@ const BookingTablePage: React.FC = () => {
             />
             <TextField
               fullWidth
-              label="Số điện thoại"
+              label={t("label.phone")}
               value={editing?.phone ?? ""}
               onChange={(e) =>
                 setEditing((s) => (s ? { ...s, phone: e.target.value } : s))
@@ -405,7 +410,7 @@ const BookingTablePage: React.FC = () => {
             <TextField
               fullWidth
               type="email"
-              label="Email"
+              label={t("label.email")}
               value={editing?.email ?? ""}
               onChange={(e) =>
                 setEditing((s) => (s ? { ...s, email: e.target.value } : s))
@@ -414,13 +419,15 @@ const BookingTablePage: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Huỷ</Button>
+          <Button onClick={() => setEditOpen(false)}>
+            {t("dialog.cancel")}
+          </Button>
           <Button
             variant="contained"
             onClick={handleSaveEdit}
             disabled={!editing}
           >
-            Lưu
+            {t("dialog.save")}
           </Button>
         </DialogActions>
       </Dialog>

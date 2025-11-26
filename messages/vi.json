@@ -3,6 +3,296 @@
     "homepage_btn_title": "Trang Chủ",
     "logout_btn_title": "Thoát"
   },
+  "adminRestaurant": {
+    "restaurant": {
+      "title": "Thông tin nhà hàng",
+      "image_alt": "Ảnh nhà hàng",
+      "btn": {
+        "edit": "Chỉnh sửa",
+        "choose_image": "Chọn ảnh mới",
+        "save_changes": "Lưu thay đổi",
+        "cancel": "Huỷ",
+        "delete": "Xóa"
+      },
+      "label": {
+        "name": "Tên nhà hàng",
+        "address": "Địa chỉ",
+        "description": "Mô tả",
+        "open_time": "Giờ mở cửa",
+        "close_time": "Giờ đóng cửa"
+      },
+      "view": {
+        "address": "Địa chỉ:",
+        "description": "Mô tả:",
+        "status": "Trạng thái:",
+        "hours": "Giờ hoạt động:",
+        "followers": "Người theo dõi:",
+        "reviews_count": "đánh giá"
+      },
+      "status": {
+        "unknown": "Không rõ",
+        "open": "Đang mở cửa",
+        "closed": "Đã đóng cửa"
+      },
+      "verified": "✓ Đã xác thực",
+      "menu": {
+        "title": "Thực đơn",
+        "no_dishes": "Chưa có món ăn nào."
+      },
+      "reviews": {
+        "no_reviews_for_restaurant": "Chưa có đánh giá nào cho nhà hàng này."
+      },
+      "dialog": {
+        "delete_review_title": "Xác nhận xóa đánh giá",
+        "delete_review_text": "Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác."
+      },
+      "no_restaurant": "Bạn chưa có nhà hàng",
+      "create_restaurant": "Tạo nhà hàng",
+      "success": {
+        "update_success": "Cập nhật nhà hàng thành công!"
+      },
+      "errors": {
+        "no_permission": "Bạn không có quyền truy cập.",
+        "no_token": "Không tìm thấy token, vui lòng đăng nhập lại.",
+        "update_failed": "Cập nhật thất bại."
+      }
+    },
+    "promotion": {
+      "title": "Quản lý khuyến mãi",
+      "subtitle": "Tạo và quản lý các chương trình khuyến mãi cho nhà hàng của bạn",
+      "btn": {
+        "create": "Tạo khuyến mãi",
+        "update": "Cập nhật",
+        "cancel": "Hủy",
+        "delete": "Xóa",
+        "confirm": "Xác nhận",
+        "choose_image": "Chọn ảnh mới",
+        "cancel_assign_min": "Huỷ gán số tiền tối thiểu"
+      },
+      "filter": {
+        "label": "Lọc theo phạm vi",
+        "all": "Tất cả",
+        "dish": "Món ăn",
+        "order": "Đơn hàng"
+      },
+      "summary": {
+        "total_promotions": "Tổng khuyến mãi: {count}"
+      },
+      "empty": {
+        "title": "Chưa có khuyến mãi nào",
+        "subtitle": "Hãy tạo chương trình khuyến mãi đầu tiên để thu hút khách hàng"
+      },
+      "status": {
+        "active": "Đang diễn ra",
+        "upcoming": "Sắp diễn ra",
+        "ended": "Đã kết thúc"
+      },
+      "target": {
+        "order": "Đơn hàng",
+        "dish": "Món ăn",
+        "category": "Danh mục",
+        "dish_specific": "Món ăn cụ thể",
+        "order_whole": "Toàn bộ đơn hàng"
+      },
+      "min_order": {
+        "label": "Tối thiểu: {amount}",
+        "title": "Gán số tiền tối thiểu",
+        "text": "Nhập số tiền tối thiểu để khách hàng có thể áp dụng khuyến mãi {title} cho đơn hàng.",
+        "input_label": "Số tiền tối thiểu (đ)",
+        "placeholder": "Ví dụ: 100000",
+        "helper": "Đơn hàng phải đạt tối thiểu số tiền này để được áp dụng khuyến mãi"
+      },
+      "modal": {
+        "title_create": "Tạo khuyến mãi mới",
+        "subtitle_create": "Điền đầy đủ thông tin bên dưới",
+        "title_update": "Cập nhật khuyến mãi",
+        "subtitle_update": "Chỉnh sửa thông tin khuyến mãi",
+        "basic_info_title": "Thông tin cơ bản",
+        "discount_config_title": "Cấu hình giảm giá",
+        "target_title": "Phạm vi áp dụng",
+        "period_title": "Thời gian hiệu lực"
+      },
+      "form": {
+        "title": { "label": "Tiêu đề khuyến mãi", "placeholder": "VD: Giảm giá cuối tuần, Combo tiết kiệm..." },
+        "description": { "label": "Mô tả chi tiết", "placeholder": "Mô tả về chương trình khuyến mãi..." },
+        "voucher": { "label": "Mã voucher (tùy chọn)", "placeholder": "VD: WEEKEND10", "helper_for_order": "Nhập mã voucher để khách hàng nhập mã khi thanh toán", "helper_for_other": "Mã chỉ có tác dụng khi phạm vi là 'Toàn bộ đơn hàng'" },
+        "image": { "label": "Ảnh khuyến mãi (tùy chọn)" },
+        "discount_value_label_percent": "Giá trị giảm (%)",
+        "discount_value_label_fixed": "Giá trị giảm (VNĐ)",
+        "discount_value_placeholder_percent": "10",
+        "discount_value_placeholder_fixed": "50000",
+        "start_date": "Ngày bắt đầu",
+        "end_date": "Ngày kết thúc"
+      },
+      "discount": {
+        "percent": "Phần trăm",
+        "fixed": "Số tiền cố định"
+      },
+      "dialog": {
+        "delete_title": "Xác nhận xoá",
+        "delete_text": "Bạn có chắc chắn muốn xoá khuyến mãi này không?"
+      },
+      "errors": {
+        "no_restaurant_account": "Tài khoản chưa có nhà hàng!"
+      },
+      "aria": {
+        "assign_min_order": "Gán số tiền tối thiểu"
+      }
+    },
+    "orders": {
+      "title": "Đơn hàng của {name}",
+      "unknown_restaurant": "Nhà hàng chưa đặt tên",
+      "labels": {
+        "order": "Đơn hàng ",
+        "customer": "Khách hàng:",
+        "total": "Tổng:",
+        "address": "Địa chỉ:",
+        "items_title": "Món đã đặt",
+        "no_items": "Không có món nào",
+        "payment_prefix": "Thanh toán:",
+        "order_status_label": "Trạng thái đơn hàng",
+        "delivery_status_label": "Trạng thái giao hàng",
+        "confirm_cod": "Xác nhận COD",
+        "no_orders": "Chưa có đơn hàng nào."
+      },
+      "errors": {
+        "backward_order": "Không thể quay về trạng thái trước của đơn hàng.",
+        "backward_delivery": "Không thể quay về trạng thái trước của giao hàng.",
+        "delivery_requires_payment": "Chỉ có thể đánh dấu 'Đã giao' khi thanh toán thành công.",
+        "update_order_failed": "Cập nhật trạng thái đơn thất bại.",
+        "update_delivery_failed": "Cập nhật trạng thái giao hàng thất bại.",
+        "missing_restaurant_cod": "Thiếu nhà hàng để xác nhận COD.",
+        "confirm_cod_failed": "Xác nhận COD thất bại."
+      },
+      "success": {
+        "update_order": "Cập nhật trạng thái đơn thành công.",
+        "update_delivery": "Cập nhật trạng thái giao hàng thành công.",
+        "confirm_cod": "Xác nhận COD thành công."
+      },
+      "status": {
+        "order": {
+          "pending": "Đang chờ",
+          "processing": "Đang xử lý",
+          "paid": "Đã thanh toán",
+          "cancelled": "Đã hủy",
+          "failed": "Thất bại",
+          "unknown": "Không rõ"
+        },
+        "delivery": {
+          "preparing": "Đang chuẩn bị",
+          "delivering": "Đang giao",
+          "delivered": "Đã giao",
+          "canceled": "Đã hủy",
+          "failed": "Thất bại",
+          "unknown": "Không rõ"
+        },
+        "payment": {
+          "pending": "Đang chờ",
+          "success": "Thành công",
+          "failed": "Thất bại",
+          "cancelled": "Đã hủy",
+          "refunded": "Đã hoàn tiền",
+          "unknown": "Không rõ"
+        }
+      }
+    },
+    "staff": {
+      "title": "Quản lý tài khoản nhân viên",
+      "btn": {
+        "create": "Tạo tài khoản",
+        "update": "Cập nhật",
+        "cancel": "Hủy"
+      },
+      "table": {
+        "id": "ID",
+        "name": "Tên",
+        "email": "Email",
+        "phone": "Phone",
+        "actions": "Hành động"
+      },
+      "aria": {
+        "edit": "Sửa nhân viên",
+        "delete": "Xóa nhân viên"
+      },
+      "dialog": {
+        "title_create": "Tạo nhân viên",
+        "title_update": "Cập nhật nhân viên",
+        "confirm_delete": "Bạn có chắc muốn xóa nhân viên này?"
+      },
+      "form": {
+        "name": "Tên",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Địa chỉ",
+        "password_helper": "Mật khẩu (nếu để trống sẽ tạo tự động)"
+      },
+      "success": {
+        "create": "Tạo nhân viên thành công",
+        "update": "Cập nhật thành công",
+        "delete": "Xóa thành công"
+      },
+      "errors": {
+        "generic": "Có lỗi xảy ra",
+        "delete_failed": "Xóa thất bại"
+      }
+    },
+    "createRestaurant": {
+      "title": "Tạo nhà hàng mới",
+      "steps": {
+        "basic_info": "Thông tin cơ bản",
+        "location": "Vị trí",
+        "image": "Ảnh đại diện",
+        "schedule": "Lịch & mô tả",
+        "confirm": "Xác nhận",
+        "confirm_title": "Xác nhận thông tin"
+      },
+      "location": {
+        "instructions": "Nhập địa chỉ hoặc chọn trên bản đồ"
+      },
+      "form": {
+        "name": "Tên nhà hàng",
+        "category_label": "Danh mục",
+        "address_placeholder": "Địa chỉ",
+        "description": "Mô tả",
+        "open_time": "Giờ mở cửa",
+        "close_time": "Giờ đóng cửa"
+      },
+      "categories": {
+        "Buffet": "Buffet",
+        "NhaHang": "Nhà hàng",
+        "AnVatViaHe": "Ăn vặt/vỉa hè",
+        "AnChay": "Ăn chay",
+        "CafeNuocuong": "Cafe/Nuocuong",
+        "QuanAn": "Quán ăn",
+        "Bar": "Bar",
+        "QuanNhau": "Quán nhậu"
+      },
+      "labels": {
+        "no_image": "Chưa chọn ảnh"
+      },
+      "review": {
+        "name": "Tên:",
+        "category": "Danh mục:",
+        "address": "Địa chỉ:",
+        "image": "Ảnh:",
+        "schedule": "Lịch hoạt động:"
+      },
+      "btn": {
+        "choose_image": "Chọn ảnh",
+        "back": "Quay lại",
+        "next": "Tiếp theo",
+        "creating": "Đang tạo...",
+        "create_restaurant": "Tạo nhà hàng"
+      },
+      "errors": {
+        "no_file": "Vui lòng chọn ảnh trước khi tạo.",
+        "create_failed": "Tạo thất bại, vui lòng kiểm tra lại."
+      },
+      "success": {
+        "create": "Tạo nhà hàng thành công!"
+      }
+    }
+  },
   "header": {
     "account_btn_title": "Tài Khoản",
     "logout_btn_title": "Đăng Xuất",
@@ -58,7 +348,103 @@
     "new_to_smartasty_text": "Bạn mới biết đến Smartasty?",
     "register_btn_title": "Đăng Ký",
     "welcome_text": "Xin chào",
-    "login_success": "Đăng nhập thành công!"
+    "login_success": "Đăng nhập thành công!",
+    "invalid_credentials": "Email hoặc mật khẩu không chính xác!"
+  },
+  "forgotPassword": {
+    "title": "Quên mật khẩu",
+    "form": {
+      "email": "Email"
+    },
+    "btn": {
+      "send": "Gửi liên kết đặt lại mật khẩu"
+    },
+    "success": {
+      "sent": "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn."
+    },
+    "errors": {
+      "empty_email": "Vui lòng nhập email!",
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+    }
+  },
+  "resetPassword": {
+    "title": "Đặt lại mật khẩu",
+    "form": {
+      "new_password": "Mật khẩu mới",
+      "confirm_password": "Xác nhận mật khẩu"
+    },
+    "btn": {
+      "reset": "Đặt lại mật khẩu"
+    },
+    "validation": {
+      "required_password": "Vui lòng nhập mật khẩu!",
+      "pattern": "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự.",
+      "required_confirm": "Vui lòng nhập lại mật khẩu!",
+      "mismatch": "Mật khẩu xác nhận không khớp."
+    },
+    "success": {
+      "reset": "Đặt lại mật khẩu thành công!"
+    },
+    "errors": {
+      "invalid_or_expired": "Token không hợp lệ hoặc đã hết hạn.",
+      "failed": "Lỗi trong quá trình đặt lại mật khẩu.",
+      "invalid_link": "Liên kết không hợp lệ."
+    }
+  },
+  "accountPage": {
+    "not_logged_in": "Bạn chưa đăng nhập",
+    "btn": {
+      "login": "Đăng nhập",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "edit": "Sửa thông tin"
+    },
+    "tabs": {
+      "info": "Thông tin tài khoản",
+      "password": "Đổi mật khẩu"
+    },
+    "form": {
+      "name": "Tên người dùng",
+      "email": "Email",
+      "email_helper": "Email không thể thay đổi",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ"
+    },
+    "labels": {
+      "username": "Tên người dùng:",
+      "email": "Email:",
+      "phone": "Số điện thoại:",
+      "address": "Địa chỉ:",
+      "not_updated": "Chưa cập nhật"
+    },
+    "messages": {
+      "update_success": "Cập nhật thành công!"
+    },
+    "errors": {
+      "email_in_use": "Email đã được sử dụng.",
+      "update_failed": "Cập nhật thất bại."
+    }
+  },
+  "changePassword": {
+    "title": "Đổi mật khẩu",
+    "form": {
+      "current_password": "Mật khẩu hiện tại",
+      "new_password": "Mật khẩu mới",
+      "confirm_password": "Xác nhận mật khẩu mới"
+    },
+    "btn": {
+      "change": "Đổi mật khẩu"
+    },
+    "validation": {
+      "mismatch": "Mật khẩu mới và xác nhận không khớp!",
+      "pattern": "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự."
+    },
+    "success": {
+      "reset": "Đổi mật khẩu thành công! Vui lòng đăng nhập lại."
+    },
+    "errors": {
+      "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+    }
   },
   "register": {
     "title": "Đăng ký tài khoản",
@@ -158,18 +544,23 @@
     "created_at": "Tạo lúc: {time}",
     "btn": {
       "update_status": "Cập nhật trạng thái",
-      "cancel_booking": "Hủy đặt bàn"
+      "cancel_booking": "Hủy đặt bàn",
+      "edit": "Chỉnh sửa"
     },
     "warnings": {
-      "select_new_status": "Chọn trạng thái mới"
+      "select_new_status": "Chọn trạng thái mới",
+      "cannot_cancel_pending": "Chỉ có thể huỷ khi trạng thái là Pending"
     },
     "success": {
       "update_status": "Cập nhật trạng thái thành công",
-      "cancelled_by_business": "Đã hủy đặt bàn (bởi nhà hàng)"
+      "cancelled_by_business": "Đã hủy đặt bàn (bởi nhà hàng)",
+      "cancel": "Hủy đặt bàn thành công",
+      "update": "Cập nhật đặt bàn thành công"
     },
     "errors": {
       "update_failed": "Cập nhật thất bại",
-      "cancel_failed": "Hủy thất bại"
+      "cancel_failed": "Hủy thất bại",
+      "cannot_edit": "Không thể chỉnh sửa"
     },
     "confirm": {
       "cancel_by_business": "Bạn có chắc muốn hủy đặt bàn này (hủy bởi nhà hàng)?"
@@ -205,7 +596,8 @@
       "current_status": "Trạng thái hiện tại",
       "select_new_status": "Chọn trạng thái mới",
       "cancel": "Huỷ",
-      "save": "Lưu"
+      "save": "Lưu",
+      "edit_title": "Chỉnh sửa đặt chỗ"
     }
   }
 
@@ -306,7 +698,20 @@
     ,
     "follow_label": "Theo dõi",
     "following_label": "Đang theo dõi",
-    "followers_label": "Người theo dõi"
+    "followers_label": "Người theo dõi",
+    "follow_aria": "Theo dõi nhà hàng",
+    "following_aria": "Đã theo dõi nhà hàng",
+    "missing_fields": "Thiếu thông tin",
+    "please_login": "Vui lòng đăng nhập",
+    "switch_view": "Chuyển mục xem",
+    "unknown": "Không rõ",
+    "please_login_to_favorite": "Vui lòng đăng nhập để theo dõi nhà hàng",
+    "removed_favorite": "Đã bỏ theo dõi nhà hàng",
+    "added_favorite": "Đã theo dõi nhà hàng",
+    "no_image_alt": "Chưa có ảnh",
+    "reserve_now": "Đặt chỗ ngay",
+    "suggested_title": "Có thể bạn quan tâm",
+    "reviews_count": "đánh giá"
   },
   "review": {
     "form_title": "Đánh giá nhà hàng",
@@ -407,4 +812,327 @@
       "remove_voucher_success": "Đã hủy voucher cho món"
     }
   }
-}
+  ,
+  "layout": {
+    "body": {
+      "badge": { "suggested": "Được đề xuất" },
+      "no_image": "Chưa có ảnh",
+      "address": { "updating": "Đang cập nhật địa chỉ" },
+      "btn": { "reserve_now": "Đặt chỗ ngay" },
+      "promotion": {
+        "badge": "Khuyến mãi",
+        "no_image": "Không có ảnh khuyến mãi",
+        "valid_until_prefix": "Áp dụng đến",
+        "valid_until_none": "khi có thông báo mới",
+        "view": "Xem ưu đãi"
+      },
+      "dish": { "view": "Xem món" },
+      "recipes": { "no_description": "Không có mô tả", "view": "Xem công thức", "empty": "Chưa có công thức nổi bật." },
+      "errors": { "no_restaurants": "Không có nhà hàng nào." },
+      "sections": {
+        "promotions_title": "Ưu đãi hiện có trên SmartTasty",
+        "suggested_restaurants": "Nhà hàng được đề xuất",
+        "dish_promotions": "Món đang giảm giá",
+        "top_recipes": "Các công thức nổi bật trên SmartTasty",
+        "all_restaurants": "Tất cả nhà hàng"
+      },
+      "promotions": { "empty": "Chưa có khuyến mãi." },
+      "dishPromotions": { "empty": "Chưa có món nào đang giảm giá." },
+      "banner": { "recipes_alt": "Banner công thức", "partners_alt": "Đối tác SmartTasty" }
+    },
+    "cart": {
+      "header": { "title": "Giỏ Hàng" },
+      "empty": { "title": "Giỏ hàng của bạn đang trống" },
+      "restaurant": { "unnamed": "Nhà hàng #{id}", "unknown_address": "Chưa có địa chỉ" },
+      "item": { "no_image_alt": "Món ăn", "no_image": "Chưa có ảnh" },
+      "order": { "no_items": "Không có món ăn nào trong đơn này." },
+      "btn": {
+        "addMore": "Thêm món",
+        "deleteOrder": "Xoá đơn hàng",
+        "checkout": "Thanh toán",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy"
+      },
+      "summary": {
+        "title": "Thông tin đơn hàng",
+        "subtotal": "Tạm tính",
+        "discount": "Giảm giá",
+        "total": "Tổng cộng",
+        "chooseItemsNote": "Vui lòng chọn món muốn thanh toán",
+        "totalOrderLabel": "Tổng đơn hàng:"
+      },
+      "errors": {
+        "selectItemsWarning": "⚠️ Vui lòng chọn món để thanh toán",
+        "orderNotFound": "❌ Không tìm thấy đơn hàng để thanh toán",
+        "deleteOrderFailed": "Không thể xóa đơn hàng",
+        "removeItemFailed": "❌ Không thể xóa món ăn",
+        "updateQuantityFailed": "❌ Không thể cập nhật số lượng món"
+      },
+      "success": {
+        "deleteOrder": "Đã xóa đơn hàng thành công",
+        "removeItem": "Đã xóa món ăn thành công"
+      },
+      "dialog": {
+        "delete_order_title": "Xác nhận xóa đơn hàng",
+        "delete_order_text": "Bạn có chắc muốn xóa đơn hàng này không? Hành động này không thể hoàn tác.",
+        "delete_item_title": "Xác nhận xóa món ăn",
+        "delete_item_text": "Bạn có chắc muốn xóa món này khỏi đơn hàng không?"
+      }
+    },
+    "nearbyRestaurant": {
+      "dialog": {
+        "title": "Cho phép truy cập vị trí",
+        "content": "Cho phép SmartTasty truy cập vị trí của bạn để tìm nhà hàng gần bạn"
+      },
+      "btn": { "later": "Để sau", "allow": "Cho phép", "reserve_now": "Đặt chỗ ngay", "get_directions": "Chỉ đường" },
+      "empty": { "no_nearby": "Không tìm thấy nhà hàng gần bạn hoặc chưa cho phép vị trí." },
+      "aria": { "toggleView": "Chuyển chế độ xem" },
+      "toggle": { "list": "Danh sách", "map": "Bản đồ" },
+      "errors": {
+        "location_permission": "Bạn cần cho phép vị trí để xem nhà hàng gần bạn.",
+        "geo_not_supported": "Trình duyệt của bạn không hỗ trợ định vị.",
+        "permission_needed": "Vui lòng cho phép vị trí để xem đường đi."
+      },
+      "map": { "youAreHere": "Bạn đang ở đây" },
+      "labels": { "distance": "Cách bạn {distance} km" }
+    }
+  },
+  "payment": {
+    "header": { "title": "Thanh toán", "subtitle": "Chọn phương thức thanh toán và xác nhận đơn hàng" },
+    "address": {
+      "title": "Địa chỉ giao hàng",
+      "add_new": "Thêm địa chỉ mới",
+      "edit": "Chỉnh sửa địa chỉ",
+      "unknown": "Chưa có địa chỉ",
+      "no_info": { "title": "Chưa có địa chỉ", "content": "Vui lòng thêm địa chỉ giao hàng để tiếp tục" },
+      "no_name": "Chưa có tên",
+      "no_phone": "Chưa có số điện thoại",
+      "no_address": "Chưa có địa chỉ",
+      "edit_title": "Chỉnh sửa địa chỉ giao hàng",
+      "form": {
+        "name": "Tên người nhận",
+        "name_helper": "Nhập họ tên đầy đủ",
+        "phone": "Số điện thoại",
+        "phone_helper": "Nhập số điện thoại để liên hệ",
+        "address": "Địa chỉ",
+        "address_helper": "Chọn địa chỉ đã lưu hoặc nhập mới",
+        "address_detail_label": "Chi tiết địa chỉ",
+        "address_detail_placeholder": "Căn hộ, tầng, v.v."
+      },
+      "recipient_label": "Người nhận",
+      "phone_label": "Số điện thoại",
+      "note_label": "Ghi chú",
+      "validate": {
+        "recipient": "Vui lòng nhập tên người nhận",
+        "phone": "Vui lòng nhập số điện thoại hợp lệ",
+        "address": "Vui lòng nhập địa chỉ giao hàng"
+      }
+    },
+    "deliveryOptions": {
+      "store_pickup": { "name": "Nhận tại quán", "desc": "Nhận hàng tại nhà hàng", "eta": "Sẵn sàng sau {minutes} phút" },
+      "delivery": { "name": "Giao hàng", "desc": "Giao tới địa chỉ của bạn", "eta": "Ước tính {min}–{max} phút" }
+    },
+    "delivery": {
+      "priority": {
+        "name": "Giao ưu tiên",
+        "description": "Giao nhanh với xử lý ưu tiên",
+        "estimatedTime": "{min}–{max} phút"
+      },
+      "fast": {
+        "name": "Giao nhanh",
+        "description": "Tùy chọn giao nhanh",
+        "estimatedTime": "{min}–{max} phút"
+      },
+      "economy": {
+        "name": "Giao tiết kiệm",
+        "description": "Giao tiết kiệm, chậm hơn",
+        "estimatedTime": "{min}–{max} phút"
+      }
+    },
+    "voucher": {
+      "title": "Voucher",
+      "applied": "Đã áp dụng voucher",
+      "code_prefix": "Mã",
+      "placeholder": "Nhập mã voucher",
+      "available_count": "có sẵn",
+      "no_vouchers": "Không có voucher",
+      "select_title": "Chọn voucher",
+      "no_use": "Không sử dụng voucher",
+      "min_order_label": "Tối thiểu: {amount}",
+      "dialog": { "title": "Áp dụng voucher", "success": "Áp dụng voucher thành công", "invalid": "Voucher không hợp lệ", "already_used": "Voucher đã được sử dụng" }
+    },
+    "paymentMethod": {
+      "title": "Phương thức thanh toán",
+      "cod": { "title": "Trả tiền khi nhận (COD)", "description": "Thanh toán khi nhận hàng" },
+      "vnpay": { "title": "VNPAY", "description": "Thanh toán bằng VNPAY" }
+    },
+    "summary": {
+      "title": "Thông tin đơn hàng",
+      "subtotal": "Tạm tính",
+      "discount": "Giảm giá",
+      "discount_by_code": "Giảm giá (voucher)",
+      "shipping_fee": "Phí vận chuyển",
+      "total": "Tổng cộng"
+    },
+    "item": { "no_image_alt": "Món ăn" },
+    "btn": { "confirm": "Xác nhận thanh toán", "cancel": "Hủy", "apply": "Áp dụng", "change": "Thay đổi", "processing": "Đang xử lý...", "place_order": "Đặt hàng" },
+    "errors": {
+      "missing_address": "Vui lòng chọn địa chỉ giao hàng",
+      "address_missing": "Cần địa chỉ giao hàng",
+      "enter_name": "Vui lòng nhập tên",
+      "enter_phone": "Vui lòng nhập số điện thoại",
+      "enter_address": "Vui lòng nhập địa chỉ",
+      "invalid_phone": "Số điện thoại không hợp lệ",
+      "apply_voucher_failed_default": "Áp dụng voucher thất bại",
+      "remove_voucher_failed_default": "Hủy voucher thất bại",
+      "voucher_still_missing": "Bạn cần thêm {amount} để sử dụng voucher",
+      "payment_failed": "Thanh toán thất bại. Vui lòng thử lại",
+      "empty_cart": "Giỏ hàng của bạn đang trống"
+    }
+  },
+  "purchase": {
+    "title": "Lịch sử thanh toán",
+    "empty": "Chưa có lịch sử thanh toán",
+    "order_prefix": "Đơn hàng ",
+    "statuses": {
+      "all": "Tất cả",
+      "preparing": "Chờ xác nhận",
+      "delivering": "Đang giao",
+      "delivered": "Đã giao",
+      "canceled": "Đã hủy"
+    },
+    "payment": { "paid": "Đã thanh toán", "pending": "Chờ thanh toán", "failed": "Thanh toán thất bại", "canceled": "Đã hủy", "refunded": "Đã hoàn tiền" },
+    "order": { "pending": "Chờ xử lý", "paid": "Đã thanh toán", "processing": "Đang xử lý", "canceled": "Đã hủy", "failed": "Thất bại" },
+    "delivery": { "preparing": "Đang chuẩn bị", "delivering": "Đang giao", "delivered": "Đã giao", "canceled": "Đã hủy" },
+    "unknown": "Không rõ",
+    "labels": { "restaurant": "Nhà hàng:", "items": "món", "original_price": "Giá gốc:", "total": "Tổng:" },
+    "btn": { "more_items": "+{count} món khác", "cancel_order": "Hủy đơn", "view_restaurant": "Xem nhà hàng", "no": "Không", "confirm_cancel": "Xác nhận hủy" },
+    "dialog": { "title": "Xác nhận hủy đơn hàng", "confirm_text": "Bạn có chắc chắn muốn hủy đơn hàng #{id}? Hành động này không thể hoàn tác." }
+  },
+  "staff": {
+    "restaurantOrders": {
+      "title": "Quản lý đơn hàng giao",
+      "loading": "Đang tải đơn hàng...",
+      "empty": "Không có đơn hàng",
+      "errors": {
+        "fetch_failed": "Tải đơn hàng thất bại.",
+        "no_permission": "Bạn không có quyền truy cập.",
+        "cannot_mark_delivered": "Không thể đánh dấu 'Đã giao' — kiểm tra trạng thái giao hàng/thanh toán.",
+        "update_failed": "Cập nhật thất bại.",
+        "action_failed": "Thao tác thất bại."
+      },
+      "success": {
+        "update_delivery": "Cập nhật trạng thái giao hàng thành công.",
+        "confirm_cod": "Xác nhận thu COD thành công.",
+        "mark_delivered": "Đã đánh dấu Đã giao."
+      },
+      "status": {
+        "order": {
+          "pending": "Đang chờ",
+          "processing": "Đang xử lý",
+          "paid": "Đã thanh toán",
+          "cancelled": "Đã hủy",
+          "failed": "Thất bại",
+          "unknown": "Không rõ"
+        },
+        "delivery": {
+          "preparing": "Đang chuẩn bị",
+          "delivering": "Đang giao",
+          "delivered": "Đã giao",
+          "canceled": "Đã hủy",
+          "failed": "Thất bại",
+          "unknown": "Không rõ"
+        }
+      },
+      "labels": {
+        "order": "Đơn hàng ",
+        "customer": "Khách hàng:",
+        "items_detail": "Chi tiết món",
+        "delivery_info": "Thông tin giao hàng",
+        "recipient": "Người nhận",
+        "delivery_address": "Địa chỉ giao hàng",
+        "delivery_status_label": "Trạng thái giao hàng",
+        "collected": "Đã thu tiền"
+      },
+      "btn": {
+        "mark_delivered": "Đánh dấu Đã giao",
+        "confirm_cod": "Xác nhận thu tiền (COD)",
+        "cancel": "Hủy",
+        "confirm": "Xác nhận"
+      },
+      "aria": {
+        "collapse": "Thu gọn chi tiết",
+        "expand": "Mở rộng chi tiết"
+      },
+      "confirm": {
+        "title": "Xác nhận",
+        "cod": "Bạn có chắc chắn muốn xác nhận thu COD?",
+        "delivered": "Bạn có muốn đánh dấu đơn này đã giao?"
+      }
+    }
+    }
+    ,
+    "recipes": {
+      "hero": {
+        "title": "Công Thức Nấu Ăn",
+        "subtitle": "Khám phá và chia sẻ những công thức nấu ăn tuyệt vời từ cộng đồng. Từ món ăn truyền thống đến sáng tạo hiện đại.",
+        "create_btn": "Tạo công thức"
+      },
+      "tabs": { "all": "Tất cả Công Thức", "mine": "Công Thức Của Tôi" },
+      "search": { "placeholder": "Tìm công thức theo tên hoặc nguyên liệu" },
+      "filter": { "all_categories": "Tất cả danh mục" },
+      "empty": {
+        "title": "Không tìm thấy công thức",
+        "no_my_recipes": "Bạn chưa tạo công thức nào",
+        "try_search": "Thử tìm bằng từ khoá khác"
+      },
+      "chip": { "mine": "Công thức của tôi" },
+      "no_description": "Chưa có mô tả",
+      "anonymous": "Ẩn danh",
+      "btn": { "create": "Tạo", "edit": "Chỉnh sửa", "delete": "Xóa", "cancel": "Hủy", "update": "Cập nhật" },
+      "detail": {
+        "description_title": "Mô tả",
+        "ingredients_title": "Nguyên liệu",
+        "steps_title": "Các bước",
+        "reviews_title": "Đánh giá ({count})"
+      },
+      "review": {
+        "write_title": "Viết đánh giá của bạn",
+        "rating_label": "Đánh giá:",
+        "placeholder": "Chia sẻ cảm nhận về công thức này...",
+        "send_btn": "Gửi đánh giá"
+      },
+      "dialog": { "create_title": "Tạo công thức", "update_title": "Cập nhật công thức" },
+      "form": {
+        "title": { "label": "Tiêu đề", "placeholder": "Nhập tiêu đề công thức" },
+        "category": { "label": "Danh mục" },
+        "description": { "label": "Mô tả", "placeholder": "Nhập mô tả" },
+        "image": { "label": "Ảnh", "choose": "Chọn ảnh", "preview_alt": "Ảnh xem trước" },
+        "ingredients": { "label": "Nguyên liệu", "placeholder": "Liệt kê nguyên liệu, cách nhau bởi dấu phẩy" },
+        "steps": { "label": "Các bước", "placeholder": "Mô tả các bước thực hiện" }
+      }
+    },
+  "vnpayReturn": {
+    "success_toast": "Thanh toán VNPay thành công",
+    "result_toast": "Kết quả thanh toán",
+    "unknown": "Không rõ",
+    "error_processing": "Lỗi khi xử lý kết quả VNPay",
+    "copied": "Đã sao chép vào clipboard",
+    "copy_failed": "Không thể sao chép",
+    "invalid_link": "Liên kết VNPay không hợp lệ.",
+    "back_home": "Về trang chủ",
+    "processing": "Đang xử lý kết quả thanh toán...",
+    "cannot_process": "Không thể xử lý kết quả VNPay",
+    "payment_success": "Thanh toán thành công",
+    "payment_result": "Kết quả thanh toán",
+    "order_id": "Mã đơn hàng",
+    "amount": "Số tiền",
+    "method": "Phương thức",
+    "transaction_id": "Mã giao dịch",
+    "vnpay_txnref": "VNPAY TxnRef",
+    "bank": "Ngân hàng",
+    "response_code": "Mã phản hồi",
+    "view_orders": "Xem đơn hàng",
+    "no_result": "Không có kết quả để hiển thị."
+  }
+  }

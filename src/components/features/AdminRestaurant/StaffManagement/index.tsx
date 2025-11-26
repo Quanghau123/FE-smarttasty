@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Box,
   Button,
@@ -39,6 +40,7 @@ import {
 export default function StaffManagement() {
   const dispatch = useAppDispatch();
   const { staffs, loading, error } = useAppSelector((s) => s.staff);
+  const t = useTranslations("adminRestaurant.staff");
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
@@ -105,7 +107,7 @@ export default function StaffManagement() {
         ).unwrap();
         setSnack({
           open: true,
-          message: "Cập nhật thành công",
+          message: t("success.update"),
           severity: "success",
         });
       } else {
@@ -120,7 +122,7 @@ export default function StaffManagement() {
         ).unwrap();
         setSnack({
           open: true,
-          message: "Tạo nhân viên thành công",
+          message: t("success.create"),
           severity: "success",
         });
       }
@@ -128,21 +130,29 @@ export default function StaffManagement() {
       dispatch(fetchStaffsByBusiness());
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      setSnack({ open: true, message: msg || "Lỗi", severity: "error" });
+      setSnack({
+        open: true,
+        message: msg || t("errors.generic"),
+        severity: "error",
+      });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Bạn có chắc muốn xóa nhân viên này?")) return;
+    if (!confirm(t("dialog.confirm_delete"))) return;
     try {
       await dispatch(deleteStaff(id)).unwrap();
-      setSnack({ open: true, message: "Xóa thành công", severity: "success" });
+      setSnack({
+        open: true,
+        message: t("success.delete"),
+        severity: "success",
+      });
       dispatch(fetchStaffsByBusiness());
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setSnack({
         open: true,
-        message: msg || "Xóa thất bại",
+        message: msg || t("errors.delete_failed"),
         severity: "error",
       });
     }
@@ -160,7 +170,7 @@ export default function StaffManagement() {
           gap: { xs: 1, sm: 0 },
         }}
       >
-        <Typography variant="h5">Quản lý tài khoản con</Typography>
+        <Typography variant="h5">{t("title")}</Typography>
         <Button
           variant="contained"
           onClick={handleOpenCreate}
@@ -169,7 +179,7 @@ export default function StaffManagement() {
             alignSelf: { xs: "stretch", sm: "auto" },
           }}
         >
-          Tạo tài khoản
+          {t("btn.create")}
         </Button>
       </Box>
 
@@ -183,11 +193,11 @@ export default function StaffManagement() {
             <Table size="small" sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Tên</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Phone</TableCell>
-                  <TableCell>Hành động</TableCell>
+                  <TableCell>{t("table.id")}</TableCell>
+                  <TableCell>{t("table.name")}</TableCell>
+                  <TableCell>{t("table.email")}</TableCell>
+                  <TableCell>{t("table.phone")}</TableCell>
+                  <TableCell>{t("table.actions")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -212,13 +222,13 @@ export default function StaffManagement() {
                     <TableCell>
                       <IconButton
                         onClick={() => handleEdit(s)}
-                        aria-label="edit"
+                        aria-label={t("aria.edit")}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={() => handleDelete(s.userId)}
-                        aria-label="delete"
+                        aria-label={t("aria.delete")}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -238,37 +248,37 @@ export default function StaffManagement() {
         fullWidth
       >
         <DialogTitle>
-          {editing ? "Cập nhật nhân viên" : "Tạo nhân viên"}
+          {editing ? t("dialog.title_update") : t("dialog.title_create")}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Tên"
+              label={t("form.name")}
               value={form.userName}
               onChange={(e) => setForm({ ...form, userName: e.target.value })}
               fullWidth
             />
             <TextField
-              label="Email"
+              label={t("form.email")}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               fullWidth
             />
             <TextField
-              label="Phone"
+              label={t("form.phone")}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               fullWidth
             />
             <TextField
-              label="Địa chỉ"
+              label={t("form.address")}
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
               fullWidth
             />
             {!editing && (
               <TextField
-                label="Mật khẩu (mặc định nếu bỏ trống sẽ được tạo tự động)"
+                label={t("form.password_helper")}
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 fullWidth
@@ -290,9 +300,9 @@ export default function StaffManagement() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Hủy</Button>
+          <Button onClick={() => setOpen(false)}>{t("btn.cancel")}</Button>
           <Button variant="contained" onClick={handleSubmit}>
-            {editing ? "Cập nhật" : "Tạo"}
+            {editing ? t("btn.update") : t("btn.create")}
           </Button>
         </DialogActions>
       </Dialog>

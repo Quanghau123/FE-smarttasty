@@ -37,11 +37,13 @@ import {
   deleteOrderItem,
   addItemToOrder,
 } from "@/redux/slices/orderSlice";
+import { useTranslations } from "next-intl";
 
 // Order types are available in the redux state; no direct import required here
 const CartPage = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const t = useTranslations("layout.cart");
   const { orders, selectedOrder, loading, error } = useAppSelector(
     (state) => state.order
   );
@@ -149,22 +151,21 @@ const CartPage = () => {
   const handleDeleteOrder = async (orderId: number) => {
     setConfirmDialog({
       open: true,
-      title: "Xác nhận xóa đơn hàng",
-      message:
-        "Bạn có chắc muốn xóa đơn hàng này không? Hành động này không thể hoàn tác.",
+      title: t("dialog.delete_order_title"),
+      message: t("dialog.delete_order_text"),
       onConfirm: async () => {
         try {
           await dispatch(deleteOrder(orderId));
           setSnackbar({
             open: true,
-            message: "Đã xóa đơn hàng thành công",
+            message: t("success.deleteOrder"),
             severity: "success",
           });
         } catch (error) {
           console.error("Lỗi xóa đơn:", error);
           setSnackbar({
             open: true,
-            message: "Không thể xóa đơn hàng",
+            message: t("errors.deleteOrderFailed"),
             severity: "error",
           });
         }
@@ -177,8 +178,8 @@ const CartPage = () => {
   const handleRemoveItem = async (orderId: number, orderItemId: number) => {
     setConfirmDialog({
       open: true,
-      title: "Xác nhận xóa món ăn",
-      message: "Bạn có chắc muốn xóa món này khỏi đơn hàng không?",
+      title: t("dialog.delete_item_title"),
+      message: t("dialog.delete_item_text"),
       onConfirm: async () => {
         try {
           // Dispatch the thunk and unwrap to throw on rejection so we can catch it
@@ -186,14 +187,14 @@ const CartPage = () => {
 
           setSnackbar({
             open: true,
-            message: "Đã xóa món ăn thành công",
+            message: t("success.removeItem"),
             severity: "success",
           });
         } catch (error) {
           console.error("Lỗi xoá món:", error);
           setSnackbar({
             open: true,
-            message: "❌ Không thể xóa món ăn",
+            message: t("errors.removeItemFailed"),
             severity: "error",
           });
         }
@@ -257,7 +258,7 @@ const CartPage = () => {
       console.error("Lỗi cập nhật số lượng:", error);
       setSnackbar({
         open: true,
-        message: "❌ Không thể cập nhật số lượng món",
+        message: t("errors.updateQuantityFailed"),
         severity: "error",
       });
     } finally {
@@ -271,7 +272,7 @@ const CartPage = () => {
     if (!order) {
       setSnackbar({
         open: true,
-        message: "❌ Không tìm thấy đơn hàng để thanh toán",
+        message: t("errors.orderNotFound"),
         severity: "error",
       });
       return;
@@ -328,7 +329,7 @@ const CartPage = () => {
             sx={{ fontSize: 80, color: "text.disabled", mb: 2 }}
           />
           <Typography variant="h6" color="text.secondary" mb={2}>
-            Giỏ hàng của bạn đang trống
+            {t("empty.title")}
           </Typography>
         </Paper>
       </Container>
@@ -341,7 +342,7 @@ const CartPage = () => {
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography variant="h5" fontWeight="bold" color="primary">
             <ShoppingCartOutlinedIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            Giỏ Hàng
+            {t("header.title")}
           </Typography>
         </Paper>
 
@@ -411,7 +412,7 @@ const CartPage = () => {
                       onClick={() => handleAddMore(order.restaurantId)}
                       startIcon={<AddIcon />}
                     >
-                      Thêm món
+                      {t("btn.addMore")}
                     </Button>
                   </Box>
 
@@ -465,7 +466,7 @@ const CartPage = () => {
                             {item.image && !imageErrors.has(item.id) ? (
                               <Image
                                 src={item.image}
-                                alt={item.dishName || "Món ăn"}
+                                alt={item.dishName || t("item.no_image_alt")}
                                 fill
                                 style={{
                                   objectFit: "cover",
@@ -493,7 +494,7 @@ const CartPage = () => {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    No image
+                                    {t("item.no_image")}
                                   </Typography>
                                 )}
                               </Box>
@@ -594,7 +595,7 @@ const CartPage = () => {
                   ) : (
                     <Box sx={{ p: 2, textAlign: "center" }}>
                       <Typography variant="body2" color="text.secondary">
-                        Không có món ăn nào trong đơn này.
+                        {t("order.no_items")}
                       </Typography>
                     </Box>
                   )}
@@ -616,11 +617,11 @@ const CartPage = () => {
                       startIcon={<DeleteOutlineIcon />}
                       onClick={() => handleDeleteOrder(order.id)}
                     >
-                      Xoá đơn hàng
+                      {t("btn.deleteOrder")}
                     </Button>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Tổng đơn hàng:
+                        {t("summary.totalOrderLabel")}
                       </Typography>
                       <Typography
                         variant="h6"
@@ -656,32 +657,32 @@ const CartPage = () => {
               }}
             >
               <Typography variant="h6" fontWeight="bold" mb={2}>
-                Thông tin đơn hàng
+                {t("summary.title")}
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
               <Stack spacing={1.5} mb={2}>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Tạm tính
+                    {t("summary.subtotal")}
                   </Typography>
                   <Typography variant="body2">
                     {calculateSelectedTotal().toLocaleString()}đ
                   </Typography>
                 </Box>
-                <Box display="flex" justifyContent="space-between">
+                {/* <Box display="flex" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Giảm giá
+                    {t("summary.discount")}
                   </Typography>
                   <Typography variant="body2">0đ</Typography>
-                </Box>
+                </Box> */}
               </Stack>
 
               <Divider sx={{ mb: 2 }} />
 
               <Box display="flex" justifyContent="space-between" mb={3}>
                 <Typography variant="body1" fontWeight="bold">
-                  Tổng cộng
+                  {t("summary.total")}
                 </Typography>
                 <Typography variant="h6" color="primary" fontWeight="bold">
                   {calculateSelectedTotal().toLocaleString()}đ
@@ -704,7 +705,7 @@ const CartPage = () => {
                   } else {
                     setSnackbar({
                       open: true,
-                      message: "⚠️ Vui lòng chọn món để thanh toán",
+                      message: t("errors.selectItemsWarning"),
                       severity: "warning",
                     });
                   }
@@ -715,7 +716,7 @@ const CartPage = () => {
                   fontSize: "1rem",
                 }}
               >
-                Thanh toán ({selectedItems.size})
+                {`${t("btn.checkout")} (${selectedItems.size})`}
               </Button>
 
               <Typography
@@ -725,7 +726,7 @@ const CartPage = () => {
                 textAlign="center"
                 mt={2}
               >
-                Vui lòng chọn món muốn thanh toán
+                {t("summary.chooseItemsNote")}
               </Typography>
             </Paper>
           </Box>
@@ -767,7 +768,7 @@ const CartPage = () => {
             onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
             color="inherit"
           >
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button
             onClick={confirmDialog.onConfirm}
@@ -775,7 +776,7 @@ const CartPage = () => {
             variant="contained"
             autoFocus
           >
-            Xác nhận
+            {t("btn.confirm")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -784,470 +785,3 @@ const CartPage = () => {
 };
 
 export default CartPage;
-
-// "use client";
-
-// import Image from "next/image";
-// import {
-//   Box,
-//   Typography,
-//   Divider,
-//   CircularProgress,
-//   Paper,
-//   Button,
-//   Checkbox,
-//   IconButton,
-//   Container,
-//   Stack,
-//   Snackbar,
-//   Alert,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogContentText,
-//   DialogActions,
-// } from "@mui/material";
-// import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-// import AddIcon from "@mui/icons-material/Add";
-// import RemoveIcon from "@mui/icons-material/Remove";
-// import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
-// import StorefrontIcon from "@mui/icons-material/Storefront";
-// import { useCart } from "@/lib/hooks/useCart";
-// import {
-//   getRestaurantInfo,
-//   getUnitPrice,
-//   calculateItemTotal,
-//   calculateOrderTotal,
-//   formatCurrency,
-//   type Order,
-// } from "@/Model/CartModel";
-
-// const CartPage = () => {
-//   const cart = useCart();
-
-//   // Loading state
-//   if (cart.loading)
-//     return (
-//       <Box
-//         display="flex"
-//         justifyContent="center"
-//         alignItems="center"
-//         minHeight="60vh"
-//       >
-//         <CircularProgress />
-//       </Box>
-//     );
-
-//   // Error state
-//   if (cart.error)
-//     return (
-//       <Container maxWidth="lg" sx={{ py: 4 }}>
-//         <Paper sx={{ p: 3, textAlign: "center" }}>
-//           <Typography color="error">
-//             Lỗi khi tải đơn hàng: {cart.error}
-//           </Typography>
-//         </Paper>
-//       </Container>
-//     );
-
-//   // Empty cart state
-//   if (cart.orders.length === 0)
-//     return (
-//       <Container maxWidth="lg" sx={{ py: 4 }}>
-//         <Paper sx={{ p: 6, textAlign: "center" }}>
-//           <ShoppingCartOutlinedIcon
-//             sx={{ fontSize: 80, color: "text.disabled", mb: 2 }}
-//           />
-//           <Typography variant="h6" color="text.secondary" mb={2}>
-//             Giỏ hàng của bạn đang trống
-//           </Typography>
-//         </Paper>
-//       </Container>
-//     );
-
-//   // Main cart UI
-//   return (
-//     <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", py: 3 }}>
-//       <Container maxWidth="lg">
-//         {/* Header */}
-//         <Paper sx={{ p: 2, mb: 2 }}>
-//           <Typography variant="h5" fontWeight="bold" color="primary">
-//             <ShoppingCartOutlinedIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-//             Giỏ Hàng
-//           </Typography>
-//         </Paper>
-
-//         <Box
-//           sx={{
-//             display: "flex",
-//             gap: 2,
-//             flexDirection: { xs: "column", md: "row" },
-//           }}
-//         >
-//           {/* Left side - Cart items */}
-//           <Box sx={{ flex: { xs: 1, md: "1 1 66%" } }}>
-//             {cart.orders.map((order) => {
-//               const restaurant = getRestaurantInfo(order as Order);
-//               const orderTotal = calculateOrderTotal(order as Order);
-
-//               return (
-//                 <Paper key={order.id} sx={{ mb: 2, overflow: "hidden" }}>
-//                   {/* Restaurant Header */}
-//                   <Box
-//                     sx={{
-//                       bgcolor: "#fff",
-//                       p: 2,
-//                       borderBottom: "1px solid #e0e0e0",
-//                       display: "flex",
-//                       alignItems: "center",
-//                       justifyContent: "space-between",
-//                     }}
-//                   >
-//                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-//                       <Checkbox
-//                         checked={cart.checkOrderFullySelected(order.id)}
-//                         onChange={() => cart.toggleOrder(order.id)}
-//                         sx={{ p: 0 }}
-//                       />
-//                       <StorefrontIcon color="primary" />
-//                       <Box>
-//                         <Typography fontWeight="bold">
-//                           {restaurant.name}
-//                         </Typography>
-//                         <Typography variant="caption" color="text.secondary">
-//                           {restaurant.address}
-//                         </Typography>
-//                       </Box>
-//                     </Box>
-//                     <Button
-//                       size="small"
-//                       variant="text"
-//                       color="primary"
-//                       onClick={() => cart.addMore(order.restaurantId)}
-//                       startIcon={<AddIcon />}
-//                     >
-//                       Thêm món
-//                     </Button>
-//                   </Box>
-
-//                   {/* Order Items */}
-//                   {order.items?.length > 0 ? (
-//                     order.items.map((item) => {
-//                       const qty = Number(item.quantity ?? 0);
-//                       const unitPrice = getUnitPrice(item);
-//                       const total = calculateItemTotal(item);
-
-//                       return (
-//                         <Box
-//                           key={item.id}
-//                           sx={{
-//                             p: 2,
-//                             borderBottom: "1px solid #f0f0f0",
-//                             display: "flex",
-//                             alignItems: "center",
-//                             gap: 2,
-//                             "&:hover": { bgcolor: "#fafafa" },
-//                           }}
-//                         >
-//                           <Checkbox
-//                             checked={cart.selectedItems.has(item.id)}
-//                             onChange={() => cart.toggleItem(item.id)}
-//                           />
-
-//                           {/* Item Image */}
-//                           <Box
-//                             sx={{
-//                               width: 80,
-//                               height: 80,
-//                               borderRadius: 1,
-//                               overflow: "hidden",
-//                               bgcolor: "#f0f0f0",
-//                               display: "flex",
-//                               alignItems: "center",
-//                               justifyContent: "center",
-//                               position: "relative",
-//                               flexShrink: 0,
-//                             }}
-//                           >
-//                             {item.image && !cart.imageErrors.has(item.id) ? (
-//                               <Image
-//                                 src={item.image}
-//                                 alt={item.dishName || "Món ăn"}
-//                                 fill
-//                                 style={{
-//                                   objectFit: "cover",
-//                                 }}
-//                                 sizes="80px"
-//                                 unoptimized
-//                                 onError={() => cart.handleImageError(item.id)}
-//                               />
-//                             ) : (
-//                               <Box
-//                                 sx={{
-//                                   display: "flex",
-//                                   flexDirection: "column",
-//                                   alignItems: "center",
-//                                   justifyContent: "center",
-//                                 }}
-//                               >
-//                                 <Typography variant="h3">🍽️</Typography>
-//                                 {!item.image && (
-//                                   <Typography
-//                                     variant="caption"
-//                                     color="text.secondary"
-//                                   >
-//                                     No image
-//                                   </Typography>
-//                                 )}
-//                               </Box>
-//                             )}
-//                           </Box>
-
-//                           {/* Item Details */}
-//                           <Box sx={{ flex: 1 }}>
-//                             <Typography fontWeight="500" mb={0.5}>
-//                               {item.dishName}
-//                             </Typography>
-//                             <Typography variant="body2" color="text.secondary">
-//                               {formatCurrency(unitPrice)}
-//                             </Typography>
-//                           </Box>
-
-//                           {/* Quantity Controls */}
-//                           <Box
-//                             sx={{
-//                               display: "flex",
-//                               alignItems: "center",
-//                               border: "1px solid #e0e0e0",
-//                               borderRadius: 1,
-//                             }}
-//                           >
-//                             <IconButton
-//                               size="small"
-//                               onClick={() => {
-//                                 if (qty - 1 <= 0) {
-//                                   cart.removeItem(order.id, item.id);
-//                                 } else {
-//                                   cart.updateItemQuantity(
-//                                     order.id,
-//                                     item.id,
-//                                     qty - 1
-//                                   );
-//                                 }
-//                               }}
-//                               disabled={cart.updatingItem}
-//                             >
-//                               <RemoveIcon fontSize="small" />
-//                             </IconButton>
-//                             <Typography
-//                               sx={{
-//                                 px: 2,
-//                                 minWidth: 40,
-//                                 textAlign: "center",
-//                               }}
-//                             >
-//                               {qty}
-//                             </Typography>
-//                             <IconButton
-//                               size="small"
-//                               onClick={() =>
-//                                 cart.updateItemQuantity(
-//                                   order.id,
-//                                   item.id,
-//                                   qty + 1
-//                                 )
-//                               }
-//                               disabled={cart.updatingItem}
-//                             >
-//                               <AddIcon fontSize="small" />
-//                             </IconButton>
-//                           </Box>
-
-//                           {/* Item Total */}
-//                           <Typography
-//                             fontWeight="bold"
-//                             color="primary"
-//                             sx={{ minWidth: 100, textAlign: "right" }}
-//                           >
-//                             {formatCurrency(total)}
-//                           </Typography>
-
-//                           {/* Delete Button */}
-//                           <IconButton
-//                             size="small"
-//                             color="error"
-//                             onClick={() => cart.removeItem(order.id, item.id)}
-//                           >
-//                             <DeleteOutlineIcon />
-//                           </IconButton>
-//                         </Box>
-//                       );
-//                     })
-//                   ) : (
-//                     <Box sx={{ p: 2, textAlign: "center" }}>
-//                       <Typography variant="body2" color="text.secondary">
-//                         Không có món ăn nào trong đơn này.
-//                       </Typography>
-//                     </Box>
-//                   )}
-
-//                   {/* Order Footer */}
-//                   <Box
-//                     sx={{
-//                       p: 2,
-//                       bgcolor: "#fafafa",
-//                       display: "flex",
-//                       justifyContent: "space-between",
-//                       alignItems: "center",
-//                     }}
-//                   >
-//                     <Button
-//                       size="small"
-//                       variant="outlined"
-//                       color="error"
-//                       startIcon={<DeleteOutlineIcon />}
-//                       onClick={() => cart.handleDeleteOrder(order.id)}
-//                     >
-//                       Xoá đơn hàng
-//                     </Button>
-//                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-//                       <Typography variant="body2" color="text.secondary">
-//                         Tổng đơn hàng:
-//                       </Typography>
-//                       <Typography
-//                         variant="h6"
-//                         color="primary"
-//                         fontWeight="bold"
-//                       >
-//                         {formatCurrency(orderTotal)}
-//                       </Typography>
-//                     </Box>
-//                   </Box>
-//                 </Paper>
-//               );
-//             })}
-//           </Box>
-
-//           {/* Right side - Summary */}
-//           <Box sx={{ flex: { xs: 1, md: "1 1 33%" } }}>
-//             <Paper
-//               sx={{
-//                 p: 3,
-//                 position: "sticky",
-//                 top: 80,
-//               }}
-//             >
-//               <Typography variant="h6" fontWeight="bold" mb={2}>
-//                 Thông tin đơn hàng
-//               </Typography>
-//               <Divider sx={{ mb: 2 }} />
-
-//               <Stack spacing={1.5} mb={2}>
-//                 <Box display="flex" justifyContent="space-between">
-//                   <Typography variant="body2" color="text.secondary">
-//                     Tạm tính
-//                   </Typography>
-//                   <Typography variant="body2">
-//                     {formatCurrency(cart.selectedTotal)}
-//                   </Typography>
-//                 </Box>
-//                 <Box display="flex" justifyContent="space-between">
-//                   <Typography variant="body2" color="text.secondary">
-//                     Giảm giá
-//                   </Typography>
-//                   <Typography variant="body2">0đ</Typography>
-//                 </Box>
-//               </Stack>
-
-//               <Divider sx={{ mb: 2 }} />
-
-//               <Box display="flex" justifyContent="space-between" mb={3}>
-//                 <Typography variant="body1" fontWeight="bold">
-//                   Tổng cộng
-//                 </Typography>
-//                 <Typography variant="h6" color="primary" fontWeight="bold">
-//                   {formatCurrency(cart.selectedTotal)}
-//                 </Typography>
-//               </Box>
-
-//               <Button
-//                 fullWidth
-//                 variant="contained"
-//                 size="large"
-//                 color="primary"
-//                 disabled={cart.selectedItems.size === 0}
-//                 onClick={cart.checkout}
-//                 sx={{
-//                   py: 1.5,
-//                   fontWeight: "bold",
-//                   fontSize: "1rem",
-//                 }}
-//               >
-//                 Thanh toán ({cart.selectedItems.size})
-//               </Button>
-
-//               <Typography
-//                 variant="caption"
-//                 color="text.secondary"
-//                 display="block"
-//                 textAlign="center"
-//                 mt={2}
-//               >
-//                 Vui lòng chọn món muốn thanh toán
-//               </Typography>
-//             </Paper>
-//           </Box>
-//         </Box>
-//       </Container>
-
-//       {/* Snackbar for notifications */}
-//       <Snackbar
-//         open={cart.snackbar.open}
-//         autoHideDuration={4000}
-//         onClose={cart.closeSnackbar}
-//         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-//       >
-//         <Alert
-//           onClose={cart.closeSnackbar}
-//           severity={cart.snackbar.severity}
-//           variant="filled"
-//           sx={{ width: "100%" }}
-//         >
-//           {cart.snackbar.message}
-//         </Alert>
-//       </Snackbar>
-
-//       {/* Confirmation Dialog */}
-//       <Dialog
-//         open={cart.confirmDialog.open}
-//         onClose={cart.closeDialog}
-//         aria-labelledby="alert-dialog-title"
-//         aria-describedby="alert-dialog-description"
-//       >
-//         <DialogTitle id="alert-dialog-title">
-//           {cart.confirmDialog.title}
-//         </DialogTitle>
-//         <DialogContent>
-//           <DialogContentText id="alert-dialog-description">
-//             {cart.confirmDialog.message}
-//           </DialogContentText>
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={cart.closeDialog} color="inherit">
-//             Hủy
-//           </Button>
-//           <Button
-//             onClick={cart.confirmDialog.onConfirm}
-//             color="error"
-//             variant="contained"
-//             autoFocus
-//           >
-//             Xác nhận
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>
-//   );
-// };
-
-// export default CartPage;

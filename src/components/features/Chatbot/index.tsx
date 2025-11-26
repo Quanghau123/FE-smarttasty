@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import {
   Box,
   Paper,
@@ -31,6 +32,7 @@ interface Message {
 }
 
 const Chatbot: React.FC = () => {
+  const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -212,13 +214,14 @@ const Chatbot: React.FC = () => {
             zIndex: 999,
             borderRadius: 2,
             overflow: "hidden",
+            bgcolor: theme.palette.background.paper,
           }}
         >
           {/* Header */}
           <Box
             sx={{
               bgcolor: "primary.main",
-              color: "white",
+              color: theme.palette.primary.contrastText,
               p: 2,
               display: "flex",
               alignItems: "center",
@@ -231,7 +234,7 @@ const Chatbot: React.FC = () => {
             </Typography>
             <IconButton
               size="small"
-              sx={{ color: "white" }}
+              sx={{ color: theme.palette.primary.contrastText }}
               onClick={() => setIsOpen(false)}
             >
               <CloseIcon />
@@ -244,7 +247,7 @@ const Chatbot: React.FC = () => {
               flexGrow: 1,
               overflowY: "auto",
               p: 2,
-              bgcolor: "#f5f5f5",
+              bgcolor: theme.palette.background.default,
               display: "flex",
               flexDirection: "column",
               gap: 2,
@@ -292,9 +295,13 @@ const Chatbot: React.FC = () => {
                     sx={{
                       p: 1.5,
                       bgcolor:
-                        message.sender === "user" ? "primary.main" : "white",
+                        message.sender === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.background.paper,
                       color:
-                        message.sender === "user" ? "white" : "text.primary",
+                        message.sender === "user"
+                          ? theme.palette.primary.contrastText
+                          : theme.palette.text.primary,
                       borderRadius: 2,
                       wordBreak: "break-word",
                     }}
@@ -304,7 +311,7 @@ const Chatbot: React.FC = () => {
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "text.secondary",
+                      color: theme.palette.text.secondary,
                       px: 1,
                       alignSelf:
                         message.sender === "user" ? "flex-end" : "flex-start",
@@ -330,7 +337,13 @@ const Chatbot: React.FC = () => {
                 <Avatar sx={{ bgcolor: "primary.main", width: 32, height: 32 }}>
                   <SmartToyIcon fontSize="small" />
                 </Avatar>
-                <Paper sx={{ p: 1.5, borderRadius: 2 }}>
+                <Paper
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: theme.palette.background.paper,
+                  }}
+                >
                   <CircularProgress size={20} />
                 </Paper>
               </Box>
@@ -343,7 +356,7 @@ const Chatbot: React.FC = () => {
             <Box
               sx={{
                 p: 1,
-                bgcolor: "background.paper",
+                bgcolor: theme.palette.background.paper,
                 borderTop: 1,
                 borderColor: "divider",
                 display: "flex",
@@ -375,7 +388,7 @@ const Chatbot: React.FC = () => {
           <Box
             sx={{
               p: 2,
-              bgcolor: "background.paper",
+              bgcolor: theme.palette.background.paper,
               borderTop: 1,
               borderColor: "divider",
               display: "flex",
@@ -409,7 +422,7 @@ const Chatbot: React.FC = () => {
               onKeyPress={handleKeyPress}
               disabled={isLoading}
               size="small"
-              sx={{ bgcolor: "background.paper" }}
+              sx={{ bgcolor: theme.palette.background.paper }}
             />
             <Tooltip title="Gửi">
               <span>

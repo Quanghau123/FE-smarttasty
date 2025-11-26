@@ -18,6 +18,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAppDispatch } from "@/redux/hook";
 import { handleVNPayReturn } from "@/redux/slices/paymentSlice";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 import type { Payment } from "@/types/payment";
 
@@ -26,6 +27,7 @@ const VNPayReturnPage: React.FC = () => {
   const query = searchParams?.toString() || "";
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useTranslations("vnpayReturn");
 
   const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState<Payment | null>(null);
@@ -44,12 +46,14 @@ const VNPayReturnPage: React.FC = () => {
         // show toast for success/failure depending on returned status
         const statusStr = (result?.status || "").toString().toLowerCase();
         if (statusStr.includes("success") || statusStr === "1") {
-          toast.success("Thanh toán VNPay thành công");
+          toast.success(t("success_toast"));
         } else {
-          toast.info("Kết quả thanh toán: " + (result?.status ?? "Không rõ"));
+          toast.info(
+            t("result_toast") + ": " + (result?.status ?? t("unknown"))
+          );
         }
       } catch (e: unknown) {
-        const msg = (e as Error)?.message ?? "Lỗi khi xử lý kết quả VNPay";
+        const msg = (e as Error)?.message ?? t("error_processing");
         setError(msg);
         toast.error(msg);
       } finally {
@@ -73,22 +77,22 @@ const VNPayReturnPage: React.FC = () => {
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Đã sao chép vào clipboard");
+      toast.success(t("copied"));
     } catch {
-      toast.error("Không thể sao chép");
+      toast.error(t("copy_failed"));
     }
   };
 
   if (!query) {
     return (
       <Box sx={{ mt: 8, textAlign: "center" }}>
-        <Typography variant="h6">Liên kết VNPay không hợp lệ.</Typography>
+        <Typography variant="h6">{t("invalid_link")}</Typography>
         <Button
           sx={{ mt: 2 }}
           variant="contained"
           onClick={() => router.push("/")}
         >
-          Về trang chủ
+          {t("back_home")}
         </Button>
       </Box>
     );
@@ -110,15 +114,13 @@ const VNPayReturnPage: React.FC = () => {
       {loading ? (
         <Box sx={{ textAlign: "center", py: 6 }}>
           <CircularProgress />
-          <Typography sx={{ mt: 2 }}>
-            Đang xử lý kết quả thanh toán...
-          </Typography>
+          <Typography sx={{ mt: 2 }}>{t("processing")}</Typography>
         </Box>
       ) : error ? (
         <Box sx={{ textAlign: "center", py: 4 }}>
           <ErrorOutlineIcon color="error" sx={{ fontSize: 48 }} />
           <Typography variant="h6" color="error" sx={{ mt: 1 }}>
-            Không thể xử lý kết quả VNPay
+            {t("cannot_process")}
           </Typography>
           <Typography sx={{ mt: 1 }}>{error}</Typography>
           <Button
@@ -126,7 +128,7 @@ const VNPayReturnPage: React.FC = () => {
             variant="contained"
             onClick={() => router.push("/")}
           >
-            Về trang chủ
+            {t("back_home")}
           </Button>
         </Box>
       ) : payment ? (
@@ -147,8 +149,8 @@ const VNPayReturnPage: React.FC = () => {
               <Typography variant="h5">
                 {String(payment.status).toLowerCase().includes("success") ||
                 String(payment.status) === "1"
-                  ? "Thanh toán thành công"
-                  : "Kết quả thanh toán"}
+                  ? t("payment_success")
+                  : t("payment_result")}
               </Typography>
             </Stack>
 
@@ -174,28 +176,28 @@ const VNPayReturnPage: React.FC = () => {
           >
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ mb: 1 }}>
-                <strong>Mã đơn hàng:</strong>
+                <strong>{t("order_id")}:</strong>
               </Typography>
               <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
                 {payment.orderId}
               </Typography>
 
               <Typography sx={{ mt: 2, mb: 1 }}>
-                <strong>Số tiền:</strong>
+                <strong>{t("amount")}:</strong>
               </Typography>
               <Typography variant="body1">
                 {formatCurrency(payment.amount)}
               </Typography>
 
               <Typography sx={{ mt: 2, mb: 1 }}>
-                <strong>Phương thức:</strong>
+                <strong>{t("method")}:</strong>
               </Typography>
               <Typography variant="body1">{payment.method ?? "-"}</Typography>
             </Box>
 
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ mb: 1 }}>
-                <strong>Mã giao dịch:</strong>
+                <strong>{t("transaction_id")}:</strong>
               </Typography>
               <Stack
                 direction="row"
@@ -223,21 +225,21 @@ const VNPayReturnPage: React.FC = () => {
               {payment.vnpPayPayment && (
                 <Box sx={{ mt: 2 }}>
                   <Typography sx={{ mb: 1 }}>
-                    <strong>VNPAY TxnRef:</strong>
+                    <strong>{t("vnpay_txnref")}:</strong>
                   </Typography>
                   <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
                     {payment.vnpPayPayment.vnpTxnRef}
                   </Typography>
 
                   <Typography sx={{ mt: 2, mb: 1 }}>
-                    <strong>Ngân hàng:</strong>
+                    <strong>{t("bank")}:</strong>
                   </Typography>
                   <Typography variant="body1">
                     {payment.vnpPayPayment.bankCode ?? "-"}
                   </Typography>
 
                   <Typography sx={{ mt: 2, mb: 1 }}>
-                    <strong>Mã phản hồi:</strong>
+                    <strong>{t("response_code")}:</strong>
                   </Typography>
                   <Typography variant="body1">
                     {payment.vnpPayPayment.responseCode ?? "-"}
@@ -258,22 +260,22 @@ const VNPayReturnPage: React.FC = () => {
               color="primary"
               onClick={() => router.push("/purchase")}
             >
-              Xem đơn hàng
+              {t("view_orders")}
             </Button>
             <Button variant="outlined" onClick={() => router.push("/")}>
-              Về trang chủ
+              {t("back_home")}
             </Button>
           </Stack>
         </Box>
       ) : (
         <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography>Không có kết quả để hiển thị.</Typography>
+          <Typography>{t("no_result")}</Typography>
           <Button
             sx={{ mt: 2 }}
             variant="contained"
             onClick={() => router.push("/")}
           >
-            Về trang chủ
+            {t("back_home")}
           </Button>
         </Box>
       )}

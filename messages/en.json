@@ -3,6 +3,296 @@
     "homepage_btn_title": "Homepage",
     "logout_btn_title": "Logout"
   },
+  "adminRestaurant": {
+    "restaurant": {
+      "title": "Restaurant Information",
+      "image_alt": "Restaurant image",
+      "btn": {
+        "edit": "Edit",
+        "choose_image": "Choose new image",
+        "save_changes": "Save changes",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "label": {
+        "name": "Restaurant name",
+        "address": "Address",
+        "description": "Description",
+        "open_time": "Opening time",
+        "close_time": "Closing time"
+      },
+      "view": {
+        "address": "Address:",
+        "description": "Description:",
+        "status": "Status:",
+        "hours": "Operating hours:",
+        "followers": "Followers:",
+        "reviews_count": "reviews"
+      },
+      "status": {
+        "unknown": "Unknown",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "verified": "✓ Verified",
+      "menu": {
+        "title": "Menu",
+        "no_dishes": "No dishes available."
+      },
+      "reviews": {
+        "no_reviews_for_restaurant": "No reviews for this restaurant."
+      },
+      "dialog": {
+        "delete_review_title": "Confirm delete review",
+        "delete_review_text": "Are you sure you want to delete this review? This action cannot be undone."
+      },
+      "no_restaurant": "You don't have a restaurant",
+      "create_restaurant": "Create restaurant",
+      "success": {
+        "update_success": "Restaurant updated successfully!"
+      },
+      "errors": {
+        "no_permission": "You don't have access.",
+        "no_token": "Token not found, please log in again.",
+        "update_failed": "Update failed."
+      }
+    },
+    "promotion": {
+      "title": "Promotions Management",
+      "subtitle": "Create and manage promotions for your restaurant",
+      "btn": {
+        "create": "Create promotion",
+        "update": "Update",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "confirm": "Confirm",
+        "choose_image": "Choose image",
+        "cancel_assign_min": "Cancel min-order assignment"
+      },
+      "filter": {
+        "label": "Filter by scope",
+        "all": "All",
+        "dish": "Dish",
+        "order": "Order"
+      },
+      "summary": {
+        "total_promotions": "Total promotions: {count}"
+      },
+      "empty": {
+        "title": "No promotions yet",
+        "subtitle": "Create your first promotion to attract customers"
+      },
+      "status": {
+        "active": "Active",
+        "upcoming": "Upcoming",
+        "ended": "Ended"
+      },
+      "target": {
+        "order": "Order",
+        "dish": "Dish",
+        "category": "Category",
+        "dish_specific": "Specific dish",
+        "order_whole": "Whole order"
+      },
+      "min_order": {
+        "label": "Min: {amount}",
+        "title": "Assign minimum order value",
+        "text": "Enter the minimum order amount so that customers can apply promotion {title} to their orders.",
+        "input_label": "Minimum order (VND)",
+        "placeholder": "Eg: 100000",
+        "helper": "Order must reach this minimum amount to apply the promotion"
+      },
+      "modal": {
+        "title_create": "Create promotion",
+        "subtitle_create": "Fill in the details below",
+        "title_update": "Update promotion",
+        "subtitle_update": "Edit promotion details",
+        "basic_info_title": "Basic information",
+        "discount_config_title": "Discount configuration",
+        "target_title": "Apply to",
+        "period_title": "Validity period"
+      },
+      "form": {
+        "title": { "label": "Promotion title", "placeholder": "Eg: Weekend sale, Combo savings..." },
+        "description": { "label": "Detailed description", "placeholder": "Describe the promotion..." },
+        "voucher": { "label": "Voucher code (optional)", "placeholder": "Eg: WEEKEND10", "helper_for_order": "Enter a voucher code customers can use at checkout", "helper_for_other": "Code only applies when scope is 'Whole order'" },
+        "image": { "label": "Promotion image (optional)" },
+        "discount_value_label_percent": "Discount value (%)",
+        "discount_value_label_fixed": "Discount value (VND)",
+        "discount_value_placeholder_percent": "10",
+        "discount_value_placeholder_fixed": "50000",
+        "start_date": "Start date",
+        "end_date": "End date"
+      },
+      "discount": {
+        "percent": "Percent",
+        "fixed": "Fixed amount"
+      },
+      "dialog": {
+        "delete_title": "Confirm delete",
+        "delete_text": "Are you sure you want to delete this promotion?"
+      },
+      "errors": {
+        "no_restaurant_account": "Account has no restaurant!"
+      },
+      "aria": {
+        "assign_min_order": "Assign minimum order value"
+      }
+    },
+    "orders": {
+      "title": "Orders for {name}",
+      "unknown_restaurant": "Unnamed restaurant",
+      "labels": {
+        "order": "Order ",
+        "customer": "Customer:",
+        "total": "Total:",
+        "address": "Address:",
+        "items_title": "Ordered items",
+        "no_items": "No items",
+        "payment_prefix": "Payment:",
+        "order_status_label": "Order status",
+        "delivery_status_label": "Delivery status",
+        "confirm_cod": "Confirm COD",
+        "no_orders": "No orders yet."
+      },
+      "errors": {
+        "backward_order": "Cannot revert to a previous order status.",
+        "backward_delivery": "Cannot revert to a previous delivery status.",
+        "delivery_requires_payment": "Cannot mark Delivered until payment is Success.",
+        "update_order_failed": "Failed to update order status.",
+        "update_delivery_failed": "Failed to update delivery status.",
+        "missing_restaurant_cod": "Missing restaurant to confirm COD.",
+        "confirm_cod_failed": "Failed to confirm COD."
+      },
+      "success": {
+        "update_order": "Order status updated.",
+        "update_delivery": "Delivery status updated.",
+        "confirm_cod": "COD confirmed."
+      },
+      "status": {
+        "order": {
+          "pending": "Pending",
+          "processing": "Processing",
+          "paid": "Paid",
+          "cancelled": "Cancelled",
+          "failed": "Failed",
+          "unknown": "Unknown"
+        },
+        "delivery": {
+          "preparing": "Preparing",
+          "delivering": "Delivering",
+          "delivered": "Delivered",
+          "canceled": "Canceled",
+          "failed": "Failed",
+          "unknown": "Unknown"
+        },
+        "payment": {
+          "pending": "Pending",
+          "success": "Success",
+          "failed": "Failed",
+          "cancelled": "Cancelled",
+          "refunded": "Refunded",
+          "unknown": "Unknown"
+        }
+      }
+    },
+    "staff": {
+      "title": "Staff accounts management",
+      "btn": {
+        "create": "Create account",
+        "update": "Update",
+        "cancel": "Cancel"
+      },
+      "table": {
+        "id": "ID",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "actions": "Actions"
+      },
+      "aria": {
+        "edit": "Edit staff",
+        "delete": "Delete staff"
+      },
+      "dialog": {
+        "title_create": "Create staff",
+        "title_update": "Update staff",
+        "confirm_delete": "Are you sure you want to delete this staff?"
+      },
+      "form": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address",
+        "password_helper": "Password (leave blank to auto-generate)"
+      },
+      "success": {
+        "create": "Staff created successfully",
+        "update": "Updated successfully",
+        "delete": "Deleted successfully"
+      },
+      "errors": {
+        "generic": "An error occurred",
+        "delete_failed": "Delete failed"
+      }
+    },
+    "createRestaurant": {
+      "title": "Create new restaurant",
+      "steps": {
+        "basic_info": "Basic information",
+        "location": "Location",
+        "image": "Upload image",
+        "schedule": "Schedule & description",
+        "confirm": "Confirm",
+        "confirm_title": "Confirm details"
+      },
+      "location": {
+        "instructions": "Enter the address or choose a point on the map"
+      },
+      "form": {
+        "name": "Restaurant name",
+        "category_label": "Category",
+        "address_placeholder": "Address",
+        "description": "Description",
+        "open_time": "Opening time",
+        "close_time": "Closing time"
+      },
+      "categories": {
+        "Buffet": "Buffet",
+        "NhaHang": "Restaurant",
+        "AnVatViaHe": "Street food",
+        "AnChay": "Vegetarian",
+        "CafeNuocuong": "Cafe / Drinks",
+        "QuanAn": "Eatery",
+        "Bar": "Bar",
+        "QuanNhau": "Pub"
+      },
+      "labels": {
+        "no_image": "No image selected"
+      },
+      "review": {
+        "name": "Name:",
+        "category": "Category:",
+        "address": "Address:",
+        "image": "Image:",
+        "schedule": "Operating hours:"
+      },
+      "btn": {
+        "choose_image": "Choose image",
+        "back": "Back",
+        "next": "Next",
+        "creating": "Creating...",
+        "create_restaurant": "Create restaurant"
+      },
+      "errors": {
+        "no_file": "Please choose an image before creating.",
+        "create_failed": "Creation failed, please check and try again."
+      },
+      "success": {
+        "create": "Restaurant created successfully!"
+      }
+    }
+  },
   "header": {
     "account_btn_title": "Account",
     "logout_btn_title": "Logout",
@@ -59,7 +349,103 @@
     "new_to_smartasty_text": "New to Smartasty?",
     "register_btn_title": "Register",
     "welcome_text": "Welcome",
-    "login_success": "Login successful!"
+    "login_success": "Login successful!",
+    "invalid_credentials": "Incorrect email or password!"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "form": {
+      "email": "Email"
+    },
+    "btn": {
+      "send": "Send password reset link"
+    },
+    "success": {
+      "sent": "A password reset link has been sent to your email."
+    },
+    "errors": {
+      "empty_email": "Please enter your email!",
+      "generic": "An error occurred. Please try again."
+    }
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "form": {
+      "new_password": "New password",
+      "confirm_password": "Confirm password"
+    },
+    "btn": {
+      "reset": "Reset password"
+    },
+    "validation": {
+      "required_password": "Please enter a password!",
+      "pattern": "Password must include uppercase, lowercase, a number, a special character and be at least 6 characters.",
+      "required_confirm": "Please confirm your password!",
+      "mismatch": "Password confirmation does not match."
+    },
+    "success": {
+      "reset": "Password reset successfully!"
+    },
+    "errors": {
+      "invalid_or_expired": "Invalid or expired token.",
+      "failed": "Failed to reset password.",
+      "invalid_link": "Invalid link."
+    }
+  },
+  "accountPage": {
+    "not_logged_in": "You are not logged in",
+    "btn": {
+      "login": "Login",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit information"
+    },
+    "tabs": {
+      "info": "Account information",
+      "password": "Change password"
+    },
+    "form": {
+      "name": "Username",
+      "email": "Email",
+      "email_helper": "Email cannot be changed",
+      "phone": "Phone number",
+      "address": "Address"
+    },
+    "labels": {
+      "username": "Username:",
+      "email": "Email:",
+      "phone": "Phone:",
+      "address": "Address:",
+      "not_updated": "Not updated"
+    },
+    "messages": {
+      "update_success": "Updated successfully!"
+    },
+    "errors": {
+      "email_in_use": "Email is already in use.",
+      "update_failed": "Update failed."
+    }
+  },
+  "changePassword": {
+    "title": "Change password",
+    "form": {
+      "current_password": "Current password",
+      "new_password": "New password",
+      "confirm_password": "Confirm new password"
+    },
+    "btn": {
+      "change": "Change password"
+    },
+    "validation": {
+      "mismatch": "New password and confirmation do not match.",
+      "pattern": "Password must include uppercase, lowercase, a number, a special character and be at least 6 characters."
+    },
+    "success": {
+      "reset": "Password changed successfully! Please log in again."
+    },
+    "errors": {
+      "generic": "An error occurred. Please try again."
+    }
   },
   "register": {
     "title": "Register Account",
@@ -159,19 +545,25 @@
     "created_at": "Created at: {time}",
     "btn": {
       "update_status": "Update status",
-      "cancel_booking": "Cancel booking"
+      "cancel_booking": "Cancel booking",
+      "edit": "Edit"
     },
     "warnings": {
-      "select_new_status": "Please select a new status"
+      "select_new_status": "Please select a new status",
+      "cannot_cancel_pending": "Can only cancel when status is Pending"
     },
     "success": {
       "update_status": "Status updated successfully",
-      "cancelled_by_business": "Reservation cancelled by business"
+      "cancelled_by_business": "Reservation cancelled by business",
+      "cancel": "Reservation cancelled successfully",
+      "update": "Reservation updated successfully"
     },
     "errors": {
       "update_failed": "Update failed",
-      "cancel_failed": "Cancel failed"
+      "cancel_failed": "Cancel failed",
+      "cannot_edit": "Cannot edit"
     },
+    
     "confirm": {
       "cancel_by_business": "Are you sure you want to cancel this reservation (cancelled by business)?"
     },
@@ -206,7 +598,8 @@
       "current_status": "Current status",
       "select_new_status": "Select new status",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "edit_title": "Edit reservation"
     }
   }
 
@@ -308,7 +701,20 @@
     ,
     "follow_label": "Follow",
     "following_label": "Following",
-    "followers_label": "Followers"
+    "followers_label": "Followers",
+    "follow_aria": "Follow restaurant",
+    "following_aria": "Following restaurant",
+    "missing_fields": "Missing information",
+    "please_login": "Please log in",
+    "switch_view": "Switch view",
+    "unknown": "Unknown",
+    "please_login_to_favorite": "Please log in to follow this restaurant",
+    "removed_favorite": "Unfollowed restaurant",
+    "added_favorite": "Following restaurant",
+    "no_image_alt": "No image",
+    "reserve_now": "Reserve now",
+    "suggested_title": "You may also like",
+    "reviews_count": "reviews"
   },
   "review": {
     "form_title": "Rate this restaurant",
@@ -408,5 +814,329 @@
       "remove_voucher_failed": "Remove voucher failed",
       "remove_voucher_success": "Voucher removed from dish"
     }
+  }
+  ,
+  "staff": {
+    "restaurantOrders": {
+      "title": "Manage delivery orders",
+      "loading": "Loading orders...",
+      "empty": "No orders",
+      "errors": {
+        "fetch_failed": "Failed to fetch orders.",
+        "no_permission": "You don't have permission to access these orders.",
+        "cannot_mark_delivered": "Cannot mark as delivered — check delivery/payment status.",
+        "update_failed": "Update failed.",
+        "action_failed": "Action failed."
+      },
+      "success": {
+        "update_delivery": "Delivery status updated.",
+        "confirm_cod": "COD confirmed.",
+        "mark_delivered": "Marked as delivered."
+      },
+      "status": {
+        "order": {
+          "pending": "Pending",
+          "processing": "Processing",
+          "paid": "Paid",
+          "cancelled": "Cancelled",
+          "failed": "Failed",
+          "unknown": "Unknown"
+        },
+        "delivery": {
+          "preparing": "Preparing",
+          "delivering": "Delivering",
+          "delivered": "Delivered",
+          "canceled": "Canceled",
+          "failed": "Failed",
+          "unknown": "Unknown"
+        }
+      },
+      "labels": {
+        "order": "Order ",
+        "customer": "Customer:",
+        "items_detail": "Items detail",
+        "delivery_info": "Delivery information",
+        "recipient": "Recipient",
+        "delivery_address": "Delivery address",
+        "delivery_status_label": "Delivery status",
+        "collected": "Collected"
+      },
+      "btn": {
+        "mark_delivered": "Mark Delivered",
+        "confirm_cod": "Confirm COD",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+      },
+      "aria": {
+        "collapse": "Collapse details",
+        "expand": "Expand details"
+      },
+      "confirm": {
+        "title": "Confirm",
+        "cod": "Are you sure you want to confirm COD collection?",
+        "delivered": "Mark this order as delivered?"
+      }
+    }
+  }
+  ,
+  "layout": {
+    "body": {
+      "badge": { "suggested": "Suggested" },
+      "no_image": "No image",
+      "address": { "updating": "Address updating" },
+      "btn": { "reserve_now": "Reserve now" },
+      "promotion": {
+        "badge": "Promotion",
+        "no_image": "No promotion image",
+        "valid_until_prefix": "Valid until",
+        "valid_until_none": "until further notice",
+        "view": "View promotion"
+      },
+      "dish": { "view": "View dish" },
+      "recipes": { "no_description": "No description", "view": "View recipe", "empty": "No top recipes yet." },
+      "errors": { "no_restaurants": "No restaurants found." },
+      "sections": {
+        "promotions_title": "Available promotions on SmartTasty",
+        "suggested_restaurants": "Suggested restaurants",
+        "dish_promotions": "Dish promotions",
+        "top_recipes": "Top recipes on SmartTasty",
+        "all_restaurants": "All restaurants"
+      },
+      "promotions": { "empty": "No promotions yet." },
+      "dishPromotions": { "empty": "No discounted dishes." },
+      "banner": { "recipes_alt": "Recipe banner", "partners_alt": "SmartTasty partners" }
+    },
+    "cart": {
+      "header": { "title": "Cart" },
+      "empty": { "title": "Your cart is empty" },
+      "restaurant": { "unnamed": "Restaurant #{id}", "unknown_address": "No address" },
+      "item": { "no_image_alt": "Dish", "no_image": "No image" },
+      "order": { "no_items": "No items in this order." },
+      "btn": {
+        "addMore": "Add more",
+        "deleteOrder": "Delete order",
+        "checkout": "Checkout",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
+      },
+      "summary": {
+        "title": "Order summary",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "total": "Total",
+        "chooseItemsNote": "Please select items to checkout",
+        "totalOrderLabel": "Order total:"
+      },
+      "errors": {
+        "selectItemsWarning": "⚠️ Please select items to checkout",
+        "orderNotFound": "❌ Cannot find order to checkout",
+        "deleteOrderFailed": "Cannot delete order",
+        "removeItemFailed": "❌ Cannot remove item",
+        "updateQuantityFailed": "❌ Cannot update item quantity"
+      },
+      "success": {
+        "deleteOrder": "Order deleted successfully",
+        "removeItem": "Item removed successfully"
+      },
+      "dialog": {
+        "delete_order_title": "Confirm delete order",
+        "delete_order_text": "Are you sure you want to delete this order? This action cannot be undone.",
+        "delete_item_title": "Confirm delete item",
+        "delete_item_text": "Are you sure you want to remove this item from the order?"
+      }
+    },
+    "nearbyRestaurant": {
+      "dialog": {
+        "title": "Allow location access",
+        "content": "Allow SmartTasty to access your location to find nearby restaurants"
+      },
+      "btn": { "later": "Later", "allow": "Allow", "reserve_now": "Reserve now", "get_directions": "Get directions" },
+      "empty": { "no_nearby": "No nearby restaurants found or location permission not granted." },
+      "aria": { "toggleView": "Toggle view mode" },
+      "toggle": { "list": "List", "map": "Map" },
+      "errors": {
+        "location_permission": "You need to allow location access to see nearby restaurants.",
+        "geo_not_supported": "Your browser does not support geolocation.",
+        "permission_needed": "Please allow location to view directions."
+      },
+      "map": { "youAreHere": "You are here" },
+      "labels": { "distance": "Distance: {distance} km" }
+    }
+  },
+  "payment": {
+    "header": { "title": "Payment", "subtitle": "Choose your payment method and confirm your order" },
+    "address": {
+      "title": "Delivery address",
+      "add_new": "Add new address",
+      "edit": "Edit address",
+      "unknown": "No address",
+      "no_info": { "title": "No address found", "content": "Please add a delivery address to continue" },
+      "no_name": "No name provided",
+      "no_phone": "No phone number",
+      "no_address": "No address provided",
+      "edit_title": "Edit delivery address",
+      "form": {
+        "name": "Recipient name",
+        "name_helper": "Enter full name",
+        "phone": "Phone number",
+        "phone_helper": "Enter phone number for delivery",
+        "address": "Address",
+        "address_helper": "Select a saved address or enter a new one",
+        "address_detail_label": "Address detail",
+        "address_detail_placeholder": "Apartment, floor, etc"
+      },
+      "recipient_label": "Recipient",
+      "phone_label": "Phone number",
+      "note_label": "Notes",
+      "validate": {
+        "recipient": "Please enter recipient name",
+        "phone": "Please enter a valid phone number",
+        "address": "Please enter delivery address"
+      }
+    },
+    "deliveryOptions": {
+      "store_pickup": { "name": "Pick up", "desc": "Pick up at the restaurant", "eta": "Ready in {minutes} mins" },
+      "delivery": { "name": "Delivery", "desc": "Deliver to your address", "eta": "Estimated {min}–{max} mins" }
+    },
+    "delivery": {
+      "priority": {
+        "name": "Priority delivery",
+        "description": "Fastest delivery with priority handling",
+        "estimatedTime": "{min}–{max} mins"
+      },
+      "fast": {
+        "name": "Fast delivery",
+        "description": "Quick delivery option",
+        "estimatedTime": "{min}–{max} mins"
+      },
+      "economy": {
+        "name": "Economy delivery",
+        "description": "Cost-saving slower delivery",
+        "estimatedTime": "{min}–{max} mins"
+      }
+    },
+    "voucher": {
+      "title": "Voucher",
+      "applied": "Applied voucher",
+      "code_prefix": "Code",
+      "placeholder": "Enter voucher code",
+      "available_count": "available",
+      "no_vouchers": "No vouchers available",
+      "select_title": "Select voucher",
+      "no_use": "Do not use voucher",
+      "min_order_label": "Min order: {amount}",
+      "dialog": { "title": "Apply voucher", "success": "Voucher applied", "invalid": "Invalid voucher", "already_used": "Voucher already used" }
+    },
+    "paymentMethod": {
+      "title": "Payment method",
+      "cod": { "title": "Cash on Delivery (COD)", "description": "Pay when you receive the order" },
+      "vnpay": { "title": "VNPAY", "description": "Pay with VNPAY" }
+    },
+    "summary": {
+      "title": "Order summary",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "discount_by_code": "Discount (voucher)",
+      "shipping_fee": "Shipping fee",
+      "total": "Total"
+    },
+    "item": { "no_image_alt": "Dish" },
+    "btn": { "confirm": "Confirm payment", "cancel": "Cancel", "apply": "Apply", "change": "Change", "processing": "Processing...", "place_order": "Place order" },
+    "errors": {
+      "missing_address": "Please select a delivery address",
+      "address_missing": "Delivery address is required",
+      "enter_name": "Please enter name",
+      "enter_phone": "Please enter phone number",
+      "enter_address": "Please enter address",
+      "invalid_phone": "Invalid phone number",
+      "apply_voucher_failed_default": "Failed to apply voucher",
+      "remove_voucher_failed_default": "Failed to remove voucher",
+      "voucher_still_missing": "You need {amount} more to use this voucher",
+      "payment_failed": "Payment failed. Please try again",
+      "empty_cart": "Your cart is empty"
+    }
+  },
+  "purchase": {
+    "title": "Purchase history",
+    "empty": "No purchase history",
+    "order_prefix": "Order ",
+    "statuses": {
+      "all": "All",
+      "preparing": "Preparing",
+      "delivering": "Delivering",
+      "delivered": "Delivered",
+      "canceled": "Canceled"
+    },
+    "payment": { "paid": "Paid", "pending": "Pending", "failed": "Failed", "canceled": "Canceled", "refunded": "Refunded" },
+    "order": { "pending": "Pending", "paid": "Paid", "processing": "Processing", "canceled": "Canceled", "failed": "Failed" },
+    "delivery": { "preparing": "Preparing", "delivering": "Delivering", "delivered": "Delivered", "canceled": "Canceled" },
+    "unknown": "Unknown",
+    "labels": { "restaurant": "Restaurant:", "items": "items", "original_price": "Original price:", "total": "Total:" },
+    "btn": { "more_items": "+{count} more", "cancel_order": "Cancel order", "view_restaurant": "View restaurant", "no": "No", "confirm_cancel": "Confirm cancel" },
+    "dialog": { "title": "Confirm cancel order", "confirm_text": "Are you sure you want to cancel order #{id}? This action cannot be undone." }
+  }
+  ,
+  "recipes": {
+    "hero": {
+      "title": "Cooking Recipes",
+      "subtitle": "Discover and share great recipes from the community. From traditional dishes to modern creations.",
+      "create_btn": "Create Recipe"
+    },
+    "tabs": { "all": "All Recipes", "mine": "My Recipes" },
+    "search": { "placeholder": "Search recipes by name or ingredient" },
+    "filter": { "all_categories": "All categories" },
+    "empty": {
+      "title": "No recipes found",
+      "no_my_recipes": "You haven't created any recipes yet",
+      "try_search": "Try searching with different keywords"
+    },
+    "chip": { "mine": "My Recipe" },
+    "no_description": "No description provided",
+    "anonymous": "Anonymous",
+    "btn": { "create": "Create", "edit": "Edit", "delete": "Delete", "cancel": "Cancel", "update": "Update" },
+    "detail": {
+      "description_title": "Description",
+      "ingredients_title": "Ingredients",
+      "steps_title": "Steps",
+      "reviews_title": "Reviews ({count})"
+    },
+    "review": {
+      "write_title": "Write your review",
+      "rating_label": "Rating:",
+      "placeholder": "Share your thoughts about this recipe...",
+      "send_btn": "Send Review"
+    },
+    "dialog": { "create_title": "Create Recipe", "update_title": "Update Recipe" },
+    "form": {
+      "title": { "label": "Title", "placeholder": "Enter recipe title" },
+      "category": { "label": "Category" },
+      "description": { "label": "Description", "placeholder": "Enter description" },
+      "image": { "label": "Image", "choose": "Choose image", "preview_alt": "Preview image" },
+      "ingredients": { "label": "Ingredients", "placeholder": "List ingredients separated by commas" },
+      "steps": { "label": "Steps", "placeholder": "Describe the steps" }
+    }
+  },
+  "vnpayReturn": {
+    "success_toast": "VNPay payment successful",
+    "result_toast": "Payment result",
+    "unknown": "Unknown",
+    "error_processing": "Error processing VNPay result",
+    "copied": "Copied to clipboard",
+    "copy_failed": "Cannot copy",
+    "invalid_link": "Invalid VNPay link.",
+    "back_home": "Back to home",
+    "processing": "Processing payment result...",
+    "cannot_process": "Cannot process VNPay result",
+    "payment_success": "Payment successful",
+    "payment_result": "Payment result",
+    "order_id": "Order ID",
+    "amount": "Amount",
+    "method": "Method",
+    "transaction_id": "Transaction ID",
+    "vnpay_txnref": "VNPAY TxnRef",
+    "bank": "Bank",
+    "response_code": "Response code",
+    "view_orders": "View orders",
+    "no_result": "No result to display."
   }
 }

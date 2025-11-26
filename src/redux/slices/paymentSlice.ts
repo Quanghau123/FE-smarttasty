@@ -246,7 +246,7 @@ export const fetchPendingPayments = createAsyncThunk<
   }
 });
 
-// 7️⃣ GET /api/Order/user/{userId} (BE changed: use Order endpoint for user's order/payment history)
+// 7️⃣ GET /api/Order/user/paid/{userId} (BE changed: now only returns PAID orders for user history)
 export const fetchPaymentHistoryByUser = createAsyncThunk<
   InfoPayment[],
   { userId: number },
@@ -254,8 +254,8 @@ export const fetchPaymentHistoryByUser = createAsyncThunk<
 >("payment/fetchPaymentHistoryByUser", async ({ userId }, { rejectWithValue }) => {
   try {
     const token = getToken();
-    // BE now exposes user's orders (including payment info) at /api/Order/user/{userId}
-    const res = await axiosInstance.get(`/api/Order/user/${userId}`, {
+    // BE endpoint updated to filter paid orders: /api/Order/user/paid/{userId}
+    const res = await axiosInstance.get(`/api/Order/user/paid/${userId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     const envelope = resolveApiData<InfoPayment[]>(res.data);
@@ -279,9 +279,9 @@ export const cancelOrder = createAsyncThunk<
     const res = await axiosInstance.delete(`/api/Payment/cancel/${orderId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
-    const envelope = resolveApiData<Record<string, unknown>>(res.data);
-    // If envelope exists and backend indicates success, refresh lists
-    if (envelope && envelope.data) {
+    
+    // If API returns 200/204, consider it success regardless of response body
+    if (res.status === 200 || res.status === 204) {
       // Prefer to refresh the user's history if we have the userId, otherwise refresh pending
       if (typeof userId === "number") {
         dispatch(fetchPaymentHistoryByUser({ userId }));
@@ -290,7 +290,9 @@ export const cancelOrder = createAsyncThunk<
       }
       return { success: true, orderId };
     }
-    // Extract error message from envelope
+    
+    // If status is not success, try to extract error message
+    const envelope = resolveApiData<Record<string, unknown>>(res.data);
     const errObj = envelope as unknown as { errMessage?: string };
     return rejectWithValue(errObj?.errMessage ?? "Không thể hủy đơn");
   } catch (e: unknown) {

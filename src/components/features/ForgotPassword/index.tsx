@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useAppDispatch } from "@/redux/hook";
 import { forgotPassword as forgotPasswordThunk } from "@/redux/slices/userSlice";
 
@@ -17,21 +18,21 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
+  const t = useTranslations("forgotPassword");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      toast.error("Vui lòng nhập email!");
+      toast.error(t("errors.empty_email"));
       return;
     }
 
     setLoading(true);
     try {
       await dispatch(forgotPasswordThunk(email)).unwrap();
-      toast.success("Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.");
+      toast.success(t("success.sent"));
     } catch (err) {
-      const message =
-        typeof err === "string" ? err : "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      const message = typeof err === "string" ? err : t("errors.generic");
       toast.error(message);
     } finally {
       setLoading(false);
@@ -48,11 +49,11 @@ const ForgotPasswordPage = () => {
     >
       <Paper elevation={3} sx={{ padding: 4, width: 400 }}>
         <Typography variant="h5" fontWeight={600} gutterBottom>
-          Quên mật khẩu
+          {t("title")}
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Email"
+            label={t("form.email")}
             variant="outlined"
             fullWidth
             type="email"
@@ -72,7 +73,7 @@ const ForgotPasswordPage = () => {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              "Gửi liên kết đặt lại mật khẩu"
+              t("btn.send")
             )}
           </Button>
         </form>

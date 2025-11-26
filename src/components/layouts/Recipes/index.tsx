@@ -42,6 +42,7 @@ import {
   RestaurantMenu as MenuIcon,
 } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { useTranslations } from "next-intl";
 import Pagination from "@/components/commons/pagination";
 import { toast } from "react-toastify";
 import {
@@ -69,6 +70,7 @@ import axiosInstance from "@/lib/axios/axiosInstance";
 
 const RecipesLayout: React.FC = () => {
   const dispatch = useAppDispatch();
+  const t = useTranslations("recipes");
   const {
     items: myRecipes,
     allItems,
@@ -431,11 +433,10 @@ const RecipesLayout: React.FC = () => {
               fontWeight="bold"
               sx={{ textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
             >
-              Kho Công Thức Nấu Ăn
+              {t("hero.title")}
             </Typography>
             <Typography variant="h6" sx={{ maxWidth: 700, opacity: 0.95 }}>
-              Khám phá và chia sẻ những công thức nấu ăn tuyệt vời từ cộng đồng.
-              Từ món ăn truyền thống đến sáng tạo hiện đại.
+              {t("hero.subtitle")}
             </Typography>
             <Button
               variant="contained"
@@ -457,7 +458,7 @@ const RecipesLayout: React.FC = () => {
                 transition: "all 0.3s ease",
               }}
             >
-              Tạo Công Thức Mới
+              {t("hero.create_btn")}
             </Button>
           </Stack>
         </Container>
@@ -511,12 +512,12 @@ const RecipesLayout: React.FC = () => {
               }}
             >
               <Tab
-                label="Tất Cả Công Thức"
+                label={t("tabs.all")}
                 icon={<MenuIcon />}
                 iconPosition="start"
               />
               <Tab
-                label="Công Thức Của Tôi"
+                label={t("tabs.mine")}
                 icon={<PersonIcon />}
                 iconPosition="start"
               />
@@ -533,7 +534,7 @@ const RecipesLayout: React.FC = () => {
               <Box>
                 <TextField
                   fullWidth
-                  placeholder="Tìm kiếm công thức..."
+                  placeholder={t("search.placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   InputProps={{
@@ -571,7 +572,7 @@ const RecipesLayout: React.FC = () => {
                     },
                   }}
                 >
-                  <MenuItem value="all">Tất cả danh mục</MenuItem>
+                  <MenuItem value="all">{t("filter.all_categories")}</MenuItem>
                   {Object.values(RecipeCategory).map((cat) => (
                     <MenuItem key={cat} value={cat}>
                       {RecipeCategoryDisplayNames[cat as RecipeCategory] ?? cat}
@@ -594,12 +595,12 @@ const RecipesLayout: React.FC = () => {
               sx={{ fontSize: 80, color: "text.secondary", mb: 2 }}
             />
             <Typography variant="h5" color="text.secondary" gutterBottom>
-              Không tìm thấy công thức nào
+              {t("empty.title")}
             </Typography>
             <Typography color="text.secondary">
               {tabValue === 1
-                ? "Bạn chưa tạo công thức nào. Hãy bắt đầu chia sẻ công thức của bạn!"
-                : "Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc"}
+                ? t("empty.no_my_recipes")
+                : t("empty.try_search")}
             </Typography>
           </Card>
         ) : (
@@ -672,7 +673,7 @@ const RecipesLayout: React.FC = () => {
                       >
                         {isOwner && (
                           <Chip
-                            label="Của tôi"
+                            label={t("chip.mine")}
                             size="small"
                             sx={{
                               position: "absolute",
@@ -748,7 +749,7 @@ const RecipesLayout: React.FC = () => {
                             width: "300px",
                           }}
                         >
-                          {recipe.description || "Không có mô tả"}
+                          {recipe.description || t("no_description")}
                         </Typography>
 
                         <Divider sx={{ my: 1.5 }} />
@@ -766,7 +767,7 @@ const RecipesLayout: React.FC = () => {
                               variant="caption"
                               color="text.secondary"
                             >
-                              {recipe.user?.userName || "Ẩn danh"}
+                              {recipe.user?.userName || t("anonymous")}
                             </Typography>
                           </Stack>
                           <Stack
@@ -781,9 +782,7 @@ const RecipesLayout: React.FC = () => {
                               variant="caption"
                               color="text.secondary"
                             >
-                              {new Date(recipe.createdAt).toLocaleDateString(
-                                "vi-VN"
-                              )}
+                              {new Date(recipe.createdAt).toLocaleDateString()}
                             </Typography>
                           </Stack>
                         </Stack>
@@ -800,7 +799,7 @@ const RecipesLayout: React.FC = () => {
                               }}
                               fullWidth
                             >
-                              Sửa
+                              {t("btn.edit")}
                             </Button>
                             <Button
                               size="small"
@@ -813,7 +812,7 @@ const RecipesLayout: React.FC = () => {
                               }}
                               fullWidth
                             >
-                              Xóa
+                              {t("btn.delete")}
                             </Button>
                           </Stack>
                         )}
@@ -887,12 +886,12 @@ const RecipesLayout: React.FC = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogTitle sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-          {editing ? "Cập nhật công thức" : "Tạo công thức mới"}
+          {editing ? t("dialog.update_title") : t("dialog.create_title")}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
             <TextField
-              label="Tiêu đề công thức"
+              label={t("form.title.label")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
@@ -900,7 +899,7 @@ const RecipesLayout: React.FC = () => {
             />
             <TextField
               select
-              label="Danh mục"
+              label={t("form.category.label")}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               required
@@ -912,38 +911,39 @@ const RecipesLayout: React.FC = () => {
               ))}
             </TextField>
             <TextField
-              label="Mô tả ngắn"
+              label={t("form.description.label")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               fullWidth
               multiline
               rows={2}
-              placeholder="Giới thiệu ngắn gọn về món ăn..."
+              placeholder={t("form.description.placeholder")}
             />
             <TextField
-              label="Nguyên liệu"
+              label={t("form.ingredients.label")}
               value={ingredients}
               onChange={(e) => setIngredients(e.target.value)}
               fullWidth
               multiline
               rows={4}
               required
-              placeholder="Liệt kê các nguyên liệu cần thiết..."
+              placeholder={t("form.ingredients.placeholder")}
             />
             <TextField
-              label="Các bước thực hiện"
+              label={t("form.steps.label")}
               value={steps}
               onChange={(e) => setSteps(e.target.value)}
               fullWidth
               multiline
               rows={5}
               required
-              placeholder="Bước 1: ...&#10;Bước 2: ..."
+              placeholder={t("form.steps.placeholder")}
             />
 
             <Box>
               <Typography variant="subtitle2" gutterBottom fontWeight="bold">
-                Ảnh món ăn {!editing && <span style={{ color: "red" }}>*</span>}
+                {t("form.image.label")}{" "}
+                {!editing && <span style={{ color: "red" }}>*</span>}
               </Typography>
               <Button
                 variant="outlined"
@@ -951,7 +951,7 @@ const RecipesLayout: React.FC = () => {
                 fullWidth
                 sx={{ py: 1.5, borderRadius: 2 }}
               >
-                Chọn ảnh
+                {t("form.image.choose")}
                 <input
                   type="file"
                   accept="image/*"
@@ -974,7 +974,7 @@ const RecipesLayout: React.FC = () => {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={preview}
-                      alt="preview"
+                      alt={t("form.image.preview_alt")}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -990,7 +990,7 @@ const RecipesLayout: React.FC = () => {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={handleClose} size="large">
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button
             variant="contained"
@@ -998,7 +998,7 @@ const RecipesLayout: React.FC = () => {
             size="large"
             sx={{ px: 4 }}
           >
-            {editing ? "Cập nhật" : "Tạo"}
+            {editing ? t("btn.update") : t("btn.create")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1096,7 +1096,7 @@ const RecipesLayout: React.FC = () => {
                         sx={{ fontSize: 18, color: "text.secondary" }}
                       />
                       <Typography variant="body2" color="text.secondary">
-                        {selectedRecipe.user?.userName || "Ẩn danh"}
+                        {selectedRecipe.user?.userName || t("anonymous")}
                       </Typography>
                     </Stack>
 
@@ -1105,9 +1105,9 @@ const RecipesLayout: React.FC = () => {
                         sx={{ fontSize: 18, color: "text.secondary" }}
                       />
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(selectedRecipe.createdAt).toLocaleDateString(
-                          "vi-VN"
-                        )}
+                        {new Date(
+                          selectedRecipe.createdAt
+                        ).toLocaleDateString()}
                       </Typography>
                     </Stack>
                   </Stack>
@@ -1149,7 +1149,7 @@ const RecipesLayout: React.FC = () => {
                 {selectedRecipe.description && (
                   <Box>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      Mô tả
+                      {t("detail.description_title")}
                     </Typography>
                     <Typography color="text.secondary">
                       {selectedRecipe.description}
@@ -1165,7 +1165,7 @@ const RecipesLayout: React.FC = () => {
                     sx={{ display: "flex", alignItems: "center", gap: 1 }}
                   >
                     <RestaurantIcon sx={{ color: "var(--recipes-primary)" }} />{" "}
-                    Nguyên liệu
+                    {t("detail.ingredients_title")}
                   </Typography>
                   <Typography sx={{ whiteSpace: "pre-line", pl: 2 }}>
                     {selectedRecipe.ingredients}
@@ -1179,8 +1179,8 @@ const RecipesLayout: React.FC = () => {
                     gutterBottom
                     sx={{ display: "flex", alignItems: "center", gap: 1 }}
                   >
-                    <MenuIcon sx={{ color: "var(--recipes-primary)" }} /> Các
-                    bước thực hiện
+                    <MenuIcon sx={{ color: "var(--recipes-primary)" }} />{" "}
+                    {t("detail.steps_title")}
                   </Typography>
                   <Typography sx={{ whiteSpace: "pre-line", pl: 2 }}>
                     {selectedRecipe.steps}
@@ -1197,8 +1197,10 @@ const RecipesLayout: React.FC = () => {
                     gutterBottom
                     sx={{ display: "flex", alignItems: "center", gap: 1 }}
                   >
-                    <StarIcon sx={{ color: "var(--recipes-primary)" }} /> Đánh
-                    giá ({getRecipeReviews(selectedRecipe.id).length})
+                    <StarIcon sx={{ color: "var(--recipes-primary)" }} />{" "}
+                    {t("detail.reviews_title", {
+                      count: getRecipeReviews(selectedRecipe.id).length,
+                    })}
                   </Typography>
 
                   {/* Add Review */}
@@ -1216,12 +1218,12 @@ const RecipesLayout: React.FC = () => {
                         fontWeight="bold"
                         gutterBottom
                       >
-                        Viết đánh giá của bạn
+                        {t("review.write_title")}
                       </Typography>
                       <Stack spacing={2}>
                         <Box>
                           <Typography variant="body2" gutterBottom>
-                            Đánh giá:
+                            {t("review.rating_label")}
                           </Typography>
                           <Rating
                             value={reviewRating}
@@ -1230,7 +1232,7 @@ const RecipesLayout: React.FC = () => {
                           />
                         </Box>
                         <TextField
-                          placeholder="Chia sẻ cảm nhận của bạn về công thức này..."
+                          placeholder={t("review.placeholder")}
                           value={reviewComment}
                           onChange={(e) => setReviewComment(e.target.value)}
                           multiline
@@ -1243,7 +1245,7 @@ const RecipesLayout: React.FC = () => {
                           onClick={handleSubmitReview}
                           sx={{ alignSelf: "flex-end" }}
                         >
-                          Gửi đánh giá
+                          {t("review.send_btn")}
                         </Button>
                       </Stack>
                     </Card>

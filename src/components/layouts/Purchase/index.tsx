@@ -10,17 +10,23 @@ import {
   Stack,
   CircularProgress,
   Container,
-  Alert,
-  Snackbar,
   Collapse,
   List,
   ListItem,
   ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from "@mui/material";
+import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { useRouter } from "next/navigation";
 import { InfoPayment } from "@/types/payment";
+import type { OrderResponse, OrderItem } from "@/types/order";
 import {
   fetchPaymentHistoryByUser,
   cancelOrder,
@@ -30,53 +36,53 @@ const PurchaseHistoryPage = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const t = useTranslations("purchase");
+
   const paymentState = useAppSelector((s) => s.payment);
   const history = paymentState.history;
 
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>({ open: false, message: "", severity: "success" });
-
-  // track which order's items list is expanded (keyed by order id)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
-  // selected delivery status filter (e.g. 'all', 'preparing', 'delivering', 'delivered', 'canceled')
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    orderId?: number;
+    orderStatus?: string;
+  }>({ open: false });
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  // Show delivery-related statuses (user requested: Chờ xác nhận, Đang giao, Đã giao, Đã hủy)
+  // order status filter labels — use translations
   const ORDER_STATUSES: { key: string; label: string }[] = [
-     { key: "all", label: "Tất cả" },
-    { key: "preparing", label: "Chờ xác nhận" },
-    { key: "delivering", label: "Đang giao" },
-    { key: "delivered", label: "Đã giao" },
-    { key: "canceled", label: "Đã hủy" },
+    { key: "all", label: t("statuses.all") },
+    { key: "preparing", label: t("statuses.preparing") },
+    { key: "delivering", label: t("statuses.delivering") },
+    { key: "delivered", label: t("statuses.delivered") },
+    { key: "canceled", label: t("statuses.canceled") },
   ];
 
   const normalize = (s?: string | null) => (s ? String(s).toLowerCase() : "");
 
-  // Payment status mapping (backend: Pending, Success, Failed, Cancelled, Refunded)
   const paymentLabel = (status?: string) => {
     switch (normalize(status)) {
       case "success":
-        return "Đã thanh toán";
+      case "paid":
+        return t("payment.paid");
       case "pending":
-        return "Chờ thanh toán";
+        return t("payment.pending");
       case "failed":
-        return "Thanh toán thất bại";
+        return t("payment.failed");
       case "cancelled":
       case "canceled":
-        return "Đã hủy";
+        return t("payment.canceled");
       case "refunded":
-        return "Đã hoàn tiền";
+        return t("payment.refunded");
       default:
-        return status ?? "Không rõ";
+        return status ?? t("unknown");
     }
   };
 
   const paymentChipColor = (status?: string) => {
     switch (normalize(status)) {
       case "success":
+      case "paid":
         return "success" as const;
       case "pending":
         return "warning" as const;
@@ -91,22 +97,21 @@ const PurchaseHistoryPage = () => {
     }
   };
 
-  // Order status mapping (backend: Pending, Paid, Cancelled, Failed, Processing)
   const orderStatusLabel = (status?: string) => {
     switch (normalize(status)) {
       case "pending":
-        return "Chờ xử lý";
+        return t("order.pending");
       case "paid":
-        return "Đã thanh toán";
+        return t("order.paid");
       case "processing":
-        return "Đang xử lý";
+        return t("order.processing");
       case "cancelled":
       case "canceled":
-        return "Đã hủy";
+        return t("order.canceled");
       case "failed":
-        return "Thất bại";
+        return t("order.failed");
       default:
-        return status ?? "Không rõ";
+        return status ?? t("unknown");
     }
   };
 
@@ -126,20 +131,19 @@ const PurchaseHistoryPage = () => {
     }
   };
 
-  // Delivery status mapping (backend: Preparing, Delivering, Delivered, Canceled)
   const deliveryStatusLabel = (status?: string) => {
     switch (normalize(status)) {
       case "preparing":
-        return "Đang chuẩn bị";
+        return t("delivery.preparing");
       case "delivering":
-        return "Đang giao hàng";
+        return t("delivery.delivering");
       case "delivered":
-        return "Đã giao hàng";
+        return t("delivery.delivered");
       case "canceled":
       case "cancelled":
-        return "Đã hủy";
+        return t("delivery.canceled");
       default:
-        return status ?? "Không rõ";
+        return status ?? t("unknown");
     }
   };
 
@@ -159,13 +163,10 @@ const PurchaseHistoryPage = () => {
     }
   };
 
-  // Check if order can be cancelled (backend logic: cannot cancel if status is Paid)
-  const canCancelOrder = (orderStatus?: string) => {
-    return normalize(orderStatus) !== "paid";
-  };
+  const canCancelOrder = (orderStatus?: string) =>
+    normalize(orderStatus) !== "paid";
 
   useEffect(() => {
-    // Read user id from localStorage and fetch payment history only
     const userRaw =
       typeof window !== "undefined" ? localStorage.getItem("user") : null;
     if (!userRaw) return;
@@ -178,23 +179,21 @@ const PurchaseHistoryPage = () => {
     }
   }, [dispatch]);
 
-  // Auto-refresh when history changes (to reflect updates from cancel or other operations)
   useEffect(() => {
-    // This effect will re-render when history state updates
+    // re-render when history updates
   }, [history]);
 
-  const handleCancelOrder = async (orderId: number, orderStatus?: string) => {
+  const handleCancelOrder = (orderId: number, orderStatus?: string) => {
     if (!canCancelOrder(orderStatus)) {
-      setSnackbar({
-        open: true,
-        message: "Không thể hủy đơn hàng đã thanh toán",
-        severity: "error",
-      });
+      toast.error("Không thể hủy đơn hàng đã thanh toán");
       return;
     }
+    setConfirmDialog({ open: true, orderId, orderStatus });
+  };
 
-    const ok = confirm("Bạn có chắc muốn hủy đơn hàng này?");
-    if (!ok) return;
+  const handleConfirmCancel = async () => {
+    const { orderId } = confirmDialog;
+    if (!orderId) return;
 
     const userRaw =
       typeof window !== "undefined" ? localStorage.getItem("user") : null;
@@ -210,20 +209,41 @@ const PurchaseHistoryPage = () => {
 
     try {
       await dispatch(cancelOrder({ orderId, userId: uid })).unwrap();
-      setSnackbar({
-        open: true,
-        message: "Hủy đơn hàng thành công",
-        severity: "success",
-      });
+      toast.success("Hủy đơn hàng thành công");
+      setConfirmDialog({ open: false });
+      // Fetch lại danh sách để cập nhật UI
+      if (uid) {
+        await dispatch(fetchPaymentHistoryByUser({ userId: uid }));
+      }
     } catch (error: unknown) {
-      setSnackbar({
-        open: true,
-        message:
-          (error as { message?: string })?.message || "Không thể hủy đơn hàng",
-        severity: "error",
-      });
+      toast.error(
+        (error as { message?: string })?.message || "Không thể hủy đơn hàng"
+      );
+      setConfirmDialog({ open: false });
     }
   };
+
+  // unify history type to support both InfoPayment (old) and OrderResponse (new API)
+  const historyList = history as unknown as Array<InfoPayment | OrderResponse>;
+
+  const isInfoPayment = (h: InfoPayment | OrderResponse): h is InfoPayment =>
+    (h as InfoPayment).order !== undefined;
+
+  const getOrderFrom = (h: InfoPayment | OrderResponse): OrderResponse =>
+    isInfoPayment(h) ? (h as InfoPayment).order : (h as OrderResponse);
+
+  const getPaymentStatus = (
+    h: InfoPayment | OrderResponse,
+    ord: OrderResponse
+  ): string =>
+    isInfoPayment(h) ? (h as InfoPayment).status : String(ord.status ?? "");
+
+  const getDisplayAmount = (
+    h: InfoPayment | OrderResponse,
+    ord: OrderResponse
+  ): number =>
+    (typeof ord.finalPrice === "number" ? ord.finalPrice : undefined) ??
+    (isInfoPayment(h) ? (h as InfoPayment).amount : 0);
 
   if (paymentState.loading)
     return (
@@ -241,21 +261,20 @@ const PurchaseHistoryPage = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="h5" fontWeight="bold" mb={1}>
-          Lịch sử thanh toán
+          {t("title")}
         </Typography>
 
-        {/* Status filter tabs (like Shopee) */}
         <Box mb={2}>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {ORDER_STATUSES.map((s) => {
-              const count = history.filter((h) => {
+              const count = historyList.filter((h) => {
                 if (s.key === "all") return true;
-                const st = normalize(h.order?.deliveryStatus);
+                const ord = getOrderFrom(h);
+                const st = normalize(ord?.deliveryStatus);
                 if (s.key === "canceled")
                   return st === "cancelled" || st === "canceled";
                 return st === s.key;
               }).length;
-
               return (
                 <Button
                   key={s.key}
@@ -264,9 +283,7 @@ const PurchaseHistoryPage = () => {
                   onClick={() => setSelectedStatus(s.key)}
                   sx={{ textTransform: "none" }}
                 >
-                  {s.label} {"("}
-                  {count}
-                  {")"}
+                  {s.label} ({count})
                 </Button>
               );
             })}
@@ -280,24 +297,28 @@ const PurchaseHistoryPage = () => {
             <ShoppingCartOutlinedIcon
               sx={{ fontSize: 56, color: "text.disabled", mb: 1 }}
             />
-            <Typography color="text.secondary">
-              Chưa có lịch sử thanh toán
-            </Typography>
+            <Typography color="text.secondary">{t("empty")}</Typography>
           </Box>
         ) : (
           <Stack spacing={1}>
-            {history
-              .filter((h: InfoPayment) => {
+            {historyList
+              .filter((h) => {
                 if (selectedStatus === "all") return true;
-                const st = normalize(h.order?.deliveryStatus);
+                const ord = getOrderFrom(h);
+                const st = normalize(ord?.deliveryStatus);
                 if (selectedStatus === "canceled")
                   return st === "cancelled" || st === "canceled";
                 return st === selectedStatus;
               })
-              .map((h: InfoPayment) => {
-                const orderId = h.order?.id ?? -1;
+              .map((h) => {
+                const ord = getOrderFrom(h);
+                const orderId = ord?.id ?? -1;
                 return (
-                  <Paper key={h.id} variant="outlined" sx={{ p: 1.5 }}>
+                  <Paper
+                    key={ord?.id ?? (isInfoPayment(h) ? h.id : Math.random())}
+                    variant="outlined"
+                    sx={{ p: 1.5 }}
+                  >
                     <Box
                       display="flex"
                       justifyContent="space-between"
@@ -307,20 +328,18 @@ const PurchaseHistoryPage = () => {
                     >
                       <Box>
                         <Typography fontWeight={600}>
-                          Đơn hàng #{h.order?.id ?? "-"}
+                          {t("order_prefix")}#{ord?.id ?? "-"}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {h.order?.createdAt
-                            ? new Date(h.order.createdAt).toLocaleString()
+                          {ord?.createdAt
+                            ? new Date(ord.createdAt).toLocaleString()
                             : "-"}
                         </Typography>
                         <Typography variant="body2">
-                          Nhà hàng:{" "}
-                          {h.order?.restaurant?.name ||
-                            `#${h.order?.restaurantId ?? "-"}`}
+                          {t("labels.restaurant")}{" "}
+                          {ord?.restaurant?.name ||
+                            `#${ord?.restaurantId ?? "-"}`}
                         </Typography>
-
-                        {/* Order status + delivery status */}
                         <Box
                           mt={0.5}
                           display="flex"
@@ -328,19 +347,17 @@ const PurchaseHistoryPage = () => {
                           alignItems="center"
                         >
                           <Chip
-                            label={orderStatusLabel(h.order?.status)}
-                            color={orderStatusColor(h.order?.status)}
+                            label={orderStatusLabel(ord?.status)}
+                            color={orderStatusColor(ord?.status)}
                             size="small"
                           />
                           <Chip
-                            label={deliveryStatusLabel(h.order?.deliveryStatus)}
-                            color={deliveryStatusColor(h.order?.deliveryStatus)}
+                            label={deliveryStatusLabel(ord?.deliveryStatus)}
+                            color={deliveryStatusColor(ord?.deliveryStatus)}
                             size="small"
                           />
                         </Box>
-
-                        {/* Items preview: show first item, collapse rest */}
-                        {h.order?.items && h.order.items.length > 0 && (
+                        {ord?.items && ord.items.length > 0 && (
                           <>
                             <Box
                               mt={0.5}
@@ -349,12 +366,12 @@ const PurchaseHistoryPage = () => {
                               gap={1}
                             >
                               <Typography variant="body2">
-                                {h.order.items[0].dishName}
-                                {h.order.items[0].quantity
-                                  ? ` x${h.order.items[0].quantity}`
+                                {ord.items[0].dishName}
+                                {ord.items[0].quantity
+                                  ? ` x${ord.items[0].quantity}`
                                   : ""}
                               </Typography>
-                              {h.order.items.length > 1 && (
+                              {ord.items.length > 1 && (
                                 <Button
                                   size="small"
                                   variant="text"
@@ -366,14 +383,15 @@ const PurchaseHistoryPage = () => {
                                   }
                                   sx={{ textTransform: "none" }}
                                 >
-                                  +{h.order.items.length - 1} món khác
+                                  {t("btn.more_items", {
+                                    count: ord.items.length - 1,
+                                  })}
                                 </Button>
                               )}
                             </Box>
-
                             <Collapse in={!!expanded[orderId]}>
                               <List dense>
-                                {h.order.items.map((it) => (
+                                {ord.items.map((it: OrderItem) => (
                                   <ListItem key={it.id} sx={{ py: 0.4 }}>
                                     <ListItemText
                                       primary={`${it.dishName} x${it.quantity}`}
@@ -390,13 +408,24 @@ const PurchaseHistoryPage = () => {
                       </Box>
                       <Box textAlign="right">
                         <Chip
-                          label={paymentLabel(h.status)}
-                          color={paymentChipColor(h.status)}
+                          label={paymentLabel(getPaymentStatus(h, ord))}
+                          color={paymentChipColor(getPaymentStatus(h, ord))}
                           size="small"
                           sx={{ mr: 1 }}
                         />
+                        {typeof ord?.totalPrice === "number" &&
+                          typeof ord?.finalPrice === "number" &&
+                          ord.totalPrice > ord.finalPrice && (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ textDecoration: "line-through" }}
+                            >
+                              {Number(ord.totalPrice).toLocaleString()}đ
+                            </Typography>
+                          )}
                         <Typography fontWeight={700}>
-                          {Number(h.amount).toLocaleString()}đ
+                          {Number(getDisplayAmount(h, ord)).toLocaleString()}đ
                         </Typography>
                         <Box mt={0.5}>
                           <Button
@@ -404,45 +433,43 @@ const PurchaseHistoryPage = () => {
                             color="error"
                             variant="outlined"
                             sx={{ mr: 1 }}
-                            disabled={!canCancelOrder(h.order?.status)}
+                            disabled={!canCancelOrder(ord?.status)}
                             onClick={() => {
-                              if (h.order?.id) {
-                                void handleCancelOrder(
-                                  h.order.id,
-                                  h.order.status
-                                );
+                              if (ord?.id) {
+                                void handleCancelOrder(ord.id, ord.status);
                               }
                             }}
                           >
-                            Hủy đơn
+                            {t("btn.cancel_order")}
                           </Button>
-
                           <Button
                             size="small"
                             variant="outlined"
                             onClick={() => {
-                              // jump to restaurant page
                               const rid =
-                                h.order?.restaurant?.id ??
-                                h.order?.restaurantId;
+                                ord?.restaurant?.id ?? ord?.restaurantId;
                               if (rid) router.push(`/RestaurantDetails/${rid}`);
                             }}
                           >
-                            Xem nhà hàng
+                            {t("btn.view_restaurant")}
                           </Button>
                         </Box>
-                        {/* show small summary of items */}
                         <Typography
                           variant="caption"
                           display="block"
                           mt={0.5}
                           color="text.secondary"
                         >
-                          {h.order?.items?.length ?? 0} món • Tổng:{" "}
-                          {Number(
-                            h.order?.finalPrice ?? h.amount
-                          ).toLocaleString()}
-                          đ
+                          {ord?.items?.length ?? 0} {t("labels.items")} •
+                          {typeof ord?.totalPrice === "number" && (
+                            <>
+                              {" "}
+                              {t("labels.original_price")}{" "}
+                              {Number(ord.totalPrice).toLocaleString()}đ •
+                            </>
+                          )}{" "}
+                          {t("labels.total")}{" "}
+                          {Number(getDisplayAmount(h, ord)).toLocaleString()}đ
                         </Typography>
                       </Box>
                     </Box>
@@ -453,20 +480,32 @@ const PurchaseHistoryPage = () => {
         )}
       </Paper>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false })}
+        maxWidth="xs"
+        fullWidth
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+        <DialogTitle>{t("dialog.title")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("dialog.confirm_text", { id: confirmDialog.orderId ?? "" })}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialog({ open: false })}>
+            {t("btn.no")}
+          </Button>
+          <Button
+            onClick={handleConfirmCancel}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            {t("btn.confirm_cancel")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

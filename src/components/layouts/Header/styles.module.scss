@@ -141,13 +141,19 @@
   gap: 12px;
   flex-shrink: 0;
   
+  /* Giảm kích thước nút mặc định hơn nữa cho mobile thấp */
+  :global(.MuiButton-root) {
+    line-height: 1.1;
+  }
+  
   @media (max-width: 768px) {
     gap: 6px;
     
-    button, a {
-      padding: 6px;
-      font-size: 0.85rem;
-      min-width: auto;
+    button, a, :global(.MuiButton-root) {
+      padding: 4px 8px !important;
+      font-size: 0.7rem !important;
+      min-width: auto !important;
+      line-height: 1.05;
     }
     
     svg {
@@ -158,8 +164,10 @@
   @media (max-width: 600px) {
     gap: 4px;
     
-    button, a {
-      padding: 4px;
+    button, a, :global(.MuiButton-root) {
+      padding: 3px 6px !important;
+      font-size: 0.58rem !important; /* giảm thêm */
+      font-weight: 500;
     }
   }
 }
@@ -199,13 +207,16 @@
   .rightSection {
     gap: 2px;
     
-    button, a {
-      padding: 2px;
-      min-width: auto;
+    button, a, :global(.MuiButton-root) {
+      padding: 2px 4px !important;
+      font-size: 0.55rem !important; /* mobile rất nhỏ */
+      font-weight: 500;
+      min-width: auto !important;
+      letter-spacing: .2px;
     }
     
     svg {
-      font-size: 1rem;
+      font-size: 0.9rem; /* thu nhỏ icon cho đồng bộ */
     }
   }
 }

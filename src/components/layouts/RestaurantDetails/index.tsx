@@ -395,7 +395,9 @@ const RestaurantDetailPage = () => {
 
     if (missingFields.length > 0) {
       const fieldsList = missingFields.join(", ");
-      toast.error(`Thiếu thông tin: ${fieldsList}. Vui lòng đăng nhập.`);
+      toast.error(
+        `${t("missing_fields")}: ${fieldsList}. ${t("please_login")}.`
+      );
       console.warn("Missing fields:", missingFields);
       return;
     }
@@ -534,9 +536,7 @@ const RestaurantDetailPage = () => {
     }
 
     if (!userId) {
-      toast.error(
-        t("please_login_to_favorite") ?? "Vui lòng đăng nhập để theo dõi"
-      );
+      toast.error(t("please_login_to_favorite"));
       router.push("/login");
       return;
     }
@@ -550,7 +550,7 @@ const RestaurantDetailPage = () => {
         );
         if (!fav) return;
         await dispatch(removeFavorite(fav.id)).unwrap();
-        toast.success(t("removed_favorite") ?? "Đã bỏ theo dõi");
+        toast.success(t("removed_favorite"));
       } else {
         await dispatch(
           addFavorite({
@@ -558,7 +558,7 @@ const RestaurantDetailPage = () => {
             restaurantId: Number(restaurant.id),
           })
         ).unwrap();
-        toast.success(t("added_favorite") ?? "Đã theo dõi");
+        toast.success(t("added_favorite"));
       }
       // refresh list
       dispatch(fetchFavoritesByRestaurant(Number(id)));
@@ -623,7 +623,7 @@ const RestaurantDetailPage = () => {
               });
             }}
             sx={{ width: "100%", flexWrap: "wrap", gap: 1 }}
-            aria-label="Chuyển mục xem"
+            aria-label={t("switch_view")}
           >
             <ToggleButton value="info" aria-label={t("info")}>
               {t("info")}
@@ -684,7 +684,9 @@ const RestaurantDetailPage = () => {
               >
                 <Typography variant="h4">{restaurant.name}</Typography>
                 <Button
-                  aria-label={isFavorite ? "Đã theo dõi" : "Theo dõi"}
+                  aria-label={
+                    isFavorite ? t("following_aria") : t("follow_aria")
+                  }
                   onClick={handleToggleFavorite}
                   variant={isFavorite ? "contained" : "outlined"}
                   color={isFavorite ? "success" : "primary"}
@@ -693,9 +695,7 @@ const RestaurantDetailPage = () => {
                   }
                   size="small"
                 >
-                  {isFavorite
-                    ? t("following_label") ?? "Đang theo dõi"
-                    : t("follow_label") ?? "Theo dõi"}
+                  {isFavorite ? t("following_label") : t("follow_label")}
                 </Button>
               </Box>
 
@@ -784,7 +784,7 @@ const RestaurantDetailPage = () => {
                 })()}
               </Typography>
               <Typography sx={{ mt: 1 }}>
-                <strong>{t("followers_label") ?? "Followers"}:</strong>{" "}
+                <strong>{t("followers_label")}:</strong>{" "}
                 {restaurantFavorites?.length ?? 0}
               </Typography>
               <Box display="flex" alignItems="center" gap={0.2} sx={{ mt: 1 }}>
@@ -798,7 +798,7 @@ const RestaurantDetailPage = () => {
                 ))}
                 <Typography variant="body2" color="error" sx={{ ml: 0.5 }}>
                   {avgRating.toFixed(1)} ({totalReviews.toLocaleString()}{" "}
-                  {t("rating")})
+                  {t("reviews_count")})
                 </Typography>
               </Box>
             </Box>
@@ -1245,7 +1245,7 @@ const RestaurantDetailPage = () => {
                     router.push(`/RestaurantDetails/${r.id}`);
                   }}
                 >
-                  Đặt chỗ ngay
+                  {t("reserve_now")}
                 </Button>
               </Box>
             </Card>
@@ -1254,7 +1254,7 @@ const RestaurantDetailPage = () => {
           return (
             <Box sx={{ mt: 3 }}>
               <Typography variant="h5" sx={{ mb: 1 }}>
-                Có thể bạn quan tâm
+                {t("suggested_title")}
               </Typography>
               <Box position="relative">
                 <Grid

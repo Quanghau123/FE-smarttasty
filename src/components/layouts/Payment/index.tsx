@@ -38,6 +38,7 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import MoneyIcon from "@mui/icons-material/Money";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import {
   createVNPayPayment,
@@ -81,6 +82,7 @@ type ShippingAddress = {
 /* -------------------------------------------------------------------------- */
 const PaymentPage = () => {
   const router = useRouter();
+  const t = useTranslations("payment");
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "VNPAY">("COD");
   const [loading, setLoading] = useState(false);
@@ -112,26 +114,26 @@ const PaymentPage = () => {
   const deliveryOptions: DeliveryOption[] = [
     {
       id: "priority",
-      name: "Ưu tiên",
-      description: "Giao hàng siêu tốc trong 15-20 phút",
+      name: t("delivery.priority.name"),
+      description: t("delivery.priority.description"),
       price: 25000,
-      estimatedTime: "15-20 phút",
+      estimatedTime: t("delivery.priority.estimatedTime"),
       icon: <FlashOnIcon sx={{ color: "#ff6b35" }} />,
     },
     {
       id: "fast",
-      name: "Nhanh",
-      description: "Giao hàng nhanh trong 30-40 phút",
+      name: t("delivery.fast.name"),
+      description: t("delivery.fast.description"),
       price: 15000,
-      estimatedTime: "30-40 phút",
+      estimatedTime: t("delivery.fast.estimatedTime"),
       icon: <LocalShippingIcon sx={{ color: "#1976d2" }} />,
     },
     {
       id: "economy",
-      name: "Tiết kiệm",
-      description: "Giao hàng tiêu chuẩn trong 45-60 phút",
+      name: t("delivery.economy.name"),
+      description: t("delivery.economy.description"),
       price: 10000,
-      estimatedTime: "45-60 phút",
+      estimatedTime: t("delivery.economy.estimatedTime"),
       icon: <SavingsIcon sx={{ color: "#2e7d32" }} />,
     },
   ];
@@ -355,9 +357,7 @@ const PaymentPage = () => {
       !shippingAddress.phone ||
       !shippingAddress.address
     ) {
-      toast.warning(
-        "⚠️ Vui lòng cập nhật đầy đủ thông tin địa chỉ nhận hàng trước khi đặt hàng!"
-      );
+      toast.warning(t("errors.address_missing"));
       setOpenAddressDialog(true);
       return;
     }
@@ -409,7 +409,7 @@ const PaymentPage = () => {
         ).unwrap();
 
         toast.success(
-          "✅ Đặt hàng thành công! Vui lòng chuẩn bị tiền khi nhận hàng."
+          "Đặt hàng thành công! Vui lòng chuẩn bị tiền khi nhận hàng."
         );
         localStorage.removeItem("checkoutOrder");
         router.push("/purchase");
@@ -472,10 +472,10 @@ const PaymentPage = () => {
           <PaymentIcon sx={{ fontSize: 32, color: "primary.main" }} />
           <Box>
             <Typography variant="h5" fontWeight="700">
-              Thanh toán
+              {t("header.title")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Xác nhận đơn hàng và hoàn tất thanh toán
+              {t("header.subtitle")}
             </Typography>
           </Box>
         </Box>
@@ -510,7 +510,7 @@ const PaymentPage = () => {
               <Box display="flex" alignItems="center" gap={1}>
                 <LocationOnIcon sx={{ color: "error.main", fontSize: 28 }} />
                 <Typography variant="h6" fontWeight="600">
-                  Địa chỉ nhận hàng
+                  {t("address.title")}
                 </Typography>
               </Box>
               <Button
@@ -522,7 +522,7 @@ const PaymentPage = () => {
                 }}
                 sx={{ textTransform: "none" }}
               >
-                Thay đổi
+                {t("btn.change")}
               </Button>
             </Box>
 
@@ -533,10 +533,10 @@ const PaymentPage = () => {
             !shippingAddress.address ? (
               <Alert severity="warning" sx={{ mb: 2 }}>
                 <Typography variant="body2" fontWeight="600" mb={0.5}>
-                  Chưa có thông tin địa chỉ nhận hàng
+                  {t("address.no_info.title")}
                 </Typography>
                 <Typography variant="body2">
-                  Vui lòng cập nhật thông tin để có thể đặt hàng
+                  {t("address.no_info.content")}
                 </Typography>
               </Alert>
             ) : null}
@@ -545,12 +545,12 @@ const PaymentPage = () => {
               <Box display="flex" alignItems="center" gap={1}>
                 <PersonIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                 <Typography fontWeight="600">
-                  {shippingAddress.name || "Chưa có tên"}
+                  {shippingAddress.name || t("address.no_name")}
                 </Typography>
                 <Divider orientation="vertical" flexItem />
                 <PhoneIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                 <Typography>
-                  {shippingAddress.phone || "Chưa có SĐT"}
+                  {shippingAddress.phone || t("address.no_phone")}
                 </Typography>
               </Box>
 
@@ -560,7 +560,7 @@ const PaymentPage = () => {
                 />
                 <Box>
                   <Typography color="text.primary">
-                    {shippingAddress.address || "Chưa có địa chỉ"}
+                    {shippingAddress.address || t("address.no_address")}
                   </Typography>
                   {shippingAddress.addressDetail && (
                     <Typography variant="body2" color="text.secondary">
@@ -626,7 +626,7 @@ const PaymentPage = () => {
                         <Box
                           component="img"
                           src={item.image}
-                          alt={item.dishName || "dish"}
+                          alt={item.dishName || t("item.no_image_alt")}
                           sx={{ width: 48, height: 48, objectFit: "cover" }}
                           onError={(e) => {
                             // hide broken image so fallback icon shows
@@ -771,13 +771,13 @@ const PaymentPage = () => {
               <Box display="flex" alignItems="center" gap={1.5}>
                 <DiscountIcon sx={{ color: "warning.main", fontSize: 28 }} />
                 <Typography variant="h6" fontWeight="600">
-                  Mã giảm giá
+                  {t("voucher.title")}
                 </Typography>
               </Box>
               {typeof finalTotal === "number" && (
                 <Chip
                   icon={<CheckCircleIcon />}
-                  label="Đã áp dụng"
+                  label={t("voucher.applied")}
                   color="success"
                   size="small"
                 />
@@ -814,17 +814,17 @@ const PaymentPage = () => {
                 >
                   <Typography>
                     {voucherCode
-                      ? `Mã: ${voucherCode}`
-                      : "Chọn hoặc nhập mã giảm giá"}
+                      ? `${t("voucher.code_prefix")} ${voucherCode}`
+                      : t("voucher.placeholder")}
                   </Typography>
                   <Typography variant="body2" color="primary.main">
-                    {orderOptions.length} mã khả dụng
+                    {orderOptions.length} {t("voucher.available_count")}
                   </Typography>
                 </Button>
               </Box>
             ) : (
               <Alert severity="info" icon={<DiscountIcon />}>
-                Không có mã giảm giá cho đơn hàng này
+                {t("voucher.no_vouchers")}
               </Alert>
             )}
           </CardContent>
@@ -843,7 +843,7 @@ const PaymentPage = () => {
                 sx={{ color: "info.main", fontSize: 28 }}
               />
               <Typography variant="h6" fontWeight="600">
-                Phương thức thanh toán
+                {t("paymentMethod.title")}
               </Typography>
             </Box>
 
@@ -882,10 +882,10 @@ const PaymentPage = () => {
                         <MoneyIcon sx={{ color: "success.main" }} />
                         <Box>
                           <Typography fontWeight="600">
-                            Thanh toán khi nhận hàng
+                            {t("paymentMethod.cod.title")}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Thanh toán bằng tiền mặt cho shipper
+                            {t("paymentMethod.cod.description")}
                           </Typography>
                         </Box>
                       </Box>
@@ -919,10 +919,10 @@ const PaymentPage = () => {
                         <PaymentIcon sx={{ color: "primary.main" }} />
                         <Box>
                           <Typography fontWeight="600">
-                            Thanh toán qua VNPay
+                            {t("paymentMethod.vnpay.title")}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Thanh toán trực tuyến qua ví điện tử, thẻ ATM
+                            {t("paymentMethod.vnpay.description")}
                           </Typography>
                         </Box>
                       </Box>
@@ -943,14 +943,16 @@ const PaymentPage = () => {
         >
           <CardContent>
             <Typography variant="h6" fontWeight="600" mb={2}>
-              Chi tiết thanh toán
+              {t("summary.title")}
             </Typography>
 
             <Divider sx={{ mb: 2 }} />
 
             <Stack spacing={1.5}>
               <Box display="flex" justifyContent="space-between">
-                <Typography color="text.secondary">Tạm tính</Typography>
+                <Typography color="text.secondary">
+                  {t("summary.subtotal")}
+                </Typography>
                 <Typography>
                   {Number(originalTotal ?? total ?? 0).toLocaleString()}₫
                 </Typography>
@@ -959,7 +961,9 @@ const PaymentPage = () => {
               {(originalTotal ?? total ?? 0) - (finalTotal ?? total ?? 0) >
                 0 && (
                 <Box display="flex" justifyContent="space-between">
-                  <Typography color="text.secondary">Giảm giá</Typography>
+                  <Typography color="text.secondary">
+                    {t("summary.discount")}
+                  </Typography>
                   <Typography color="success.main" fontWeight="600">
                     -
                     {Number(
@@ -972,7 +976,9 @@ const PaymentPage = () => {
 
               {voucherDiscount && voucherDiscount > 0 && (
                 <Box display="flex" justifyContent="space-between">
-                  <Typography color="text.secondary">Giảm bởi mã</Typography>
+                  <Typography color="text.secondary">
+                    {t("summary.discount_by_code")}
+                  </Typography>
                   <Typography color="success.main" fontWeight="600">
                     -{Number(voucherDiscount).toLocaleString()}₫
                   </Typography>
@@ -980,7 +986,9 @@ const PaymentPage = () => {
               )}
 
               <Box display="flex" justifyContent="space-between">
-                <Typography color="text.secondary">Phí giao hàng</Typography>
+                <Typography color="text.secondary">
+                  {t("summary.shipping_fee")}
+                </Typography>
                 <Typography>+{deliveryFee.toLocaleString()}₫</Typography>
               </Box>
 
@@ -992,7 +1000,7 @@ const PaymentPage = () => {
                 alignItems="center"
               >
                 <Typography variant="h6" fontWeight="700">
-                  Tổng cộng
+                  {t("summary.total")}
                 </Typography>
                 <Typography variant="h5" fontWeight="700" color="primary.main">
                   {grandTotal.toLocaleString()}₫
@@ -1023,10 +1031,10 @@ const PaymentPage = () => {
           {loading ? (
             <Box display="flex" alignItems="center" gap={1}>
               <CircularProgress size={24} color="inherit" />
-              <Typography component="span">Đang xử lý...</Typography>
+              <Typography component="span">{t("btn.processing")}</Typography>
             </Box>
           ) : (
-            `Đặt hàng • ${grandTotal.toLocaleString()}₫`
+            `${t("btn.place_order")} • ${grandTotal.toLocaleString()}₫`
           )}
         </Button>
       </Box>
@@ -1045,7 +1053,7 @@ const PaymentPage = () => {
             alignItems="center"
           >
             <Typography variant="h6" fontWeight="600">
-              Chỉnh sửa địa chỉ nhận hàng
+              {t("address.edit_title")}
             </Typography>
             <IconButton
               size="small"
@@ -1060,29 +1068,29 @@ const PaymentPage = () => {
             <TextField
               fullWidth
               required
-              label="Họ và tên"
+              label={t("address.form.name")}
               value={tempAddress.name}
               onChange={(e) =>
                 setTempAddress({ ...tempAddress, name: e.target.value })
               }
               variant="outlined"
-              helperText="Vui lòng nhập họ tên người nhận"
+              helperText={t("address.form.name_helper")}
             />
             <TextField
               fullWidth
               required
-              label="Số điện thoại"
+              label={t("address.form.phone")}
               value={tempAddress.phone}
               onChange={(e) =>
                 setTempAddress({ ...tempAddress, phone: e.target.value })
               }
               variant="outlined"
-              helperText="Nhập 10-11 chữ số"
+              helperText={t("address.form.phone_helper")}
             />
             <TextField
               fullWidth
               required
-              label="Địa chỉ"
+              label={t("address.form.address")}
               value={tempAddress.address}
               onChange={(e) =>
                 setTempAddress({ ...tempAddress, address: e.target.value })
@@ -1090,11 +1098,11 @@ const PaymentPage = () => {
               variant="outlined"
               multiline
               rows={2}
-              helperText="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+              helperText={t("address.form.address_helper")}
             />
             <TextField
               fullWidth
-              label="Chi tiết địa chỉ (Tùy chọn)"
+              label={t("address.form.address_detail_label")}
               value={tempAddress.addressDetail || ""}
               onChange={(e) =>
                 setTempAddress({
@@ -1103,7 +1111,7 @@ const PaymentPage = () => {
                 })
               }
               variant="outlined"
-              placeholder="Tầng, số phòng, ghi chú cho tài xế..."
+              placeholder={t("address.form.address_detail_placeholder")}
             />
           </Stack>
         </DialogContent>
@@ -1115,31 +1123,29 @@ const PaymentPage = () => {
             }}
             sx={{ textTransform: "none" }}
           >
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button
             variant="contained"
             onClick={() => {
               // Validate before saving
               if (!tempAddress.name.trim()) {
-                toast.warning("⚠️ Vui lòng nhập họ tên!");
+                toast.warning(t("errors.enter_name"));
                 return;
               }
               if (!tempAddress.phone.trim()) {
-                toast.warning("⚠️ Vui lòng nhập số điện thoại!");
+                toast.warning(t("errors.enter_phone"));
                 return;
               }
               if (!tempAddress.address.trim()) {
-                toast.warning("⚠️ Vui lòng nhập địa chỉ!");
+                toast.warning(t("errors.enter_address"));
                 return;
               }
 
               // Validate phone number format (basic)
               const phoneRegex = /^[0-9]{10,11}$/;
               if (!phoneRegex.test(tempAddress.phone.replace(/\s/g, ""))) {
-                toast.warning(
-                  "⚠️ Số điện thoại không hợp lệ! Vui lòng nhập 10-11 chữ số."
-                );
+                toast.warning(t("errors.invalid_phone"));
                 return;
               }
 
@@ -1167,7 +1173,7 @@ const PaymentPage = () => {
             alignItems="center"
           >
             <Typography variant="h6" fontWeight="600">
-              Chọn mã giảm giá
+              {t("voucher.select_title")}
             </Typography>
             <IconButton
               size="small"
@@ -1213,7 +1219,7 @@ const PaymentPage = () => {
                   setOpenVoucherDialog(false);
                 } catch (err: unknown) {
                   // remove promotion error (handled below)
-                  let msg = "Hủy mã thất bại";
+                  let msg = t("errors.remove_voucher_failed_default");
                   try {
                     const e = err as Record<string, unknown> | string;
                     if (typeof e === "string") msg = e;
@@ -1248,9 +1254,7 @@ const PaymentPage = () => {
                 }
               }}
             >
-              <Typography fontWeight="600">
-                Không sử dụng mã giảm giá
-              </Typography>
+              <Typography fontWeight="600">{t("voucher.no_use")}</Typography>
             </Box>
 
             {/* Voucher options */}
@@ -1367,7 +1371,7 @@ const PaymentPage = () => {
                       setOpenVoucherDialog(false);
                     } catch (err: unknown) {
                       // apply promotion error (handled below)
-                      let msg = "Áp mã thất bại";
+                      let msg = t("errors.apply_voucher_failed_default");
                       try {
                         const e = err as unknown as
                           | Record<string, unknown>
@@ -1432,13 +1436,16 @@ const PaymentPage = () => {
                   {opt.minOrderValue && (
                     <Box mt={1}>
                       <Typography variant="body2" color="text.secondary">
-                        Đơn tối thiểu: {opt.minOrderValue.toLocaleString()}₫
+                        {t("voucher.min_order_label", {
+                          amount: opt.minOrderValue.toLocaleString(),
+                        })}
                       </Typography>
                       {!isEligible && (
                         <Alert severity="warning" sx={{ mt: 1, py: 0.5 }}>
                           <Typography variant="caption">
-                            ⚠️ Còn thiếu {missingAmount.toLocaleString()}đ để sử
-                            dụng voucher này
+                            {t("errors.voucher_still_missing", {
+                              amount: missingAmount.toLocaleString(),
+                            })}
                           </Typography>
                         </Alert>
                       )}

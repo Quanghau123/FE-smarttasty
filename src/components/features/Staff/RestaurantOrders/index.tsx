@@ -10,7 +10,6 @@ import {
   InputLabel,
   CircularProgress,
   Button,
-  Snackbar,
   Alert,
   Paper,
   List,
@@ -35,20 +34,18 @@ import {
 } from "@/redux/slices/paymentSlice";
 import { updateDeliveryStatus } from "@/redux/slices/orderSlice";
 import { DeliveryStatus } from "@/types/order";
+import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 export default function StaffRestaurantOrders() {
   const dispatch = useAppDispatch();
   const currentStaff = useAppSelector((s) => s.staff.currentStaff);
+  const t = useTranslations("staff.restaurantOrders");
   const paymentState = useAppSelector((s) => s.payment);
   const staffLoading = useAppSelector((s) => s.staff.loading);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<
     number | null
   >(null);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>({ open: false, message: "", severity: "success" });
   const [noPermission, setNoPermission] = useState(false);
 
   // confirm dialog state
@@ -107,19 +104,12 @@ export default function StaffRestaurantOrders() {
           low.includes("permission")
         )
           setNoPermission(true);
-        else
-          setSnackbar({
-            open: true,
-            message: msg || "Lỗi khi lấy đơn hàng",
-            severity: "error",
-          });
+        else toast.error(msg || t("errors.fetch_failed"));
       }
     })();
-  }, [dispatch, selectedRestaurantId]);
+  }, [dispatch, selectedRestaurantId, t]);
 
   const loading = paymentState.loading || staffLoading;
-
-  const handleChangeRestaurant = (id: number) => setSelectedRestaurantId(id);
 
   const handleChangeDelivery = async (
     orderId: number,
@@ -152,12 +142,7 @@ export default function StaffRestaurantOrders() {
         Boolean(paymentForOrder?.codPayment) &&
         !paymentForOrder?.codPayment?.isCollected;
       if (!isShippingState || codNotCollected) {
-        setSnackbar({
-          open: true,
-          message:
-            "Không thể đặt trạng thái 'Đã giao' trước khi đơn ở trạng thái đang giao và COD (nếu có) đã được thu.",
-          severity: "error",
-        });
+        toast.error(t("errors.cannot_mark_delivered"));
         return;
       }
     }
@@ -165,21 +150,13 @@ export default function StaffRestaurantOrders() {
       await dispatch(
         updateDeliveryStatus({ id: orderId, deliveryStatus: mapped })
       ).unwrap();
-      setSnackbar({
-        open: true,
-        message: "Cập nhật trạng thái giao hàng thành công",
-        severity: "success",
-      });
+      toast.success(t("success.update_delivery"));
       if (selectedRestaurantId && !noPermission)
         dispatch(
           fetchPaymentsByRestaurant({ restaurantId: selectedRestaurantId })
         );
     } catch (e: unknown) {
-      setSnackbar({
-        open: true,
-        message: (e as Error)?.message ?? "Cập nhật thất bại",
-        severity: "error",
-      });
+      toast.error((e as Error)?.message ?? t("errors.update_failed"));
     }
   };
 
@@ -204,11 +181,7 @@ export default function StaffRestaurantOrders() {
             restaurantId: selectedRestaurantId!,
           })
         ).unwrap();
-        setSnackbar({
-          open: true,
-          message: "Xác nhận thu COD thành công",
-          severity: "success",
-        });
+        toast.success(t("success.confirm_cod"));
       }
       if (confirmDialog.type === "delivered" && confirmDialog.orderId) {
         await dispatch(
@@ -217,68 +190,60 @@ export default function StaffRestaurantOrders() {
             deliveryStatus: DeliveryStatus.Delivered,
           })
         ).unwrap();
-        setSnackbar({
-          open: true,
-          message: "Đã đánh dấu Đã giao",
-          severity: "success",
-        });
+        toast.success(t("success.mark_delivered"));
       }
       if (selectedRestaurantId && !noPermission)
         dispatch(
           fetchPaymentsByRestaurant({ restaurantId: selectedRestaurantId })
         );
     } catch (e: unknown) {
-      setSnackbar({
-        open: true,
-        message: (e as Error)?.message ?? "Thao tác thất bại",
-        severity: "error",
-      });
+      toast.error((e as Error)?.message ?? t("errors.action_failed"));
     } finally {
       closeConfirmDialog();
     }
   };
 
   const statusOptions: { label: string; value: DeliveryStatus }[] = [
-    { label: "Đang chuẩn bị", value: DeliveryStatus.Preparing },
-    { label: "Đang giao", value: DeliveryStatus.Shipping },
-    { label: "Đã giao", value: DeliveryStatus.Delivered },
-    { label: "Thất bại", value: DeliveryStatus.Failed },
+    { label: t("status.delivery.preparing"), value: DeliveryStatus.Preparing },
+    { label: t("status.delivery.delivering"), value: DeliveryStatus.Shipping },
+    { label: t("status.delivery.delivered"), value: DeliveryStatus.Delivered },
+    { label: t("status.delivery.failed"), value: DeliveryStatus.Failed },
   ];
 
   const labelOrderStatus = (s?: string) => {
     switch ((s || "").toLowerCase()) {
       case "pending":
-        return "Chờ xử lý";
+        return t("status.order.pending");
       case "processing":
-        return "Đang xử lý";
+        return t("status.order.processing");
       case "paid":
-        return "Đã thanh toán";
+        return t("status.order.paid");
       case "cancelled":
       case "canceled":
-        return "Đã hủy";
+        return t("status.order.cancelled");
       case "failed":
-        return "Thất bại";
+        return t("status.order.failed");
       default:
-        return s || "Không rõ";
+        return s || t("status.order.unknown");
     }
   };
 
   const labelDeliveryStatus = (s?: string) => {
     switch ((s || "").toLowerCase()) {
       case "preparing":
-        return "Đang chuẩn bị";
+        return t("status.delivery.preparing");
       case "delivering":
       case "shipping":
-        return "Đang giao";
+        return t("status.delivery.delivering");
       case "delivered":
-        return "Đã giao";
+        return t("status.delivery.delivered");
       case "canceled":
       case "cancelled":
-        return "Đã hủy";
+        return t("status.delivery.canceled");
       case "failed":
-        return "Thất bại";
+        return t("status.delivery.failed");
       default:
-        return s || "Không rõ";
+        return s || t("status.delivery.unknown");
     }
   };
 
@@ -302,149 +267,190 @@ export default function StaffRestaurantOrders() {
   };
 
   return (
-    <Box>
-      <Typography variant="h6" mb={2}>
-        Đơn hàng (dành cho nhân viên giao hàng)
-      </Typography>
+    <Box sx={{ maxWidth: 1400, mx: "auto", p: 3 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          p: 3,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          color: "white",
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          {t("title")}
+        </Typography>
+        {currentStaff && restaurants.length > 0 && (
+          <Typography variant="body1" sx={{ opacity: 0.95 }}>
+            {restaurants[0].name}
+          </Typography>
+        )}
+      </Paper>
 
       {!currentStaff && (
-        <Typography>Đang lấy thông tin nhân viên...</Typography>
-      )}
-
-      {currentStaff && (
-        <Box mb={2} display="flex" gap={2} alignItems="center">
-          <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel id="restaurant-select-label">Nhà hàng</InputLabel>
-            <Select
-              labelId="restaurant-select-label"
-              value={selectedRestaurantId ?? ""}
-              label="Nhà hàng"
-              onChange={(e) => handleChangeRestaurant(Number(e.target.value))}
-            >
-              {restaurants.map((r) => (
-                <MenuItem key={r.id} value={r.id}>
-                  {r.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
         </Box>
       )}
 
-      {loading && (
-        <Box display="flex" alignItems="center" gap={1}>
-          <CircularProgress size={20} />{" "}
-          <Typography>Đang tải đơn hàng...</Typography>
+      {loading && currentStaff && (
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          gap={2}
+          py={4}
+        >
+          <CircularProgress size={24} />
+          <Typography>{t("loading")}</Typography>
         </Box>
       )}
 
       {!loading && (
         <Box>
           {noPermission ? (
-            <Alert severity="warning">
-              Bạn không có quyền xem thông tin thanh toán; chỉ hiển thị đơn hàng
-              sẽ bị tắt.
-            </Alert>
+            <Alert severity="warning">{t("errors.no_permission")}</Alert>
           ) : (
             (() => {
               const payments = paymentState.restaurantPayments ?? [];
               if (payments.length === 0)
-                return <Typography>Không có đơn hàng</Typography>;
+                return <Typography>{t("empty")}</Typography>;
 
               return (
-                <List>
+                <List sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {payments.map((p) => {
                     const o = p.order;
                     const expanded = Boolean(o?.id && expandedOrders[o.id]);
                     return (
                       <Paper
                         key={p.id}
-                        sx={{ mb: 2, p: 1.25 }}
-                        variant="outlined"
+                        elevation={2}
+                        sx={{
+                          overflow: "hidden",
+                          borderRadius: 2,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            boxShadow: 4,
+                            transform: "translateY(-2px)",
+                          },
+                        }}
                       >
-                        <ListItem disableGutters>
+                        <ListItem
+                          disableGutters
+                          sx={{
+                            p: 2.5,
+                            bgcolor: "background.paper",
+                          }}
+                        >
                           <Box sx={{ width: "100%" }}>
                             <Stack
                               direction={{ xs: "column", sm: "row" }}
                               justifyContent="space-between"
                               alignItems="center"
-                              spacing={1}
+                              spacing={2}
                             >
                               <Stack
                                 direction="row"
                                 alignItems="center"
                                 spacing={2}
-                                sx={{ minWidth: 0 }}
+                                sx={{ minWidth: 0, flex: 1 }}
                               >
                                 <Avatar
                                   sx={{
-                                    width: 56,
-                                    height: 56,
-                                    bgcolor: "background.paper",
+                                    width: 64,
+                                    height: 64,
+                                    bgcolor: "primary.main",
+                                    fontSize: "1.5rem",
+                                    fontWeight: 700,
                                   }}
                                 >
                                   {String(
                                     o?.recipientName || o?.userId || ""
                                   ).charAt(0) || "#"}
                                 </Avatar>
-                                <Box sx={{ minWidth: 0 }}>
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
                                   <Typography
-                                    variant="subtitle1"
-                                    noWrap
-                                    sx={{ fontWeight: 700 }}
+                                    variant="h6"
+                                    sx={{ fontWeight: 700, mb: 0.5 }}
                                   >
-                                    {`Đơn #${o?.id} — ${
-                                      o?.recipientName || `#${o?.userId}`
-                                    }`}
+                                    {t("labels.order")}#{o?.id}
                                   </Typography>
                                   <Typography
-                                    variant="caption"
+                                    variant="body2"
                                     color="text.secondary"
-                                    noWrap
+                                    sx={{ mb: 0.5 }}
                                   >
-                                    {`Tổng: ${(
-                                      o?.finalPrice ??
-                                      p.amount ??
-                                      0
-                                    ).toLocaleString()}đ — Tạo: ${
-                                      o?.createdAt
-                                        ? new Date(o.createdAt).toLocaleString()
-                                        : "-"
-                                    }`}
+                                    {t("labels.customer")}{" "}
+                                    {o?.recipientName || `#${o?.userId}`}
                                   </Typography>
+                                  <Stack direction="row" spacing={2}>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color: "primary.main",
+                                      }}
+                                    >
+                                      {(
+                                        o?.finalPrice ??
+                                        p.amount ??
+                                        0
+                                      ).toLocaleString()}
+                                      đ
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {o?.createdAt
+                                        ? new Date(o.createdAt).toLocaleString(
+                                            "vi-VN"
+                                          )
+                                        : "-"}
+                                    </Typography>
+                                  </Stack>
                                 </Box>
                               </Stack>
 
                               <Stack
                                 direction="row"
-                                spacing={1}
+                                spacing={1.5}
                                 alignItems="center"
+                                flexWrap="wrap"
                               >
                                 <Chip
-                                  size="small"
                                   label={labelOrderStatus(o?.status)}
                                   color={chipColorForOrder(o?.status)}
+                                  sx={{ fontWeight: 600 }}
                                 />
 
                                 <Chip
-                                  size="small"
                                   label={labelDeliveryStatus(o?.deliveryStatus)}
                                   color={chipColorForDelivery(
                                     o?.deliveryStatus
                                   )}
+                                  sx={{ fontWeight: 600 }}
                                 />
 
                                 <IconButton
-                                  aria-label={expanded ? "collapse" : "expand"}
+                                  aria-label={
+                                    expanded
+                                      ? t("aria.collapse")
+                                      : t("aria.expand")
+                                  }
                                   onClick={() => toggleExpand(o?.id ?? 0)}
-                                  size="small"
+                                  sx={{
+                                    bgcolor: "action.hover",
+                                    "&:hover": { bgcolor: "action.selected" },
+                                  }}
                                 >
                                   <ExpandMoreIcon
                                     sx={{
                                       transform: expanded
                                         ? "rotate(180deg)"
                                         : "rotate(0deg)",
-                                      transition: "transform 0.2s",
+                                      transition: "transform 0.3s ease",
                                     }}
                                   />
                                 </IconButton>
@@ -456,29 +462,45 @@ export default function StaffRestaurantOrders() {
                               timeout="auto"
                               unmountOnExit
                             >
-                              <Divider sx={{ my: 1 }} />
+                              <Divider sx={{ my: 2 }} />
                               <Box
                                 sx={{
                                   display: "flex",
                                   flexDirection: { xs: "column", md: "row" },
-                                  gap: 2,
+                                  gap: 3,
+                                  mt: 2,
                                 }}
                               >
                                 <Box sx={{ flex: 1 }}>
-                                  {/* Items */}
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 700, mb: 2 }}
+                                  >
+                                    {t("labels.items_detail")}
+                                  </Typography>
                                   {(o?.items || []).map((it) => (
                                     <Box
                                       key={it.id}
                                       display="flex"
                                       alignItems="center"
                                       gap={2}
-                                      sx={{ py: 0.75 }}
+                                      sx={{
+                                        py: 1.5,
+                                        px: 2,
+                                        mb: 1,
+                                        bgcolor: "grey.50",
+                                        borderRadius: 1,
+                                      }}
                                     >
                                       <Avatar
                                         variant="rounded"
                                         src={it.image || undefined}
                                         alt={it.dishName}
-                                        sx={{ width: 56, height: 40 }}
+                                        sx={{
+                                          width: 72,
+                                          height: 72,
+                                          borderRadius: 2,
+                                        }}
                                       >
                                         {it.dishName?.charAt(0) || "?"}
                                       </Avatar>
@@ -514,34 +536,65 @@ export default function StaffRestaurantOrders() {
                                   ))}
                                 </Box>
 
-                                <Box sx={{ width: { xs: "100%", md: 320 } }}>
+                                <Box
+                                  sx={{
+                                    width: { xs: "100%", md: 380 },
+                                    p: 2.5,
+                                    bgcolor: "grey.50",
+                                    borderRadius: 2,
+                                  }}
+                                >
                                   <Typography
-                                    variant="subtitle2"
-                                    sx={{ fontWeight: 700 }}
+                                    variant="h6"
+                                    sx={{ fontWeight: 700, mb: 2 }}
                                   >
-                                    Thông tin giao hàng
+                                    {t("labels.delivery_info")}
                                   </Typography>
-                                  <Typography variant="body2">
-                                    {o?.recipientName} •{" "}
-                                    {o?.recipientPhone || "-"}
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ wordBreak: "break-word" }}
-                                  >
-                                    {o?.deliveryAddress ||
-                                      o?.restaurant?.address ||
-                                      "-"}
-                                  </Typography>
+                                  <Box sx={{ mb: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 0.5 }}
+                                    >
+                                      {t("labels.recipient")}
+                                    </Typography>
+                                    <Typography
+                                      variant="body1"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {o?.recipientName || "-"}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                      {o?.recipientPhone || "-"}
+                                    </Typography>
+                                  </Box>
 
-                                  <Divider sx={{ my: 1 }} />
+                                  <Box sx={{ mb: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 0.5 }}
+                                    >
+                                      {t("labels.delivery_address")}
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ wordBreak: "break-word" }}
+                                    >
+                                      {o?.deliveryAddress ||
+                                        o?.restaurant?.address ||
+                                        "-"}
+                                    </Typography>
+                                  </Box>
 
-                                  <Stack direction="column" spacing={1}>
-                                    <FormControl size="small">
+                                  <Divider sx={{ my: 2 }} />
+
+                                  <Stack direction="column" spacing={2}>
+                                    <FormControl fullWidth>
                                       <InputLabel
                                         id={`delivery-select-${o?.id}`}
                                       >
-                                        Trạng thái giao
+                                        {t("labels.delivery_status_label")}
                                       </InputLabel>
                                       <Select
                                         labelId={`delivery-select-${o?.id}`}
@@ -549,7 +602,7 @@ export default function StaffRestaurantOrders() {
                                           (o?.deliveryStatus as DeliveryStatus) ??
                                           DeliveryStatus.Preparing
                                         }
-                                        label="Trạng thái giao"
+                                        label="Trạng thái giao hàng"
                                         onChange={(e) =>
                                           handleChangeDelivery(
                                             o?.id ?? 0,
@@ -579,11 +632,53 @@ export default function StaffRestaurantOrders() {
                                             (codNotCollected ||
                                               !isShippingState);
 
+                                          // Get current status index - normalize to lowercase for comparison
+                                          const currentDeliveryStatusLower =
+                                            String(
+                                              o?.deliveryStatus || ""
+                                            ).toLowerCase();
+                                          const currentStatusIndex =
+                                            statusOptions.findIndex((opt) => {
+                                              const optValue = String(
+                                                opt.value
+                                              ).toLowerCase();
+                                              // Handle "Delivering" mapping to "Shipping"
+                                              if (
+                                                currentDeliveryStatusLower.includes(
+                                                  "deliver"
+                                                ) ||
+                                                currentDeliveryStatusLower.includes(
+                                                  "ship"
+                                                )
+                                              ) {
+                                                return optValue.includes(
+                                                  "ship"
+                                                );
+                                              }
+                                              return (
+                                                optValue ===
+                                                currentDeliveryStatusLower
+                                              );
+                                            });
+                                          const thisStatusIndex =
+                                            statusOptions.findIndex(
+                                              (opt) => opt.value === s.value
+                                            );
+
+                                          // Disable previous statuses (don't allow going back)
+                                          const isPreviousStatus =
+                                            currentStatusIndex !== -1 &&
+                                            thisStatusIndex <
+                                              currentStatusIndex;
+
                                           return (
                                             <MenuItem
                                               key={s.value}
                                               value={s.value}
-                                              disabled={disableDeliveredOption}
+                                              disabled={
+                                                disableDeliveredOption ||
+                                                isPreviousStatus
+                                              }
                                             >
                                               {s.label}
                                             </MenuItem>
@@ -609,7 +704,8 @@ export default function StaffRestaurantOrders() {
                                       return (
                                         <Button
                                           variant="contained"
-                                          size="small"
+                                          fullWidth
+                                          size="large"
                                           onClick={() =>
                                             openConfirmDialog({
                                               type: "delivered",
@@ -617,34 +713,56 @@ export default function StaffRestaurantOrders() {
                                             })
                                           }
                                           disabled={!canMarkDelivered}
+                                          sx={{ py: 1.5 }}
                                         >
-                                          Đánh dấu Đã giao
+                                          {t("btn.mark_delivered")}
                                         </Button>
                                       );
                                     })()}
 
                                     {p.codPayment ? (
                                       p.codPayment.isCollected ? (
-                                        <Typography variant="body2">
-                                          Đã thu COD:{" "}
-                                          {p.codPayment.collectedAt
-                                            ? new Date(
-                                                p.codPayment.collectedAt
-                                              ).toLocaleString()
-                                            : "-"}
-                                        </Typography>
+                                        <Paper
+                                          variant="outlined"
+                                          sx={{
+                                            p: 2,
+                                            bgcolor: "success.50",
+                                            borderColor: "success.main",
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="body2"
+                                            color="success.dark"
+                                            sx={{ fontWeight: 600 }}
+                                          >
+                                            {t("labels.collected")}
+                                          </Typography>
+                                          <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                          >
+                                            {p.codPayment.collectedAt
+                                              ? new Date(
+                                                  p.codPayment.collectedAt
+                                                ).toLocaleString("vi-VN")
+                                              : "-"}
+                                          </Typography>
+                                        </Paper>
                                       ) : (
                                         <Button
                                           variant="outlined"
-                                          size="small"
+                                          fullWidth
+                                          size="large"
+                                          color="warning"
                                           onClick={() =>
                                             openConfirmDialog({
                                               type: "cod",
                                               paymentId: p.id,
                                             })
                                           }
+                                          sx={{ py: 1.5 }}
                                         >
-                                          Xác nhận thu COD
+                                          {t("btn.confirm_cod")}
                                         </Button>
                                       )
                                     ) : null}
@@ -665,34 +783,23 @@ export default function StaffRestaurantOrders() {
       )}
 
       <Dialog open={confirmDialog.open} onClose={closeConfirmDialog}>
-        <DialogTitle>Xác nhận</DialogTitle>
+        <DialogTitle>{t("confirm.title")}</DialogTitle>
         <DialogContent>
           <Typography>
             {confirmDialog.type === "cod"
-              ? "Bạn có chắc chắn muốn xác nhận thu COD?"
-              : "Bạn muốn đánh dấu đơn đã giao?"}
+              ? t("confirm.cod")
+              : t("confirm.delivered")}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeConfirmDialog}>Hủy</Button>
+          <Button onClick={closeConfirmDialog}>{t("btn.cancel")}</Button>
           <Button variant="contained" onClick={handleConfirmDialog}>
-            Xác nhận
+            {t("btn.confirm")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* Toast notifications handled globally via ToastContainer */}
     </Box>
   );
 }

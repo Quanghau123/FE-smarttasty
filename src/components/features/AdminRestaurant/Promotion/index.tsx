@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Box,
   Button,
@@ -66,6 +67,7 @@ const fromISO = (iso?: string) =>
 
 const PromotionPage = () => {
   const dispatch = useAppDispatch();
+  const t = useTranslations("adminRestaurant.promotion");
   const {
     promotions,
     loading,
@@ -130,9 +132,9 @@ const PromotionPage = () => {
       // Load order-promotions for this restaurant so we can show minOrderValue and allow cancel
       dispatch(getOrderPromotionsForUser({ restaurantId: restaurant.id }));
     } else if (restaurant) {
-      toast.warning("Tài khoản chưa có nhà hàng!");
+      toast.warning(t("errors.no_restaurant_account"));
     }
-  }, [restaurant, dispatch, promotionError]);
+  }, [restaurant, dispatch, promotionError, t]);
 
   // ===== HANDLERS =====
   const handleOpenModal = (promo: Promotion | null = null) => {
@@ -332,10 +334,10 @@ const PromotionPage = () => {
         >
           <Box>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Quản lý khuyến mãi
+              {t("title")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tạo và quản lý các chương trình khuyến mãi cho nhà hàng của bạn
+              {t("subtitle")}
             </Typography>
           </Box>
           <Button
@@ -351,7 +353,7 @@ const PromotionPage = () => {
               fontWeight: 600,
             }}
           >
-            Tạo khuyến mãi
+            {t("btn.create")}
           </Button>
         </Stack>
       </Box>
@@ -361,20 +363,22 @@ const PromotionPage = () => {
         <TextField
           select
           size="small"
-          label="Lọc theo phạm vi"
+          label={t("filter.label")}
           value={filterTarget}
           onChange={(e) =>
             setFilterTarget(e.target.value as "all" | TargetType)
           }
           sx={{ minWidth: 200 }}
         >
-          <MenuItem value="all">Tất cả</MenuItem>
-          <MenuItem value="dish">Món ăn </MenuItem>
-          <MenuItem value="order">Đơn hàng</MenuItem>
+          <MenuItem value="all">{t("filter.all")}</MenuItem>
+          <MenuItem value="dish">{t("filter.dish")}</MenuItem>
+          <MenuItem value="order">{t("filter.order")}</MenuItem>
         </TextField>
 
         <Typography variant="body2" color="text.secondary">
-          Tổng khuyến mãi: {promotions ? promotions.length : 0}
+          {t("summary.total_promotions", {
+            count: promotions ? promotions.length : 0,
+          })}
         </Typography>
       </Box>
 
@@ -393,10 +397,10 @@ const PromotionPage = () => {
         >
           <OfferIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            Chưa có khuyến mãi nào
+            {t("empty.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={3}>
-            Hãy tạo chương trình khuyến mãi đầu tiên để thu hút khách hàng
+            {t("empty.subtitle")}
           </Typography>
         </Card>
       ) : (
@@ -411,10 +415,10 @@ const PromotionPage = () => {
             const isActive = now >= start && now <= end;
             const isUpcoming = now < start;
             const statusLabel = isActive
-              ? "Đang diễn ra"
+              ? t("status.active")
               : isUpcoming
-              ? "Sắp diễn ra"
-              : "Đã kết thúc";
+              ? t("status.upcoming")
+              : t("status.ended");
             const statusColor = isActive
               ? "success"
               : isUpcoming
@@ -422,10 +426,10 @@ const PromotionPage = () => {
               : "default";
             const targetLabel =
               promo.targetType === "order"
-                ? "Đơn hàng"
+                ? t("target.order")
                 : promo.targetType === "dish"
-                ? "Món ăn"
-                : "Danh mục";
+                ? t("target.dish")
+                : t("target.category");
 
             return (
               <Card
@@ -527,7 +531,9 @@ const PromotionPage = () => {
                       {orderPromotion && (
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip
-                            label={`Tối thiểu: ${orderPromotion.minOrderValue.toLocaleString()}đ`}
+                            label={t("min_order.label", {
+                              amount: `${orderPromotion.minOrderValue.toLocaleString()}đ`,
+                            })}
                             size="small"
                             color="info"
                           />
@@ -537,7 +543,7 @@ const PromotionPage = () => {
                               handleCancelOrderPromotion(orderPromotion.id)
                             }
                             aria-label="cancel-order-promotion"
-                            title="Huỷ gán số tiền tối thiểu"
+                            title={t("btn.cancel_assign_min")}
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -572,7 +578,7 @@ const PromotionPage = () => {
                         },
                       }}
                       aria-label="assign-min-order"
-                      title="Gán số tiền tối thiểu"
+                      title={t("aria.assign_min_order")}
                     >
                       <MoneyIcon fontSize="small" />
                     </IconButton>
@@ -641,12 +647,14 @@ const PromotionPage = () => {
             </Box>
             <Box>
               <Typography variant="h6" fontWeight="bold">
-                {editingPromo ? "Cập nhật khuyến mãi" : "Tạo khuyến mãi mới"}
+                {editingPromo
+                  ? t("modal.title_update")
+                  : t("modal.title_create")}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {editingPromo
-                  ? "Chỉnh sửa thông tin khuyến mãi"
-                  : "Điền đầy đủ thông tin bên dưới"}
+                  ? t("modal.subtitle_update")
+                  : t("modal.subtitle_create")}
               </Typography>
             </Box>
           </Stack>
@@ -664,13 +672,13 @@ const PromotionPage = () => {
                 color="text.secondary"
                 mb={2}
               >
-                Thông tin cơ bản
+                {t("modal.basic_info_title")}
               </Typography>
               <Stack spacing={2.5}>
                 <TextField
                   fullWidth
-                  label="Tiêu đề khuyến mãi"
-                  placeholder="VD: Giảm giá cuối tuần, Combo tiết kiệm..."
+                  label={t("form.title.label")}
+                  placeholder={t("form.title.placeholder")}
                   value={formData.title}
                   onChange={(e) =>
                     setFormData((s) => ({ ...s, title: e.target.value }))
@@ -681,8 +689,8 @@ const PromotionPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Mô tả chi tiết"
-                  placeholder="Mô tả về chương trình khuyến mãi..."
+                  label={t("form.description.label")}
+                  placeholder={t("form.description.placeholder")}
                   multiline
                   rows={3}
                   value={formData.description}
@@ -695,8 +703,8 @@ const PromotionPage = () => {
                 {/* Voucher code (optional) - useful for order-level promotions */}
                 <TextField
                   fullWidth
-                  label="Mã voucher (tùy chọn)"
-                  placeholder="VD: WEEKEND10"
+                  label={t("form.voucher.label")}
+                  placeholder={t("form.voucher.placeholder")}
                   value={formData.voucherCode}
                   onChange={(e) =>
                     setFormData((s) => ({ ...s, voucherCode: e.target.value }))
@@ -704,15 +712,15 @@ const PromotionPage = () => {
                   variant="outlined"
                   helperText={
                     formData.targetType === "order"
-                      ? "Nhập mã voucher để khách hàng nhập mã khi thanh toán"
-                      : "Mã chỉ có tác dụng khi phạm vi là 'Toàn bộ đơn hàng'"
+                      ? t("form.voucher.helper_for_order")
+                      : t("form.voucher.helper_for_other")
                   }
                 />
 
                 {/* Upload ảnh khuyến mãi (tùy chọn) */}
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" mb={1}>
-                    Ảnh khuyến mãi (tùy chọn)
+                    {t("form.image.label")}
                   </Typography>
                   {previewUrl && (
                     <Box mb={1}>
@@ -734,7 +742,7 @@ const PromotionPage = () => {
                     component="label"
                     sx={{ textTransform: "none" }}
                   >
-                    Chọn ảnh
+                    {t("btn.choose_image")}
                     <input
                       type="file"
                       accept="image/*"
@@ -765,7 +773,7 @@ const PromotionPage = () => {
                 color="text.secondary"
                 mb={2}
               >
-                Cấu hình giảm giá
+                {t("modal.discount_config_title")}
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
@@ -794,14 +802,12 @@ const PromotionPage = () => {
                 >
                   <MenuItem value="percent">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      {/* <PercentIcon fontSize="small" /> */}
-                      <span>Phần trăm</span>
+                      <span>{t("discount.percent")}</span>
                     </Stack>
                   </MenuItem>
                   <MenuItem value="fixed_amount">
                     <Stack direction="row" spacing={1} alignItems="center">
-                      {/* <MoneyIcon fontSize="small" /> */}
-                      <span>Số tiền cố định</span>
+                      <span>{t("discount.fixed")}</span>
                     </Stack>
                   </MenuItem>
                 </TextField>
@@ -811,11 +817,13 @@ const PromotionPage = () => {
                   type="text"
                   label={
                     formData.discountType === "percent"
-                      ? "Giá trị giảm (%)"
-                      : "Giá trị giảm (VNĐ)"
+                      ? t("form.discount_value_label_percent")
+                      : t("form.discount_value_label_fixed")
                   }
                   placeholder={
-                    formData.discountType === "percent" ? "10" : "50000"
+                    formData.discountType === "percent"
+                      ? t("form.discount_value_placeholder_percent")
+                      : t("form.discount_value_placeholder_fixed")
                   }
                   value={formData.discountValue}
                   onChange={(e) => {
@@ -854,7 +862,7 @@ const PromotionPage = () => {
                 color="text.secondary"
                 mb={2}
               >
-                Phạm vi áp dụng
+                {t("modal.target_title")}
               </Typography>
               <TextField
                 select
@@ -878,7 +886,7 @@ const PromotionPage = () => {
                         bgcolor: "success.main",
                       }}
                     />
-                    <span>Món ăn cụ thể</span>
+                    <span>{t("target.dish_specific")}</span>
                   </Stack>
                 </MenuItem>
                 <MenuItem value="order">
@@ -891,7 +899,7 @@ const PromotionPage = () => {
                         bgcolor: "primary.main",
                       }}
                     />
-                    <span>Toàn bộ đơn hàng</span>
+                    <span>{t("target.order_whole")}</span>
                   </Stack>
                 </MenuItem>
                 {/* <MenuItem value="category">
@@ -904,7 +912,7 @@ const PromotionPage = () => {
                         bgcolor: "warning.main",
                       }}
                     />
-                    <span>Danh mục món ăn</span>
+                    <span>{t("target.category")}</span>
                   </Stack>
                 </MenuItem> */}
               </TextField>
@@ -920,13 +928,13 @@ const PromotionPage = () => {
                 color="text.secondary"
                 mb={2}
               >
-                Thời gian hiệu lực
+                {t("modal.period_title")}
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
                   fullWidth
                   type="date"
-                  label="Ngày bắt đầu"
+                  label={t("form.start_date")}
                   InputLabelProps={{ shrink: true }}
                   value={formData.startDate}
                   onChange={(e) =>
@@ -943,7 +951,7 @@ const PromotionPage = () => {
                 <TextField
                   fullWidth
                   type="date"
-                  label="Ngày kết thúc"
+                  label={t("form.end_date")}
                   InputLabelProps={{ shrink: true }}
                   value={formData.endDate}
                   onChange={(e) =>
@@ -972,7 +980,7 @@ const PromotionPage = () => {
             size="large"
             sx={{ px: 3, textTransform: "none" }}
           >
-            Hủy bỏ
+            {t("btn.cancel")}
           </Button>
           <Button
             variant="contained"
@@ -985,7 +993,7 @@ const PromotionPage = () => {
             }}
             startIcon={editingPromo ? <EditIcon /> : <AddIcon />}
           >
-            {editingPromo ? "Cập nhật" : "Tạo khuyến mãi"}
+            {editingPromo ? t("btn.update") : t("btn.create")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -995,20 +1003,20 @@ const PromotionPage = () => {
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
       >
-        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogTitle>{t("dialog.delete_title")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xoá khuyến mãi này không?
-          </DialogContentText>
+          <DialogContentText>{t("dialog.delete_text")}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)}>
+            {t("btn.cancel")}
+          </Button>
           <Button
             color="error"
             variant="contained"
             onClick={handleConfirmDelete}
           >
-            Xoá
+            {t("btn.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1024,27 +1032,28 @@ const PromotionPage = () => {
           <Stack direction="row" alignItems="center" spacing={1}>
             <MoneyIcon color="info" />
             <Typography variant="h6" fontWeight="600">
-              Gán số tiền tối thiểu
+              {t("min_order.title")}
             </Typography>
           </Stack>
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 3 }}>
-            Nhập số tiền tối thiểu để khách hàng có thể áp dụng khuyến mãi{" "}
-            <strong>{selectedPromoForMinOrder?.title}</strong> cho đơn hàng.
+            {t("min_order.text", {
+              title: selectedPromoForMinOrder?.title ?? "",
+            })}
           </DialogContentText>
           <TextField
             autoFocus
             fullWidth
-            label="Số tiền tối thiểu (đ)"
+            label={t("min_order.input_label")}
             type="text"
             value={minOrderValue}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, "");
               setMinOrderValue(value);
             }}
-            placeholder="Ví dụ: 100000"
-            helperText="Đơn hàng phải đạt tối thiểu số tiền này để được áp dụng khuyến mãi"
+            placeholder={t("min_order.placeholder")}
+            helperText={t("min_order.helper")}
             InputProps={{
               startAdornment: (
                 <MoneyIcon sx={{ mr: 1, color: "action.active" }} />
@@ -1058,7 +1067,7 @@ const PromotionPage = () => {
             size="large"
             sx={{ textTransform: "none" }}
           >
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button
             variant="contained"
@@ -1067,7 +1076,7 @@ const PromotionPage = () => {
             sx={{ textTransform: "none", fontWeight: 600 }}
             disabled={!minOrderValue || Number(minOrderValue) <= 0}
           >
-            Xác nhận
+            {t("btn.confirm")}
           </Button>
         </DialogActions>
       </Dialog>

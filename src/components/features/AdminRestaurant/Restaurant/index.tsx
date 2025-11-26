@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   Box,
@@ -42,6 +43,7 @@ import ReviewList from "@/components/features/Review/ReviewList";
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const t = useTranslations("adminRestaurant.restaurant");
 
   const { current: restaurantInfo, loading: restaurantLoading } =
     useAppSelector((state) => state.restaurant);
@@ -106,7 +108,7 @@ const RestaurantPage = () => {
     const role = userData?.role;
 
     if (!token || role !== "business") {
-      toast.error("Bạn không có quyền truy cập.");
+      toast.error(t("errors.no_permission"));
       return;
     }
 
@@ -115,7 +117,7 @@ const RestaurantPage = () => {
     return () => {
       dispatch(clearCurrentRestaurant());
     };
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   useEffect(() => {
     if (restaurantInfo?.id) {
@@ -149,7 +151,7 @@ const RestaurantPage = () => {
 
     const token = getAccessToken();
     if (!token) {
-      toast.error("Không tìm thấy token, vui lòng đăng nhập lại.");
+      toast.error(t("errors.no_token"));
       return;
     }
 
@@ -168,11 +170,11 @@ const RestaurantPage = () => {
         updateRestaurant({ token, id: restaurantInfo.id, data: formPayload })
       ).unwrap();
 
-      toast.success("Cập nhật nhà hàng thành công!");
+      toast.success(t("success.update_success"));
       dispatch(fetchRestaurantByOwner({ token }));
       setIsEditing(false);
     } catch {
-      toast.error("Cập nhật thất bại.");
+      toast.error(t("errors.update_failed"));
     }
   };
 
@@ -261,14 +263,14 @@ const RestaurantPage = () => {
       <Box display="flex" justifyContent="center" py={6}>
         <Paper elevation={3} sx={{ padding: 4, textAlign: "center" }}>
           <Typography variant="h5" gutterBottom>
-            Bạn chưa có nhà hàng
+            {t("no_restaurant")}
           </Typography>
           <Button
             variant="contained"
             color="primary"
             onClick={() => router.push("/createrestaurant")}
           >
-            Tạo nhà hàng
+            {t("create_restaurant")}
           </Button>
         </Paper>
       </Box>
@@ -316,7 +318,7 @@ const RestaurantPage = () => {
                 color: "text.primary",
               }}
             >
-              Thông tin nhà hàng
+              {t("title")}
             </Typography>
             {!isEditing && (
               <Button
@@ -331,7 +333,7 @@ const RestaurantPage = () => {
                   boxShadow: 2,
                 }}
               >
-                Chỉnh sửa
+                {t("btn.edit")}
               </Button>
             )}
           </Box>
@@ -370,7 +372,7 @@ const RestaurantPage = () => {
                       : restaurantInfo.imageUrl ||
                         `https://res.cloudinary.com/djcur1ymq/image/upload/${restaurantInfo.imagePublicId}`
                   }
-                  alt="Ảnh nhà hàng"
+                  alt={t("image_alt")}
                   fill
                   style={{ objectFit: "cover" }}
                 />
@@ -390,7 +392,7 @@ const RestaurantPage = () => {
                     },
                   }}
                 >
-                  Chọn ảnh mới
+                  {t("btn.choose_image")}
                   <input
                     type="file"
                     hidden
@@ -423,7 +425,7 @@ const RestaurantPage = () => {
                   >
                     <TextField
                       fullWidth
-                      label="Tên nhà hàng"
+                      label={t("label.name")}
                       value={formState.name}
                       onChange={(e) =>
                         setFormState({ ...formState, name: e.target.value })
@@ -433,7 +435,7 @@ const RestaurantPage = () => {
                     />
                     <TextField
                       fullWidth
-                      label="Địa chỉ"
+                      label={t("label.address")}
                       value={formState.address}
                       onChange={(e) =>
                         setFormState({ ...formState, address: e.target.value })
@@ -442,7 +444,7 @@ const RestaurantPage = () => {
                     />
                     <TextField
                       fullWidth
-                      label="Mô tả"
+                      label={t("label.description")}
                       value={formState.description}
                       onChange={(e) =>
                         setFormState({
@@ -463,7 +465,7 @@ const RestaurantPage = () => {
                       }}
                     >
                       <TextField
-                        label="Giờ mở cửa"
+                        label={t("label.open_time")}
                         value={formState.openTime}
                         onChange={(e) =>
                           setFormState({
@@ -475,7 +477,7 @@ const RestaurantPage = () => {
                         size="medium"
                       />
                       <TextField
-                        label="Giờ đóng cửa"
+                        label={t("label.close_time")}
                         value={formState.closeTime}
                         onChange={(e) =>
                           setFormState({
@@ -531,7 +533,7 @@ const RestaurantPage = () => {
                             fontSize: { xs: "0.938rem", sm: "1rem" },
                           }}
                         >
-                          Địa chỉ:
+                          {t("view.address")}
                         </Typography>
                         <Typography
                           sx={{
@@ -560,7 +562,7 @@ const RestaurantPage = () => {
                               fontSize: { xs: "0.938rem", sm: "1rem" },
                             }}
                           >
-                            Mô tả:
+                            {t("view.description")}
                           </Typography>
                           <Typography
                             sx={{
@@ -586,7 +588,7 @@ const RestaurantPage = () => {
                             fontSize: { xs: "0.938rem", sm: "1rem" },
                           }}
                         >
-                          Trạng thái:
+                          {t("view.status")}
                         </Typography>
                         {(() => {
                           const parseHHMM = (
@@ -610,7 +612,7 @@ const RestaurantPage = () => {
                           if (!open || !close) {
                             return (
                               <Chip
-                                label="Không rõ"
+                                label={t("status.unknown")}
                                 size="small"
                                 sx={{ bgcolor: "grey.300" }}
                               />
@@ -629,7 +631,9 @@ const RestaurantPage = () => {
                           const isOpen = now >= openDate && now <= closeDate;
                           return (
                             <Chip
-                              label={isOpen ? "Đang mở cửa" : "Đã đóng cửa"}
+                              label={
+                                isOpen ? t("status.open") : t("status.closed")
+                              }
                               color={isOpen ? "success" : "error"}
                               size="small"
                               sx={{ fontWeight: 600 }}
@@ -650,7 +654,7 @@ const RestaurantPage = () => {
                             fontSize: { xs: "0.938rem", sm: "1rem" },
                           }}
                         >
-                          Giờ hoạt động:
+                          {t("view.hours")}
                         </Typography>
                         <Typography
                           sx={{ fontSize: { xs: "0.938rem", sm: "1rem" } }}
@@ -671,7 +675,7 @@ const RestaurantPage = () => {
                             fontSize: { xs: "0.938rem", sm: "1rem" },
                           }}
                         >
-                          Người theo dõi:
+                          {t("view.followers")}
                         </Typography>
                         <Chip
                           label={`${restaurantFavorites?.length ?? 0} người`}
@@ -740,7 +744,7 @@ const RestaurantPage = () => {
                                 }}
                               >
                                 ({(totalReviewsFromState ?? 0).toLocaleString()}{" "}
-                                đánh giá)
+                                {t("view.reviews_count")})
                               </Typography>
                             )}
                           </Typography>
@@ -761,7 +765,7 @@ const RestaurantPage = () => {
                           };
                           return ri.isVerified ? (
                             <Chip
-                              label="✓ Đã xác thực"
+                              label={t("verified")}
                               color="success"
                               size="medium"
                               sx={{ fontWeight: 600 }}
@@ -804,7 +808,7 @@ const RestaurantPage = () => {
                         boxShadow: 2,
                       }}
                     >
-                      Lưu thay đổi
+                      {t("btn.save_changes")}
                     </Button>
                     <Button
                       variant="outlined"
@@ -822,7 +826,7 @@ const RestaurantPage = () => {
                         },
                       }}
                     >
-                      Huỷ
+                      {t("btn.cancel")}
                     </Button>
                   </Box>
                 </Box>
@@ -842,7 +846,7 @@ const RestaurantPage = () => {
               fontWeight: 700,
             }}
           >
-            Thực đơn
+            {t("menu.title")}
           </Typography>
 
           {dishLoading ? (
@@ -860,7 +864,7 @@ const RestaurantPage = () => {
               }}
             >
               <Typography color="text.secondary">
-                Chưa có món ăn nào.
+                {t("menu.no_dishes")}
               </Typography>
             </Paper>
           ) : (
@@ -937,7 +941,7 @@ const RestaurantPage = () => {
               }}
             >
               <Typography color="text.secondary">
-                Chưa có đánh giá nào cho nhà hàng này.
+                {t("reviews.no_reviews_for_restaurant")}
               </Typography>
             </Paper>
           ) : (
@@ -970,12 +974,11 @@ const RestaurantPage = () => {
               fontSize: { xs: "1.125rem", sm: "1.25rem" },
             }}
           >
-            Xác nhận xóa đánh giá
+            {t("dialog.delete_review_title")}
           </DialogTitle>
           <DialogContent>
             <DialogContentText id="delete-dialog-description">
-              Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể
-              hoàn tác.
+              {t("dialog.delete_review_text")}
             </DialogContentText>
           </DialogContent>
           <DialogActions sx={{ p: 2.5, gap: 1 }}>
@@ -989,7 +992,7 @@ const RestaurantPage = () => {
                 textTransform: "none",
               }}
             >
-              Hủy
+              {t("btn.cancel")}
             </Button>
             <Button
               onClick={confirmDeleteReview}
@@ -1004,7 +1007,7 @@ const RestaurantPage = () => {
                 boxShadow: 2,
               }}
             >
-              Xóa
+              {t("btn.delete")}
             </Button>
           </DialogActions>
         </Dialog>

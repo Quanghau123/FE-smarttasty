@@ -54,6 +54,8 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const t = useTranslations("header");
   const router = useRouter();
+  // Determine role from Redux or localStorage
+  const [currentRole, setCurrentRole] = useState<string | null>(null);
 
   // suggestions from redux
   const { suggestions: searchSuggestions = [], loadingSuggestions } =
@@ -116,9 +118,11 @@ const Header = () => {
           userName?: string;
           fullName?: string;
           name?: string;
+          role?: string;
         };
         const userName = cu.userName || cu.fullName || cu.name || "User";
         setLocalUserName(userName);
+        setCurrentRole(cu.role ?? null);
         setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong Redux
       } else {
         const storedUser = localStorage.getItem("user");
@@ -130,26 +134,32 @@ const Header = () => {
             parsedUser?.name ||
             "User";
           setLocalUserName(userName);
+          setCurrentRole(parsedUser?.role ?? null);
           setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong localStorage
         } else {
           setIsLoggedIn(false);
           setLocalUserName(null);
+          setCurrentRole(null);
         }
       }
     } catch (e) {
       console.error("Lỗi khi lấy user từ localStorage:", e);
       setIsLoggedIn(false);
       setLocalUserName(null);
+      setCurrentRole(null);
     }
   }, [currentUser]);
 
+  // Chỉ fetch danh sách nhà hàng khi hiển thị khối tìm kiếm (user hoặc chưa đăng nhập)
   useEffect(() => {
+    const canShowSearch = !isLoggedIn || currentRole === "user";
+    if (!canShowSearch) return; // tránh gọi API khi role khác -> giảm lỗi 502
     if (selectedCategory === "All") {
       dispatch(fetchRestaurants());
     } else {
       dispatch(fetchRestaurantsByCategory(selectedCategory));
     }
-  }, [selectedCategory, dispatch]);
+  }, [selectedCategory, dispatch, isLoggedIn, currentRole]);
 
   const handleSearchSubmit = (q?: string) => {
     const finalQ = (q ?? query).trim();
@@ -255,104 +265,127 @@ const Header = () => {
         color: theme.palette.text.primary,
       })}
     >
-      <Box className={styles.headerInner}>
+      <Box
+        className={styles.headerInner}
+        sx={{
+          justifyContent:
+            currentRole === "user"
+              ? "space-between !important"
+              : "flex-start !important",
+          gap: currentRole === "user" ? "inherit" : "2rem !important",
+        }}
+      >
         {/* Left: Logo */}
-        <Link href="/">
-          <Image
-            src={getImageUrl("Logo/anhdaidienmoi.png")}
-            alt={t("logo_alt")}
-            width={70}
-            height={50}
-            priority
-          />
-        </Link>
+        {currentRole === "user" ? (
+          <Link href="/">
+            <Image
+              src={getImageUrl("Logo/anhdaidienmoi.png")}
+              alt={t("logo_alt")}
+              width={70}
+              height={50}
+              priority
+            />
+          </Link>
+        ) : (
+          <Box sx={{ cursor: "default" }}>
+            <Image
+              src={getImageUrl("Logo/anhdaidienmoi.png")}
+              alt={t("logo_alt")}
+              width={70}
+              height={50}
+              priority
+            />
+          </Box>
+        )}
 
-        {/* Middle: Filter + Search */}
-        <Box className={styles.searchSection}>
-          {/* <TextField
-            select
-            defaultValue="TP. HCM"
-            size="small"
-            variant="standard"
-            className={styles.citySelect}
-          >
-            <MenuItem value="TP. HCM">TP. HCM</MenuItem>
-            <MenuItem value="HN">Hà Nội</MenuItem>
-            <MenuItem value="DN">Đà Nẵng</MenuItem>
-          </TextField> */}
+        {/* Middle: Filter + Search - hiển thị cho user hoặc chưa đăng nhập */}
+        {(!isLoggedIn || currentRole === "user") && (
+          <Box className={styles.searchSection}>
+            {/* <TextField
+              select
+              defaultValue="TP. HCM"
+              size="small"
+              variant="standard"
+              className={styles.citySelect}
+            >
+              <MenuItem value="TP. HCM">TP. HCM</MenuItem>
+              <MenuItem value="HN">Hà Nội</MenuItem>
+              <MenuItem value="DN">Đà Nẵng</MenuItem>
+            </TextField> */}
 
-          <TextField
-            select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            size="small"
-            variant="standard"
-            className={styles.categorySelect}
-          >
-            <MenuItem value="All">{t("category_all")}</MenuItem>
-            <MenuItem value="Buffet">{t("category_buffet")}</MenuItem>
-            <MenuItem value="NhaHang">{t("category_nhahang")}</MenuItem>
-            <MenuItem value="AnVatViaHe">{t("category_anvatviahe")}</MenuItem>
-            <MenuItem value="AnChay">{t("category_anchay")}</MenuItem>
-            <MenuItem value="CafeNuocuong">
-              {t("category_cafenuocuong")}
-            </MenuItem>
-            <MenuItem value="QuanAn">{t("category_quanan")}</MenuItem>
-            <MenuItem value="Bar">{t("category_bar")}</MenuItem>
-            <MenuItem value="QuanNhau">{t("category_quannhau")}</MenuItem>
-          </TextField>
+            <TextField
+              select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              size="small"
+              variant="standard"
+              className={styles.categorySelect}
+            >
+              <MenuItem value="All">{t("category_all")}</MenuItem>
+              <MenuItem value="Buffet">{t("category_buffet")}</MenuItem>
+              <MenuItem value="NhaHang">{t("category_nhahang")}</MenuItem>
+              <MenuItem value="AnVatViaHe">{t("category_anvatviahe")}</MenuItem>
+              <MenuItem value="AnChay">{t("category_anchay")}</MenuItem>
+              <MenuItem value="CafeNuocuong">
+                {t("category_cafenuocuong")}
+              </MenuItem>
+              <MenuItem value="QuanAn">{t("category_quanan")}</MenuItem>
+              <MenuItem value="Bar">{t("category_bar")}</MenuItem>
+              <MenuItem value="QuanNhau">{t("category_quannhau")}</MenuItem>
+            </TextField>
 
-          <Autocomplete
-            freeSolo
-            options={searchSuggestions}
-            loading={loadingSuggestions}
-            inputValue={query}
-            onInputChange={(e, value) => {
-              setQuery(value);
-              if (suggTimer.current) {
-                window.clearTimeout(suggTimer.current);
-              }
-              if ((value ?? "").trim().length >= 2) {
-                suggTimer.current = window.setTimeout(() => {
-                  dispatch(
-                    fetchRestaurantSearchSuggestions((value ?? "").trim())
-                  );
-                }, 300);
-              }
-            }}
-            onChange={(_, value) => {
-              const val = typeof value === "string" ? value : value ?? "";
-              setQuery(val as string);
-              handleSearchSubmit(val as string);
-            }}
-            sx={{ flex: "1 1 0" }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                size="small"
-                variant="outlined"
-                placeholder={t("search_placeholder")}
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <SearchIcon
-                      onClick={() => handleSearchSubmit()}
-                      style={{ cursor: "pointer" }}
-                    />
-                  ),
-                }}
-                className={styles.searchInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleSearchSubmit();
-                  }
-                }}
-              />
-            )}
-          />
-        </Box>
+            <Autocomplete
+              freeSolo
+              options={searchSuggestions}
+              loading={loadingSuggestions}
+              inputValue={query}
+              onInputChange={(e, value) => {
+                setQuery(value);
+                if (suggTimer.current) {
+                  window.clearTimeout(suggTimer.current);
+                }
+                if ((value ?? "").trim().length >= 2) {
+                  suggTimer.current = window.setTimeout(() => {
+                    dispatch(
+                      fetchRestaurantSearchSuggestions((value ?? "").trim())
+                    );
+                  }, 300);
+                }
+              }}
+              onChange={(_, value) => {
+                const val = typeof value === "string" ? value : value ?? "";
+                setQuery(val as string);
+                handleSearchSubmit(val as string);
+              }}
+              sx={{ flex: "1 1 0" }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  placeholder={t("search_placeholder")}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <SearchIcon
+                        onClick={() => handleSearchSubmit()}
+                        style={{ cursor: "pointer" }}
+                      />
+                    ),
+                  }}
+                  className={styles.searchInput}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearchSubmit();
+                    }
+                  }}
+                />
+              )}
+            />
+          </Box>
+        )}
         {/* Right: Auth, Notification, Language, Theme */}
         <Box className={styles.rightSection}>
           {isLoggedIn ? (
@@ -433,14 +466,16 @@ const Header = () => {
             </>
           )}
 
-          {/* ✅ Icon giỏ hàng có badge hiển thị số lượng món */}
-          <Link href="/cart">
-            <IconButton>
-              <Badge badgeContent={totalOrders} color="primary">
-                <ShoppingCartIcon />
-              </Badge>
-            </IconButton>
-          </Link>
+          {/* ✅ Icon giỏ hàng có badge hiển thị số lượng món - Only show for User role */}
+          {currentRole === "user" && (
+            <Link href="/cart">
+              <IconButton>
+                <Badge badgeContent={totalOrders} color="primary">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+            </Link>
+          )}
 
           <IconButton onClick={handleNotifOpen} aria-label="notifications">
             <Badge badgeContent={unreadCount} color="error">

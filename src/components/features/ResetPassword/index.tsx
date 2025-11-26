@@ -11,6 +11,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const ResetPasswordPage = () => {
   const searchParams = useSearchParams();
@@ -24,22 +25,22 @@ const ResetPasswordPage = () => {
     password?: string;
     confirmPassword?: string;
   }>({});
+  const t = useTranslations("resetPassword");
 
   const validate = () => {
     const newErrors: typeof errors = {};
     const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
 
     if (!password) {
-      newErrors.password = "Vui lòng nhập mật khẩu!";
+      newErrors.password = t("validation.required_password");
     } else if (!pattern.test(password)) {
-      newErrors.password =
-        "Mật khẩu phải chứa chữ hoa, chữ thường, số, ký tự đặc biệt và dài hơn 5 ký tự.";
+      newErrors.password = t("validation.pattern");
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu!";
+      newErrors.confirmPassword = t("validation.required_confirm");
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu xác nhận không khớp.";
+      newErrors.confirmPassword = t("validation.mismatch");
     }
 
     setErrors(newErrors);
@@ -57,15 +58,13 @@ const ResetPasswordPage = () => {
       });
 
       if (res.data.errCode === 0 || res.data.errCode === "success") {
-        toast.success("Đặt lại mật khẩu thành công!");
+        toast.success(t("success.reset"));
         router.push("/login");
       } else {
-        toast.error(
-          res.data.errMessage || "Token không hợp lệ hoặc đã hết hạn."
-        );
+        toast.error(res.data.errMessage || t("errors.invalid_or_expired"));
       }
     } catch {
-      toast.error("Lỗi trong quá trình đặt lại mật khẩu.");
+      toast.error(t("errors.failed"));
     } finally {
       setLoading(false);
     }
@@ -74,7 +73,7 @@ const ResetPasswordPage = () => {
   if (!token) {
     return (
       <Typography variant="h6" align="center">
-        Liên kết không hợp lệ.
+        {t("errors.invalid_link")}
       </Typography>
     );
   }
@@ -93,11 +92,11 @@ const ResetPasswordPage = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Đặt lại mật khẩu
+        {t("title")}
       </Typography>
 
       <TextField
-        label="Mật khẩu mới"
+        label={t("form.new_password")}
         type="password"
         fullWidth
         margin="normal"
@@ -108,7 +107,7 @@ const ResetPasswordPage = () => {
       />
 
       <TextField
-        label="Xác nhận mật khẩu"
+        label={t("form.confirm_password")}
         type="password"
         fullWidth
         margin="normal"
@@ -129,7 +128,7 @@ const ResetPasswordPage = () => {
         {loading ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
-          "Đặt lại mật khẩu"
+          t("btn.reset")
         )}
       </Button>
     </Box>

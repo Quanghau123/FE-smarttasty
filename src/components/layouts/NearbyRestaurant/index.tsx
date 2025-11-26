@@ -19,6 +19,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTranslations } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchNearbyRestaurants } from "@/redux/slices/restaurantSlice";
 import { Restaurant } from "@/types/restaurant";
@@ -70,6 +71,7 @@ const restaurantIcon = new L.Icon({
 const NearbyRestaurantsPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useTranslations("layout");
   const { nearby, loadingNearby } = useAppSelector((state) => state.restaurant);
   const isMobile = useMediaQuery("(max-width:600px)");
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
@@ -111,11 +113,11 @@ const NearbyRestaurantsPage = () => {
         },
         (err) => {
           console.error("Không lấy được vị trí:", err);
-          setError("Bạn cần cho phép truy cập vị trí để xem nhà hàng gần bạn.");
+          setError(t("nearbyRestaurant.errors.location_permission"));
         }
       );
     } else {
-      setError("Trình duyệt của bạn không hỗ trợ định vị.");
+      setError(t("nearbyRestaurant.errors.geo_not_supported"));
     }
   };
 
@@ -136,17 +138,16 @@ const NearbyRestaurantsPage = () => {
     <Box className={styles.container}>
       {/* Modal xin quyền location */}
       <Dialog open={openDialog}>
-        <DialogTitle>Cho phép Smarttasty truy cập vị trí</DialogTitle>
+        <DialogTitle>{t("nearbyRestaurant.dialog.title")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Cho phép Smarttasty quyền vị trí để tìm kiếm chính xác điểm đến xung
-            quanh bạn
-          </Typography>
+          <Typography>{t("nearbyRestaurant.dialog.content")}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleLater}>Để sau</Button>
+          <Button onClick={handleLater}>
+            {t("nearbyRestaurant.btn.later")}
+          </Button>
           <Button variant="contained" color="error" onClick={handleAllow}>
-            Cho phép
+            {t("nearbyRestaurant.btn.allow")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -158,7 +159,7 @@ const NearbyRestaurantsPage = () => {
         </Box>
       ) : nearby.length === 0 ? (
         <Typography color="text.secondary" mb={3}>
-          Không tìm thấy nhà hàng gần bạn hoặc bạn chưa cho phép sử dụng vị trí.
+          {t("nearbyRestaurant.empty.no_nearby")}
         </Typography>
       ) : (
         <>
@@ -169,13 +170,19 @@ const NearbyRestaurantsPage = () => {
                 exclusive
                 onChange={(_, v) => v && setMobileView(v)}
                 sx={{ width: "100%" }}
-                aria-label="Chuyển chế độ xem"
+                aria-label={t("nearbyRestaurant.aria.toggleView")}
               >
-                <ToggleButton value="list" aria-label="Danh sách">
-                  Danh sách
+                <ToggleButton
+                  value="list"
+                  aria-label={t("nearbyRestaurant.toggle.list")}
+                >
+                  {t("nearbyRestaurant.toggle.list")}
                 </ToggleButton>
-                <ToggleButton value="map" aria-label="Bản đồ">
-                  Bản đồ
+                <ToggleButton
+                  value="map"
+                  aria-label={t("nearbyRestaurant.toggle.map")}
+                >
+                  {t("nearbyRestaurant.toggle.map")}
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
@@ -252,7 +259,9 @@ const NearbyRestaurantsPage = () => {
                           color="text.secondary"
                           mb={1}
                         >
-                          Cách bạn {restaurant.distanceKm.toFixed(2)} km
+                          {t("nearbyRestaurant.labels.distance", {
+                            distance: restaurant.distanceKm.toFixed(2),
+                          })}
                         </Typography>
                       )}
 
@@ -266,7 +275,7 @@ const NearbyRestaurantsPage = () => {
                           router.push(`/RestaurantDetails/${restaurant.id}`);
                         }}
                       >
-                        Đặt chỗ ngay
+                        {t("nearbyRestaurant.btn.reserve_now")}
                       </Button>
                       <Box mt={1}>
                         <Button
@@ -278,7 +287,7 @@ const NearbyRestaurantsPage = () => {
                             e.stopPropagation();
                             if (!userPosition) {
                               setError(
-                                "Vui lòng cho phép vị trí để xem đường đi."
+                                t("nearbyRestaurant.errors.permission_needed")
                               );
                               return;
                             }
@@ -319,7 +328,7 @@ const NearbyRestaurantsPage = () => {
                             if (isMobile) setMobileView("map");
                           }}
                         >
-                          Chỉ đường
+                          {t("nearbyRestaurant.btn.get_directions")}
                         </Button>
                       </Box>
                     </CardContent>
@@ -346,7 +355,7 @@ const NearbyRestaurantsPage = () => {
                       position={[userPosition.lat, userPosition.lng]}
                       icon={userIcon}
                     >
-                      <Popup>Bạn đang ở đây</Popup>
+                      <Popup>{t("nearbyRestaurant.map.youAreHere")}</Popup>
                     </Marker>
                   )}
                   {nearby.map((restaurant) => (
