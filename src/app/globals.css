@@ -138,3 +138,52 @@ button:hover {
   color: #fff !important;
   box-shadow: 0 8px 28px rgba(var(--recipes-primary-rgb), 0.18);
 }
+
+/* Shine / glass sweep effect */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Base overlay (no animation by default); component or hover will enable */
+.shine::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    25deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 35%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.06) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(2px);
+  transform: skewX(-15deg) rotate(25deg);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 2; /* ensure overlay is above image */
+  /* no animation by default */
+}
+
+/* One-run activation: add .shine-active to trigger a single sweep */
+.shine.shine-active::before {
+  animation: shine-sweep 1.2s ease-in-out;
+}
+
+/* Hover-only variant: add .shine-hover to enable on hover */
+.shine.shine-hover:hover::before {
+  animation: shine-sweep 1.2s ease-in-out;
+}
+
+@keyframes shine-sweep {
+  0% {
+    left: -60%;
+  }
+  100% {
+    left: 120%;
+  }
+}

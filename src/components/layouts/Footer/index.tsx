@@ -71,7 +71,7 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-primary">
+                  <Link href="contact" className="hover:text-primary">
                     {t("link_contact")}
                   </Link>
                 </li>
