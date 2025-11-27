@@ -29,6 +29,7 @@ import StarIcon from "@mui/icons-material/Star";
 import HorizontalArrows from "@/components/commons/HorizontalArrows";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./styles.module.scss";
+import Shine from "@/components/commons/Shine";
 import Pagination from "@/components/commons/pagination";
 import Image from "next/image";
 import banerV2 from "../../../assets/Image/SlideHeader/banerV2.png";
@@ -335,76 +336,80 @@ const BodyPage = () => {
         >
           {/* Ảnh nhà hàng (bắt buộc 1:1 để giữ layout ổn định) */}
           {restaurant.imageUrl ? (
-            <Box className={styles.aspectSquare}>
-              <Box
-                component="img"
-                src={restaurant.imageUrl}
-                alt={restaurant.name}
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-              {showSuggestedBadge && (
+            <Shine hoverOnly={false}>
+              <Box className={`${styles.aspectSquare} shine`}>
                 <Box
+                  component="img"
+                  src={restaurant.imageUrl}
+                  alt={restaurant.name}
                   sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    bgcolor: "error.main",
-                    color: "#fff",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    boxShadow: 1,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
                   }}
-                >
-                  {t("badge.suggested")}
-                </Box>
-              )}
-            </Box>
-          ) : (
-            <Box className={styles.aspectSquare}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: "#f5f5f5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {t("no_image")}
-                </Typography>
+                />
+                {showSuggestedBadge && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      bgcolor: "error.main",
+                      color: "#fff",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      boxShadow: 1,
+                    }}
+                  >
+                    {t("badge.suggested")}
+                  </Box>
+                )}
               </Box>
-              {showSuggestedBadge && (
+            </Shine>
+          ) : (
+            <Shine hoverOnly={false}>
+              <Box className={`${styles.aspectSquare} shine`}>
                 <Box
                   sx={{
                     position: "absolute",
-                    top: 8,
-                    left: 8,
-                    bgcolor: "error.main",
-                    color: "#fff",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    boxShadow: 1,
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "#f5f5f5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  Được đề xuất
+                  <Typography variant="body2" color="text.secondary">
+                    {t("no_image")}
+                  </Typography>
                 </Box>
-              )}
-            </Box>
+                {showSuggestedBadge && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      bgcolor: "error.main",
+                      color: "#fff",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      boxShadow: 1,
+                    }}
+                  >
+                    Được đề xuất
+                  </Box>
+                )}
+              </Box>
+            </Shine>
           )}
 
           <CardContent sx={{ flexGrow: 1, width: "100%" }}>
@@ -563,68 +568,72 @@ const BodyPage = () => {
       >
         {/* Image area similar to restaurant card */}
         {p.imageUrl ? (
-          <Box className={styles.aspectSquare}>
-            <Box
-              component="img"
-              src={p.imageUrl}
-              alt={p.title}
-              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-            <Box
-              sx={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                bgcolor: "error.main",
-                color: "#fff",
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                fontSize: 12,
-                fontWeight: 700,
-                boxShadow: 1,
-              }}
-            >
-              {t("promotion.badge")}
+          <Shine hoverOnly={false}>
+            <Box className={`${styles.aspectSquare} shine`}>
+              <Box
+                component="img"
+                src={p.imageUrl}
+                alt={p.title}
+                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  bgcolor: "error.main",
+                  color: "#fff",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  boxShadow: 1,
+                }}
+              >
+                {t("promotion.badge")}
+              </Box>
             </Box>
-          </Box>
+          </Shine>
         ) : (
-          <Box className={styles.aspectSquare}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "#f5f5f5",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {t("promotion.no_image")}
-              </Typography>
+          <Shine hoverOnly={false}>
+            <Box className={`${styles.aspectSquare} shine`}>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "#f5f5f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {t("promotion.no_image")}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  bgcolor: "error.main",
+                  color: "#fff",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  boxShadow: 1,
+                }}
+              >
+                {t("promotion.badge")}
+              </Box>
             </Box>
-            <Box
-              sx={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                bgcolor: "error.main",
-                color: "#fff",
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                fontSize: 12,
-                fontWeight: 700,
-                boxShadow: 1,
-              }}
-            >
-              {t("promotion.badge")}
-            </Box>
-          </Box>
+          </Shine>
         )}
 
         <CardContent
@@ -730,68 +739,72 @@ const BodyPage = () => {
           >
             {/* Support both old nested `dish` shape and new flat shape with `image` */}
             {imageSrc ? (
-              <Box className={styles.aspectSquare}>
-                <Box
-                  component="img"
-                  src={imageSrc}
-                  alt={name}
-                  sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    bgcolor: "error.main",
-                    color: "#fff",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    boxShadow: 1,
-                  }}
-                >
-                  {t("promotion.badge")}
+              <Shine hoverOnly={false}>
+                <Box className={`${styles.aspectSquare} shine`}>
+                  <Box
+                    component="img"
+                    src={imageSrc}
+                    alt={name}
+                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      bgcolor: "error.main",
+                      color: "#fff",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      boxShadow: 1,
+                    }}
+                  >
+                    {t("promotion.badge")}
+                  </Box>
                 </Box>
-              </Box>
+              </Shine>
             ) : (
-              <Box className={styles.aspectSquare}>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "#f5f5f5",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {t("no_image")}
-                  </Typography>
+              <Shine hoverOnly={false}>
+                <Box className={`${styles.aspectSquare} shine`}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "#f5f5f5",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {t("no_image")}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      bgcolor: "error.main",
+                      color: "#fff",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      boxShadow: 1,
+                    }}
+                  >
+                    {t("promotion.badge")}
+                  </Box>
                 </Box>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    bgcolor: "error.main",
-                    color: "#fff",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    boxShadow: 1,
-                  }}
-                >
-                  {t("promotion.badge")}
-                </Box>
-              </Box>
+              </Shine>
             )}
 
             <CardContent sx={{ flexGrow: 1 }}>
@@ -900,27 +913,31 @@ const BodyPage = () => {
           }}
         >
           {recipe.imageUrl ? (
-            <Box className={styles.aspectSquare}>
-              <Box
-                component="img"
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </Box>
+            <Shine hoverOnly={false}>
+              <Box className={`${styles.aspectSquare} shine`}>
+                <Box
+                  component="img"
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </Box>
+            </Shine>
           ) : (
-            <Box className={styles.aspectSquare}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: "#f5f5f5",
-                }}
-              />
-            </Box>
+            <Shine hoverOnly={false}>
+              <Box className={`${styles.aspectSquare} shine`}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                />
+              </Box>
+            </Shine>
           )}
 
           <CardContent sx={{ flexGrow: 1, width: "100%" }}>
@@ -1198,21 +1215,23 @@ const BodyPage = () => {
           <Paper
             sx={{ mb: 4, borderRadius: 3, overflow: "hidden", boxShadow: 3 }}
           >
-            <Box
-              sx={{
-                position: "relative",
-                width: "100%",
-                height: { xs: 340, sm: 400, md: 480 },
-              }}
-            >
-              <Image
-                src={banerV2}
-                alt={t("banner.recipes_alt")}
-                fill
-                sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
-                //  style={{ objectFit: "cover" }}
-              />
-            </Box>
+            <Shine hoverOnly={false}>
+              <Box
+                className="shine"
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: { xs: 340, sm: 400, md: 480 },
+                }}
+              >
+                <Image
+                  src={banerV2}
+                  alt={t("banner.recipes_alt")}
+                  fill
+                  sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
+                />
+              </Box>
+            </Shine>
           </Paper>
 
           {topRecipes.length > 0 && (
@@ -1271,20 +1290,23 @@ const BodyPage = () => {
               boxShadow: 3,
             }}
           >
-            <Box
-              sx={{
-                position: "relative",
-                width: "100%",
-                height: { xs: 340, sm: 400, md: 580 },
-              }}
-            >
-              <Image
-                src={HopTac}
-                alt={t("banner.partners_alt")}
-                fill
-                sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
-              />
-            </Box>
+            <Shine hoverOnly={false}>
+              <Box
+                className="shine"
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: { xs: 300, sm: 350, md: 400 },
+                }}
+              >
+                <Image
+                  src={HopTac}
+                  alt={t("banner.partners_alt")}
+                  fill
+                  sizes="(max-width:600px) 100vw, (max-width:1200px) 100vw, 1200px"
+                />
+              </Box>
+            </Shine>
           </Paper>
         </>
       )}

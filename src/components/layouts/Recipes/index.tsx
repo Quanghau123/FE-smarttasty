@@ -44,6 +44,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { useTranslations } from "next-intl";
 import Pagination from "@/components/commons/pagination";
+import Shine from "@/components/commons/Shine";
 import { toast } from "react-toastify";
 import {
   fetchRecipesByUser,
@@ -416,53 +417,55 @@ const RecipesLayout: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      {/* Hero Section */}
-      <Box
-        className="recipes-hero"
-        sx={{
-          py: 8,
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
-          <Stack spacing={3} alignItems="center" textAlign="center">
-            <RestaurantIcon sx={{ fontSize: 64 }} />
-            <Typography
-              variant="h2"
-              fontWeight="bold"
-              sx={{ textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
-            >
-              {t("hero.title")}
-            </Typography>
-            <Typography variant="h6" sx={{ maxWidth: 700, opacity: 0.95 }}>
-              {t("hero.subtitle")}
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={openForCreate}
-              sx={{
-                bgcolor: "white",
-                color: "var(--recipes-primary)",
-                px: 4,
-                py: 1.5,
-                fontSize: "1.1rem",
-                fontWeight: "bold",
-                "&:hover": {
-                  bgcolor: alpha("#ffffff", 0.9),
-                  transform: "translateY(-2px)",
-                  boxShadow: 6,
-                },
-                transition: "all 0.3s ease",
-              }}
-            >
-              {t("hero.create_btn")}
-            </Button>
-          </Stack>
-        </Container>
-      </Box>
+      {/* Hero Section with shine sweep */}
+      <Shine hoverOnly={false}>
+        <Box
+          className="recipes-hero shine"
+          sx={{
+            py: 8,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+            <Stack spacing={3} alignItems="center" textAlign="center">
+              <RestaurantIcon sx={{ fontSize: 64 }} />
+              <Typography
+                variant="h2"
+                fontWeight="bold"
+                sx={{ textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
+              >
+                {t("hero.title")}
+              </Typography>
+              <Typography variant="h6" sx={{ maxWidth: 700, opacity: 0.95 }}>
+                {t("hero.subtitle")}
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<AddIcon />}
+                onClick={openForCreate}
+                sx={{
+                  bgcolor: "white",
+                  color: "var(--recipes-primary)",
+                  px: 4,
+                  py: 1.5,
+                  fontSize: "1.1rem",
+                  fontWeight: "bold",
+                  "&:hover": {
+                    bgcolor: alpha("#ffffff", 0.9),
+                    transform: "translateY(-2px)",
+                    boxShadow: 6,
+                  },
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {t("hero.create_btn")}
+              </Button>
+            </Stack>
+          </Container>
+        </Box>
+      </Shine>
 
       <Container maxWidth="lg" sx={{ mt: -4, position: "relative", zIndex: 2 }}>
         {/* Search & Filter Card */}
