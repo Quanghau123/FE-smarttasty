@@ -14,7 +14,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-[var(--footer-bg)] text-[var(--text-color)]">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex flex-col md:flex-row md:justify-center md:items-start gap-12">
           <div className="md:w-1/3">
             <div className="flex items-center gap-3 mb-4">
@@ -30,33 +30,6 @@ const Footer = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
-            <div>
-              <div className="font-semibold mb-3">
-                {t("contactus_btn_title")}
-              </div>
-              <ul className="text-sm opacity-80 space-y-2">
-                <li className="flex items-center gap-2">
-                  <LocationOnIcon className="text-[var(--text-color)] opacity-80" />
-                  <span>12 Nguyễn Văn Bảo, phường Hạnh Thông, Quận Gò Vấp, TP.HCM</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <MailIcon className="text-[var(--text-color)] opacity-80" />
-                  <a
-                    href="#"
-                    className="hover:text-primary"
-                  >
-                    admin@smarttasty.com
-                  </a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <PhoneIcon className="text-[var(--text-color)] opacity-80" />
-                  <a href="#" className="hover:text-primary">
-                    0399999999
-                  </a>
-                </li>
-              </ul>
-            </div>
-
             <div>
               <div className="font-semibold mb-3">{t("aboutus_btn_title")}</div>
               <ul className="text-sm opacity-80 space-y-2">
@@ -82,28 +55,62 @@ const Footer = () => {
               <div className="font-semibold mb-3">
                 {t("followme_btn_title")}
               </div>
-              <div className="flex items-center gap-3">
-                <IconButton
-                  component={Link}
-                  href="/"
-                  className="w-10 h-10 bg-[rgba(0,0,0,0.06)] text-[var(--text-color)] hover:opacity-80"
-                >
-                  <FacebookIcon />
-                </IconButton>
-                <IconButton
-                  component={Link}
-                  href="/"
-                  className="w-10 h-10 bg-[rgba(0,0,0,0.06)] text-[var(--text-color)] hover:opacity-80"
-                >
-                  <SiTiktok size={18} />
-                </IconButton>
+              <div className="flex flex-col items-start">
+                <div className="flex flex-row items-center">
+                  <IconButton
+                    component={Link}
+                    href="/"
+                    className="w-10 h-10 text-[var(--text-color)] opacity-80"
+                  >
+                    <FacebookIcon />
+                  </IconButton>
+                  <p className="text-[var(--text-color)] opacity-80">
+                    Facebook
+                  </p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <IconButton
+                    component={Link}
+                    href="/"
+                    className="w-10 h-10 text-[var(--text-color)] opacity-80"
+                  >
+                    <SiTiktok />
+                  </IconButton>
+                  <p className="text-[var(--text-color)] opacity-80">TikTok</p>
+                </div>
               </div>
+            </div>
+
+            <div>
+              <div className="font-semibold mb-3">
+                {t("contactus_btn_title")}
+              </div>
+              <ul className="text-sm opacity-80 space-y-2">
+                <li className="flex items-center gap-2">
+                  <LocationOnIcon className="text-[var(--text-color)] opacity-80" />
+                  <span>
+                    12 Nguyễn Văn Bảo, phường Hạnh Thông, Quận Gò Vấp, TP.HCM
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MailIcon className="text-[var(--text-color)] opacity-80" />
+                  <a href="#" className="hover:text-primary">
+                    admin@smarttasty.com
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <PhoneIcon className="text-[var(--text-color)] opacity-80" />
+                  <a href="#" className="hover:text-primary">
+                    0399999999
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
         <div
-          className="mt-10 border-t pt-6 text-center text-sm opacity-70"
+          className="mt-5 border-t pt-5 text-center text-sm opacity-70"
           style={{ borderColor: "var(--border-color)" }}
         >
           © {new Date().getFullYear()} SmartTasty. All rights reserved. &nbsp; •

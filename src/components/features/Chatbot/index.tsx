@@ -18,6 +18,7 @@ import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import RobotIcon from "@/components/layouts/ChatbotIcon/RobotIcon";
 import PersonIcon from "@mui/icons-material/Person";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
@@ -196,7 +197,7 @@ const Chatbot: React.FC = () => {
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <CloseIcon /> : <SmartToyIcon />}
+        {isOpen ? <CloseIcon /> : <RobotIcon isTalking={isLoading} />}
       </Fab>
 
       {/* Chatbox */}
@@ -228,7 +229,7 @@ const Chatbot: React.FC = () => {
               gap: 1,
             }}
           >
-            <SmartToyIcon />
+            <RobotIcon isTalking={isLoading} />
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
               SmartTasty Assistant
             </Typography>
@@ -268,7 +269,7 @@ const Chatbot: React.FC = () => {
                   <Avatar
                     sx={{ bgcolor: "primary.main", width: 32, height: 32 }}
                   >
-                    <SmartToyIcon fontSize="small" />
+                    <RobotIcon isTalking={isLoading} />
                   </Avatar>
                 )}
                 <Box

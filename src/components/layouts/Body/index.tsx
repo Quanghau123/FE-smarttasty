@@ -1221,7 +1221,7 @@ const BodyPage = () => {
                 sx={{
                   position: "relative",
                   width: "100%",
-                  height: { xs: 340, sm: 400, md: 480 },
+                  height: { xs: 195, sm: 255, md: 335 },
                 }}
               >
                 <Image
@@ -1296,7 +1296,7 @@ const BodyPage = () => {
                 sx={{
                   position: "relative",
                   width: "100%",
-                  height: { xs: 300, sm: 350, md: 400 },
+                  height: { xs: 200, sm: 250, md: 300 },
                 }}
               >
                 <Image

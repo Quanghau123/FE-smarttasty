@@ -63,14 +63,30 @@ const SlideHeader: React.FC = () => {
             key={idx}
             sx={{ position: "relative", flex: "0 0 100%", height: "100%" }}
           >
-            <Image
-              src={img}
-              alt={`Slide ${idx + 1}`}
-              fill
-              priority={idx === 0}
-              draggable={false}
-              style={{ objectFit: "cover" }}
-            />
+            {/* Wrapped slide content with Shine; programmatic sweeping enabled */}
+            <Shine
+              hoverOnly={false}
+              initialRuns={1}
+              intervalMs={5000}
+              style={{ height: "100%" }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`Slide ${idx + 1}`}
+                  fill
+                  priority={idx === 0}
+                  draggable={false}
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+            </Shine>
           </Box>
         ))}
       </Box>
@@ -126,5 +142,132 @@ const SlideHeader: React.FC = () => {
     </Box>
   );
 };
+
+type ShineProps = {
+  children: React.ReactNode;
+  hoverOnly?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  initialRuns?: number;
+  intervalMs?: number;
+};
+
+function Shine({
+  children,
+  hoverOnly = true,
+  className = "",
+  style,
+  initialRuns = 1,
+  intervalMs = 3000,
+}: ShineProps) {
+  const [active, setActive] = useState(false);
+  const runCountRef = useRef(0);
+  const intervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (hoverOnly) return;
+
+    const trigger = () => {
+      setActive(true);
+      const timeout = window.setTimeout(() => setActive(false), 1300);
+      return timeout;
+    };
+
+    const timeouts: number[] = [];
+    for (let i = 0; i < initialRuns; i++) {
+      const t = window.setTimeout(() => {
+        runCountRef.current += 1;
+        trigger();
+      }, i * 1400);
+      timeouts.push(t);
+    }
+
+    const startInterval = () => {
+      intervalRef.current = window.setInterval(() => {
+        trigger();
+      }, intervalMs) as unknown as number;
+    };
+    const afterInitial = window.setTimeout(
+      startInterval,
+      initialRuns * 1400 + 200
+    );
+
+    return () => {
+      timeouts.forEach((t) => window.clearTimeout(t));
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      window.clearTimeout(afterInitial);
+    };
+  }, [hoverOnly, initialRuns, intervalMs]);
+
+  const classes = [
+    "shine",
+    hoverOnly ? "shine-hover" : "",
+    active ? "shine-active" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div
+      className={classes}
+      style={{ position: "relative", overflow: "hidden", ...style }}
+    >
+      {children}
+      {/* overlay element that moves across */}
+      <div className="shine-overlay" aria-hidden="true" />
+      {/* scoped styles for the shine effect */}
+      <style jsx>{`
+        .shine {
+          position: relative;
+          display: block;
+        }
+        .shine-overlay {
+          pointer-events: none;
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.35) 45%,
+            rgba(255, 255, 255, 0.65) 50%,
+            rgba(255, 255, 255, 0.35) 55%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          transform: translateX(-120%);
+          transition: none;
+        }
+        /* hover-only mode: play on hover */
+        .shine-hover:hover .shine-overlay {
+          animation: sweep 1.2s ease-in-out 1;
+          opacity: 1;
+        }
+        /* programmatic trigger (class toggled) */
+        .shine-active .shine-overlay {
+          animation: sweep 1.2s ease-in-out 1;
+          opacity: 1;
+        }
+        @keyframes sweep {
+          0% {
+            transform: translateX(-120%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          50% {
+            transform: translateX(120%);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(120%);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default SlideHeader;

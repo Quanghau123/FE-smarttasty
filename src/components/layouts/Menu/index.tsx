@@ -4,6 +4,14 @@ import { Box, Button } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+const stripLocale = (path: string) => {
+  const parts = path.split("/");
+  if (parts.length > 1 && parts[1].length === 2) {
+    return "/" + parts.slice(2).join("/");
+  }
+  return path;
+};
+
 const Menu = () => {
   const router = useRouter();
   const pathname = usePathname() || "/";
@@ -17,36 +25,34 @@ const Menu = () => {
   ];
 
   const isActive = (path: string) => {
-    if (path === "/") return pathname === "/";
-    return pathname.startsWith(path);
+    const cleanPath = stripLocale(pathname);
+
+    if (path === "/") return cleanPath === "/";
+    return cleanPath.startsWith(path);
   };
 
   return (
-    <Box
-      display="flex"
-      gap={2}
-      p={2}
-      sx={{
-        bgcolor: "background.default",
-        color: "text.primary",
-      }}
-    >
+    <Box display="flex" gap={2} p={2}>
       {menuItems.map((item) => {
         const active = isActive(item.path);
         return (
           <Button
             key={item.path}
             onClick={() => router.push(item.path)}
-            className={`menu-button ${
-              active
-                ? item.path === "/recipes"
-                  ? "menu-active--strong"
-                  : "menu-active"
-                : ""
-            }`}
-            aria-current={active ? "page" : undefined}
+            className={`menu-button ${active ? "menu-active" : ""}`}
             sx={{
               textTransform: "none",
+              borderRadius: "8px",
+              boxShadow: "none !important",
+
+              bgcolor: active ? "#FFA726" : "rgba(0,0,0,0.06)",
+              color: active ? "#fff" : "inherit",
+
+              transition: "background-color 0.2s ease",
+
+              "&:hover": {
+                bgcolor: active ? "#FB8C00" : "rgba(0,0,0,0.1)",
+              },
             }}
           >
             {item.label}
