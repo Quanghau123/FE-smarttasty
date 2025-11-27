@@ -1133,6 +1133,17 @@
     "bank": "Ngân hàng",
     "response_code": "Mã phản hồi",
     "view_orders": "Xem đơn hàng",
-    "no_result": "Không có kết quả để hiển thị."
+    "no_result": "Không có kết quả để hiển thị.",
+    "bank_code": "Mã ngân hàng",
+    "bank_tran_no": "Mã GD Ngân hàng",
+    "card_type": "Loại thẻ",
+    "order_info": "Thông tin đơn hàng",
+    "pay_date": "Ngày thanh toán",
+    "tmn_code": "Mã TMN",
+    "transaction_no": "Mã GD VNPAY",
+    "transaction_status": "Trạng thái GD",
+    "secure_hash": "Mã bảo mật",
+    "payment_info": "Thông tin thanh toán",
+    "transaction_info": "Thông tin giao dịch"
   }
   }

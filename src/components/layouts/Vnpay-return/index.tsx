@@ -22,6 +22,21 @@ import { useTranslations } from "next-intl";
 
 import type { Payment } from "@/types/payment";
 
+interface VNPayParams {
+  vnp_Amount?: string;
+  vnp_BankCode?: string;
+  vnp_BankTranNo?: string;
+  vnp_CardType?: string;
+  vnp_OrderInfo?: string;
+  vnp_PayDate?: string;
+  vnp_ResponseCode?: string;
+  vnp_TmnCode?: string;
+  vnp_TransactionNo?: string;
+  vnp_TransactionStatus?: string;
+  vnp_TxnRef?: string;
+  vnp_SecureHash?: string;
+}
+
 const VNPayReturnPage: React.FC = () => {
   const searchParams = useSearchParams();
   const query = searchParams?.toString() || "";
@@ -32,9 +47,17 @@ const VNPayReturnPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [payment, setPayment] = useState<Payment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [vnpayParams, setVnpayParams] = useState<VNPayParams>({});
 
   useEffect(() => {
     if (!query) return;
+
+    // Extract VNPay parameters from URL
+    const params: VNPayParams = {};
+    searchParams?.forEach((value, key) => {
+      params[key as keyof VNPayParams] = value;
+    });
+    setVnpayParams(params);
 
     const run = async () => {
       setLoading(true);
@@ -71,6 +94,18 @@ const VNPayReturnPage: React.FC = () => {
       style: "currency",
       currency: "VND",
     }).format(value);
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr || dateStr.length !== 14) return dateStr || "-";
+    // Format: YYYYMMDDHHmmss -> DD/MM/YYYY HH:mm:ss
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    const hour = dateStr.substring(8, 10);
+    const minute = dateStr.substring(10, 12);
+    const second = dateStr.substring(12, 14);
+    return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
   };
 
   const handleCopy = async (text?: string) => {
@@ -171,83 +206,168 @@ const VNPayReturnPage: React.FC = () => {
             sx={{
               display: "flex",
               flexDirection: { xs: "column", md: "row" },
-              gap: 2,
+              gap: 3,
             }}
           >
+            {/* Payment Information */}
             <Box sx={{ flex: 1 }}>
-              <Typography sx={{ mb: 1 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
+                {t("payment_info")}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
                 <strong>{t("order_id")}:</strong>
               </Typography>
-              <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
+              <Typography
+                variant="body1"
+                sx={{ mb: 2, wordBreak: "break-all" }}
+              >
                 {payment.orderId}
               </Typography>
 
-              <Typography sx={{ mt: 2, mb: 1 }}>
+              <Typography sx={{ mb: 0.5 }}>
                 <strong>{t("amount")}:</strong>
               </Typography>
-              <Typography variant="body1">
-                {formatCurrency(payment.amount)}
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_Amount
+                  ? formatCurrency(parseInt(vnpayParams.vnp_Amount) / 100)
+                  : formatCurrency(payment.amount)}
               </Typography>
 
-              <Typography sx={{ mt: 2, mb: 1 }}>
+              <Typography sx={{ mb: 0.5 }}>
                 <strong>{t("method")}:</strong>
               </Typography>
-              <Typography variant="body1">{payment.method ?? "-"}</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {payment.method ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("order_info")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_OrderInfo
+                  ? decodeURIComponent(
+                      vnpayParams.vnp_OrderInfo.replace(/\+/g, " ")
+                    )
+                  : "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("pay_date")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {formatDate(vnpayParams.vnp_PayDate)}
+              </Typography>
             </Box>
 
+            {/* Transaction Information */}
             <Box sx={{ flex: 1 }}>
-              <Typography sx={{ mb: 1 }}>
-                <strong>{t("transaction_id")}:</strong>
+              <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
+                {t("transaction_info")}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("vnpay_txnref")}:</strong>
               </Typography>
               <Stack
                 direction="row"
                 alignItems="center"
                 spacing={1}
-                sx={{ wordBreak: "break-all" }}
+                sx={{ mb: 2 }}
               >
                 <Typography variant="body1">
-                  {payment.transactionId ??
-                    payment.vnpPayPayment?.vnpTxnRef ??
-                    "-"}
+                  {vnpayParams.vnp_TxnRef ?? "-"}
+                </Typography>
+                {vnpayParams.vnp_TxnRef && (
+                  <IconButton
+                    size="small"
+                    onClick={() => handleCopy(vnpayParams.vnp_TxnRef)}
+                  >
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Stack>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("transaction_no")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_TransactionNo ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("bank_code")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_BankCode ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("bank_tran_no")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_BankTranNo ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("card_type")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_CardType ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("response_code")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_ResponseCode ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("transaction_status")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_TransactionStatus ?? "-"}
+              </Typography>
+
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("tmn_code")}:</strong>
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {vnpayParams.vnp_TmnCode ?? "-"}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Secure Hash - Full Width */}
+          {vnpayParams.vnp_SecureHash && (
+            <Box sx={{ mt: 3 }}>
+              <Typography sx={{ mb: 0.5 }}>
+                <strong>{t("secure_hash")}:</strong>
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    wordBreak: "break-all",
+                    fontFamily: "monospace",
+                    bgcolor: "grey.100",
+                    p: 1,
+                    borderRadius: 1,
+                    flex: 1,
+                  }}
+                >
+                  {vnpayParams.vnp_SecureHash}
                 </Typography>
                 <IconButton
                   size="small"
-                  onClick={() =>
-                    handleCopy(
-                      payment.transactionId ?? payment.vnpPayPayment?.vnpTxnRef
-                    )
-                  }
+                  onClick={() => handleCopy(vnpayParams.vnp_SecureHash)}
                 >
                   <ContentCopyIcon fontSize="small" />
                 </IconButton>
               </Stack>
-
-              {payment.vnpPayPayment && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography sx={{ mb: 1 }}>
-                    <strong>{t("vnpay_txnref")}:</strong>
-                  </Typography>
-                  <Typography variant="body1" sx={{ wordBreak: "break-all" }}>
-                    {payment.vnpPayPayment.vnpTxnRef}
-                  </Typography>
-
-                  <Typography sx={{ mt: 2, mb: 1 }}>
-                    <strong>{t("bank")}:</strong>
-                  </Typography>
-                  <Typography variant="body1">
-                    {payment.vnpPayPayment.bankCode ?? "-"}
-                  </Typography>
-
-                  <Typography sx={{ mt: 2, mb: 1 }}>
-                    <strong>{t("response_code")}:</strong>
-                  </Typography>
-                  <Typography variant="body1">
-                    {payment.vnpPayPayment.responseCode ?? "-"}
-                  </Typography>
-                </Box>
-              )}
             </Box>
-          </Box>
+          )}
 
           <Stack
             direction={{ xs: "column", sm: "row" }}

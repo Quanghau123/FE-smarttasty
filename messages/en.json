@@ -1122,7 +1122,7 @@
     "unknown": "Unknown",
     "error_processing": "Error processing VNPay result",
     "copied": "Copied to clipboard",
-    "copy_failed": "Cannot copy",
+    "copy_failed": "Failed to copy",
     "invalid_link": "Invalid VNPay link.",
     "back_home": "Back to home",
     "processing": "Processing payment result...",
@@ -1135,8 +1135,19 @@
     "transaction_id": "Transaction ID",
     "vnpay_txnref": "VNPAY TxnRef",
     "bank": "Bank",
-    "response_code": "Response code",
+    "response_code": "Response Code",
     "view_orders": "View orders",
-    "no_result": "No result to display."
+    "no_result": "No result to display.",
+    "bank_code": "Bank Code",
+    "bank_tran_no": "Bank Transaction No",
+    "card_type": "Card Type",
+    "order_info": "Order Info",
+    "pay_date": "Payment Date",
+    "tmn_code": "TMN Code",
+    "transaction_no": "VNPAY Transaction No",
+    "transaction_status": "Transaction Status",
+    "secure_hash": "Secure Hash",
+    "payment_info": "Payment Information",
+    "transaction_info": "Transaction Information"
   }
 }
