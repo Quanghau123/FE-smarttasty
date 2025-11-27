@@ -194,10 +194,12 @@ const Chatbot: React.FC = () => {
           bottom: 96,
           right: 24,
           zIndex: 1000,
+          width: 70,
+          height: 70,
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <CloseIcon /> : <RobotIcon isTalking={isLoading} />}
+        {isOpen ? <CloseIcon /> : <RobotIcon scale={1} isTalking={isLoading} />}
       </Fab>
 
       {/* Chatbox */}
@@ -221,6 +223,8 @@ const Chatbot: React.FC = () => {
           {/* Header */}
           <Box
             sx={{
+              width: "100%",
+              height: 80,
               bgcolor: "primary.main",
               color: theme.palette.primary.contrastText,
               p: 2,
@@ -229,7 +233,9 @@ const Chatbot: React.FC = () => {
               gap: 1,
             }}
           >
-            <RobotIcon isTalking={isLoading} />
+            <Box sx={{ width: 70, height: 70 }}>
+              <RobotIcon scale={0.9} isTalking={isLoading} />
+            </Box>
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
               SmartTasty Assistant
             </Typography>
@@ -267,7 +273,7 @@ const Chatbot: React.FC = () => {
               >
                 {message.sender === "bot" && (
                   <Avatar
-                    sx={{ bgcolor: "primary.main", width: 32, height: 32 }}
+                    sx={{ bgcolor: "primary.main", width: 45, height: 45 }}
                   >
                     <RobotIcon isTalking={isLoading} />
                   </Avatar>
