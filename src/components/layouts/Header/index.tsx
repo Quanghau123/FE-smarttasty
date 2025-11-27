@@ -8,17 +8,23 @@ import {
   Button,
   Popover,
   TextField,
-  MenuItem,
   Typography,
   IconButton,
   Badge,
   Autocomplete,
+  Menu,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useSignalR } from "@/lib/signalr";
 import { fetchOrdersByUser } from "@/redux/slices/orderSlice";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
+import WavingHandIcon from "@mui/icons-material/WavingHand";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { FaUserCircle } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
@@ -42,6 +48,9 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [categoryMenuAnchor, setCategoryMenuAnchor] =
+    useState<HTMLElement | null>(null);
+  const isCategoryMenuOpen = Boolean(categoryMenuAnchor);
   const [query, setQuery] = useState<string>("");
   const suggTimer = useRef<number | null>(null);
 
@@ -277,8 +286,8 @@ const Header = () => {
             <Image
               src={getImageUrl("Logo/anhdaidienmoi.png")}
               alt={t("logo_alt")}
-              width={70}
-              height={50}
+              width={90}
+              height={90}
               priority
             />
           </Link>
@@ -297,38 +306,78 @@ const Header = () => {
         {/* Middle: Filter + Search - hiển thị cho user hoặc chưa đăng nhập */}
         {(!isLoggedIn || currentRole === "user") && (
           <Box className={styles.searchSection}>
-            {/* <TextField
-              select
-              defaultValue="TP. HCM"
-              size="small"
-              variant="standard"
-              className={styles.citySelect}
-            >
-              <MenuItem value="TP. HCM">TP. HCM</MenuItem>
-              <MenuItem value="HN">Hà Nội</MenuItem>
-              <MenuItem value="DN">Đà Nẵng</MenuItem>
-            </TextField> */}
+            <>
+              <IconButton
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  setCategoryMenuAnchor(e.currentTarget)
+                }
+                sx={{
+                  width: 50,
+                  height: 50,
+                  textTransform: "none",
+                  backgroundColor: "transparent",
+                  "&:hover": { backgroundColor: "transparent" },
+                  "&:active": { backgroundColor: "transparent" },
+                }}
+              >
+                <MenuIcon fontSize="large" />
+              </IconButton>
 
-            <TextField
-              select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              size="small"
-              variant="standard"
-              className={styles.categorySelect}
-            >
-              <MenuItem value="All">{t("category_all")}</MenuItem>
-              <MenuItem value="Buffet">{t("category_buffet")}</MenuItem>
-              <MenuItem value="NhaHang">{t("category_nhahang")}</MenuItem>
-              <MenuItem value="AnVatViaHe">{t("category_anvatviahe")}</MenuItem>
-              <MenuItem value="AnChay">{t("category_anchay")}</MenuItem>
-              <MenuItem value="CafeNuocuong">
-                {t("category_cafenuocuong")}
-              </MenuItem>
-              <MenuItem value="QuanAn">{t("category_quanan")}</MenuItem>
-              <MenuItem value="Bar">{t("category_bar")}</MenuItem>
-              <MenuItem value="QuanNhau">{t("category_quannhau")}</MenuItem>
-            </TextField>
+              <Menu
+                anchorEl={categoryMenuAnchor}
+                open={isCategoryMenuOpen}
+                onClose={() => setCategoryMenuAnchor(null)}
+                PaperProps={{
+                  sx: {
+                    padding: 1,
+                    minWidth: 300,
+                  },
+                }}
+                MenuListProps={{
+                  sx: {
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)", // 3 cột đều
+                    gap: 1,
+                    padding: 0,
+                  },
+                }}
+              >
+                {[
+                  { key: "All", label: t("category_all") },
+                  { key: "Buffet", label: t("category_buffet") },
+                  { key: "NhaHang", label: t("category_nhahang") },
+                  { key: "AnVatViaHe", label: t("category_anvatviahe") },
+                  { key: "AnChay", label: t("category_anchay") },
+                  { key: "CafeNuocuong", label: t("category_cafenuocuong") },
+                  { key: "QuanAn", label: t("category_quanan") },
+                  { key: "Bar", label: t("category_bar") },
+                  { key: "QuanNhau", label: t("category_quannhau") },
+                ].map((item) => (
+                  <Box
+                    key={item.key}
+                    component="button"
+                    onClick={() => {
+                      setSelectedCategory(item.key);
+                      setCategoryMenuAnchor(null);
+                    }}
+                    sx={{
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      paddingY: 1,
+                      paddingX: 0.5,
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      "&:hover": { backgroundColor: "rgba(0,0,0,0.08)" },
+                    }}
+                  >
+                    {item.label}
+                  </Box>
+                ))}
+              </Menu>
+            </>
 
             <Autocomplete
               freeSolo
@@ -389,11 +438,11 @@ const Header = () => {
               <IconButton
                 onClick={handlePopoverOpen}
                 sx={{
-                  p: 0.5,
+                  p: 1,
                   "& svg": {
-                    fontSize: { xs: 20, sm: 20, md: 24 },
-                    width: { xs: 20, sm: 20, md: 24 },
-                    height: { xs: 20, sm: 20, md: 24 },
+                    fontSize: { xs: 22, sm: 22, md: 26 },
+                    width: { xs: 22, sm: 22, md: 26 },
+                    height: { xs: 22, sm: 22, md: 26 },
                   },
                 }}
               >
@@ -405,7 +454,7 @@ const Header = () => {
                 onClose={handlePopoverClose}
                 anchorOrigin={{
                   vertical: "bottom",
-                  horizontal: "right",
+                  horizontal: "left",
                 }}
               >
                 <Box
@@ -417,31 +466,83 @@ const Header = () => {
                     border: `1px solid ${theme.palette.divider}`,
                   })}
                 >
-                  <Typography fontWeight={600} mb={1}>
-                    {t("welcome_text")}, {localUserName}
+                  <Typography
+                    fontWeight={600}
+                    mb={1}
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    paddingBottom={2}
+                    borderBottom={`1px solid #eee`}
+                  >
+                    <WavingHandIcon fontSize="small" />
+                    {localUserName}
                   </Typography>
+
                   <Link href="/account">
-                    <Button fullWidth size="small" variant="text">
+                    <Button
+                      fullWidth
+                      size="small"
+                      variant="text"
+                      sx={{
+                        justifyContent: "flex-start",
+                        gap: 1,
+                        paddingBottom: 1,
+                        borderBottom: "1px solid #eee",
+                      }}
+                    >
+                      <PersonOutlineIcon fontSize="small" />
                       {t("account_btn_title")}
                     </Button>
                   </Link>
+
                   <Link href="/purchase">
-                    <Button fullWidth size="small" variant="text">
+                    <Button
+                      fullWidth
+                      size="small"
+                      variant="text"
+                      sx={{
+                        justifyContent: "flex-start",
+                        gap: 1,
+                        paddingBottom: 1,
+                        borderBottom: "1px solid #eee",
+                      }}
+                    >
+                      <ReceiptLongIcon fontSize="small" />
                       {t("my_purchase_btn_title")}
                     </Button>
                   </Link>
+
                   <Link href="/bookingtable">
-                    <Button fullWidth size="small" variant="text">
+                    <Button
+                      fullWidth
+                      size="small"
+                      variant="text"
+                      sx={{
+                        justifyContent: "flex-start",
+                        gap: 1,
+                        paddingBottom: 1,
+                        borderBottom: "1px solid #eee",
+                      }}
+                    >
+                      <EventSeatIcon fontSize="small" />
                       {t("my_booking_btn_title")}
                     </Button>
                   </Link>
+
                   <Button
                     fullWidth
                     size="small"
                     variant="text"
                     color="error"
                     onClick={handleLogout}
+                    sx={{
+                      justifyContent: "flex-center",
+                      gap: 1,
+                      paddingTop: 1.5,
+                    }}
                   >
+                    <LogoutIcon fontSize="small" />
                     {t("logout_btn_title")}
                   </Button>
                 </Box>
@@ -486,7 +587,13 @@ const Header = () => {
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           >
             <Box sx={{ width: 320, maxHeight: 360, overflow: "auto", p: 1 }}>
-              <Typography fontWeight={600} mb={1} px={1}>
+              <Typography
+                fontWeight={600}
+                mb={1}
+                px={1}
+                paddingBottom={1}
+                sx={{ borderBottom: "1px solid #eee" }}
+              >
                 {t("notifications_title") || "Notifications"}
               </Typography>
               {notifications.length === 0 ? (

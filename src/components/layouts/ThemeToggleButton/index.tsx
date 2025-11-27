@@ -14,10 +14,14 @@ const ThemeToggleButton = () => {
   return (
     <button
       onClick={() => dispatch(toggleTheme())}
-      className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-text hover:bg-button-hover transition border-none focus:outline-none"
+      className="p-1 flex items-center justify-center rounded-full bg-transparent text-text hover:bg-button-hover transition border-none focus:outline-none"
       title={`Switch to ${themeMode === "dark" ? "light" : "dark"} mode`}
     >
-      {themeMode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+      {themeMode === "dark" ? (
+        <LightModeIcon style={{ fontSize: 28 }} />
+      ) : (
+        <DarkModeIcon style={{ fontSize: 28 }} />
+      )}
     </button>
   );
 };

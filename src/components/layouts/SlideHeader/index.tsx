@@ -35,21 +35,21 @@ const SlideHeader: React.FC = () => {
       sx={{
         position: "relative",
         width: "100%",
-         height: {
-           xs: "18vh",
-           sm: "28vh",
-           md: "calc(48vh + 50px)",
-           lg: "calc(56vh + 50px)",
-           xl: "calc(64vh + 50px)",
-         },
-         // On small devices in landscape the viewport height is much smaller
-         // (so `vh` values look tiny). Increase header height specifically
-         // for mobile landscape using a media query.
-         "@media (orientation: landscape) and (max-width:600px)": {
-           height: "44vh",
-           // keep a reasonable cap so images don't overflow on some devices
-           maxHeight: 520,
-         },
+        height: {
+          xs: "18vh",
+          sm: "28vh",
+          md: "calc(32vh + 50px)",
+          lg: "calc(36vh + 50px)",
+          xl: "calc(43vh + 50px)",
+        },
+        // On small devices in landscape the viewport height is much smaller
+        // (so `vh` values look tiny). Increase header height specifically
+        // for mobile landscape using a media query.
+        "@media (orientation: landscape) and (max-width:600px)": {
+          height: "44vh",
+          // keep a reasonable cap so images don't overflow on some devices
+          maxHeight: 520,
+        },
         maxHeight: 900,
         overflow: "hidden",
       }}

@@ -8,11 +8,12 @@
   --header-height: 72px;
   height: var(--header-height);
   will-change: transform;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: background-color 200ms ease, color 200ms ease,
+    border-color 200ms ease;
 
   .headerInner {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 0 16px;
     height: 100%;
@@ -21,22 +22,22 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: nowrap;
-    
+
     @media (max-width: 768px) {
       padding: 0 8px;
       gap: 8px;
     }
-    
+
     // Logo responsive
     a:first-child {
       flex-shrink: 0;
-      
+
       img {
         @media (max-width: 600px) {
           max-width: 50px !important;
           max-height: 36px !important;
         }
-        
+
         @media (max-width: 480px) {
           max-width: 45px !important;
           max-height: 32px !important;
@@ -47,8 +48,8 @@
 }
 
 .popoverBox {
-  padding: 12px;
-  min-width: 200px;
+  padding: 12px 8px;
+  max-width: 250px;
   /* color/background handled by MUI theme (sx). Keep stylesheet neutral to avoid forcing white */
   color: inherit;
   background-color: transparent;
@@ -80,10 +81,11 @@
   .categorySelect {
     flex: 0 0 auto;
     width: auto;
-    min-width: 70px;
-    max-width: 120px;
+    min-width: 40px;
+    // max-width: 120px;
+    min-height: 40px;
+    border: solid 1px rgb(192, 190, 190);
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -93,10 +95,10 @@
     min-width: 280px;
     max-width: 720px;
   }
-  
+
   @media (max-width: 768px) {
     gap: 4px;
-    
+
     .citySelect {
       min-width: 60px;
       max-width: 80px;
@@ -116,7 +118,7 @@
       flex: 1 1 0;
     }
   }
-  
+
   @media (max-width: 600px) {
     .citySelect {
       min-width: 50px;
@@ -138,33 +140,37 @@
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
   flex-shrink: 0;
-  
+
   /* Giảm kích thước nút mặc định hơn nữa cho mobile thấp */
   :global(.MuiButton-root) {
     line-height: 1.1;
   }
-  
+
   @media (max-width: 768px) {
     gap: 6px;
-    
-    button, a, :global(.MuiButton-root) {
+
+    button,
+    a,
+    :global(.MuiButton-root) {
       padding: 4px 8px !important;
       font-size: 0.7rem !important;
       min-width: auto !important;
       line-height: 1.05;
     }
-    
+
     svg {
       font-size: 1.2rem;
     }
   }
-  
+
   @media (max-width: 600px) {
     gap: 4px;
-    
-    button, a, :global(.MuiButton-root) {
+
+    button,
+    a,
+    :global(.MuiButton-root) {
       padding: 3px 6px !important;
       font-size: 0.58rem !important; /* giảm thêm */
       font-weight: 500;
@@ -179,7 +185,7 @@
       gap: 4px;
     }
   }
-  
+
   .searchSection {
     gap: 2px;
 
@@ -206,15 +212,17 @@
 
   .rightSection {
     gap: 2px;
-    
-    button, a, :global(.MuiButton-root) {
-      padding: 2px 4px !important;
+
+    button,
+    a,
+    :global(.MuiButton-root) {
+      padding: 3px 5px !important;
       font-size: 0.55rem !important; /* mobile rất nhỏ */
       font-weight: 500;
       min-width: auto !important;
-      letter-spacing: .2px;
+      letter-spacing: 0.2px;
     }
-    
+
     svg {
       font-size: 0.9rem; /* thu nhỏ icon cho đồng bộ */
     }

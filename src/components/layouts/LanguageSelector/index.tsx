@@ -28,10 +28,10 @@ export default function LanguageSelector() {
     <div className="relative inline-block text-left">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-6 h-6 flex items-center justify-center rounded-full bg-transparent text-text hover:bg-button-hover transition duration-300 ease-in-out border-none focus:outline-none"
+        className="p-1 flex items-center justify-center rounded-full bg-transparent text-text hover:bg-button-hover transition duration-300 ease-in-out border-none focus:outline-none"
         aria-label="Change language"
       >
-        <LanguageIcon />
+        <LanguageIcon style={{ fontSize: 28 }} />
       </button>
 
       {isOpen && (
