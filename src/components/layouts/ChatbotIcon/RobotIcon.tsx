@@ -5,21 +5,21 @@ import React, { useEffect, useState } from "react";
 interface Props {
   isTalking?: boolean;
   size?: number;
-  className?: string; // optional: allow CSS sizing via class
-  style?: React.CSSProperties; // optional inline styles
-  scale?: number; // <-- added: control internal SVG scale (1 = 100%)
+  className?: string; 
+  style?: React.CSSProperties; 
+  scale?: number; 
 }
 
 const RobotIcon: React.FC<Props> = ({
   isTalking = false,
   className,
   style,
-  scale = 1, // <-- default scale
+  scale = 1, 
 }) => {
   const [eyePos, setEyePos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
 
-  // 👀 Di chuyển mắt theo chuột
+  // Di chuyển mắt theo chuột
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       const maxOffset = 0.5;
@@ -31,7 +31,7 @@ const RobotIcon: React.FC<Props> = ({
     return () => window.removeEventListener("mousemove", handleMove);
   }, []);
 
-  // 😉 Nháy mắt
+  // Nháy mắt
   useEffect(() => {
     const blink = () => {
       setIsBlinking(true);
