@@ -235,13 +235,6 @@ const VNPayReturnPage: React.FC = () => {
               </Typography>
 
               <Typography sx={{ mb: 0.5 }}>
-                <strong>{t("method")}:</strong>
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                {payment.method ?? "-"}
-              </Typography>
-
-              <Typography sx={{ mb: 0.5 }}>
                 <strong>{t("order_info")}:</strong>
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
@@ -338,36 +331,6 @@ const VNPayReturnPage: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-
-          {/* Secure Hash - Full Width */}
-          {vnpayParams.vnp_SecureHash && (
-            <Box sx={{ mt: 3 }}>
-              <Typography sx={{ mb: 0.5 }}>
-                <strong>{t("secure_hash")}:</strong>
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    wordBreak: "break-all",
-                    fontFamily: "monospace",
-                    bgcolor: "grey.100",
-                    p: 1,
-                    borderRadius: 1,
-                    flex: 1,
-                  }}
-                >
-                  {vnpayParams.vnp_SecureHash}
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => handleCopy(vnpayParams.vnp_SecureHash)}
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            </Box>
-          )}
 
           <Stack
             direction={{ xs: "column", sm: "row" }}
