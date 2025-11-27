@@ -17,7 +17,6 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import RobotIcon from "@/components/layouts/ChatbotIcon/RobotIcon";
 import PersonIcon from "@mui/icons-material/Person";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
@@ -341,8 +340,8 @@ const Chatbot: React.FC = () => {
             ))}
             {isLoading && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Avatar sx={{ bgcolor: "primary.main", width: 32, height: 32 }}>
-                  <SmartToyIcon fontSize="small" />
+                <Avatar sx={{ bgcolor: "primary.main", width: 45, height: 45 }}>
+                  <RobotIcon isTalking={isLoading} />
                 </Avatar>
                 <Paper
                   sx={{
