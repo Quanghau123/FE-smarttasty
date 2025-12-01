@@ -5,11 +5,45 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: 12px;
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  will-change: transform;
 
   &:hover {
     transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Tối ưu cho horizontal scroll containers
+.carousel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  
+  // GPU acceleration
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: scroll-position;
+  
+  // Ẩn scrollbar
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  // Tắt hover effects khi đang scroll
+  &.scrolling {
+    .card {
+      pointer-events: none;
+      
+      &:hover {
+        transform: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+    }
   }
 }
 
@@ -60,8 +94,8 @@
 .descClamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  line-clamp: 2;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.5;
@@ -84,4 +118,11 @@
 /* Helpers for consistent card content spacing on mobile */
 .cardContentCompact {
   padding: 12px;
+}
+
+// Tối ưu performance cho tất cả items trong carousel
+.carousel > * {
+  // Giảm chi phí repaints/reflows khi scroll
+  contain: layout style paint;
+  content-visibility: auto;
 }

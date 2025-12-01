@@ -24,6 +24,8 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { fetchNearbyRestaurants } from "@/redux/slices/restaurantSlice";
 import { Restaurant } from "@/types/restaurant";
 import StarIcon from "@mui/icons-material/Star";
+import CloseIcon from "@mui/icons-material/Close";
+import DirectionsIcon from "@mui/icons-material/Directions";
 import styles from "./styles.module.scss";
 import nhahang from "@/assets/Image/MapView/nhahang.png";
 
@@ -68,6 +70,35 @@ const restaurantIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+// Types cho OSRM API response
+interface OSRMManeuver {
+  type: string;
+  modifier?: string;
+  instruction?: string;
+  exit?: number;
+}
+
+interface OSRMStep {
+  distance: number;
+  duration: number;
+  name?: string;
+  mode?: string;
+  maneuver?: OSRMManeuver;
+}
+
+interface OSRMLeg {
+  steps: OSRMStep[];
+}
+
+interface OSRMRoute {
+  distance: number;
+  duration: number;
+  geometry: {
+    coordinates: Array<[number, number]>;
+  };
+  legs: OSRMLeg[];
+}
+
 const NearbyRestaurantsPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -75,6 +106,92 @@ const NearbyRestaurantsPage = () => {
   const { nearby, loadingNearby } = useAppSelector((state) => state.restaurant);
   const isMobile = useMediaQuery("(max-width:600px)");
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
+
+  // Hàm tạo câu hướng dẫn từ translation
+  const createInstruction = (
+    type: string,
+    modifier: string,
+    streetName: string,
+    exit?: number
+  ): string => {
+    const hasStreet = !!streetName;
+    const streetType = hasStreet ? "withStreet" : "withoutStreet";
+
+    switch (type) {
+      case "depart":
+        return t(
+          `nearbyRestaurant.directions.instructions.depart.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+
+      case "arrive":
+        return t(
+          `nearbyRestaurant.directions.instructions.arrive.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+
+      case "turn": {
+        // Lấy hướng từ translation hoặc dùng modifier làm fallback
+        const directionKey = `nearbyRestaurant.directions.instructions.turn.directions.${modifier}`;
+        const direction = modifier
+          ? t(directionKey, { defaultValue: modifier })
+          : "";
+        return t(
+          `nearbyRestaurant.directions.instructions.turn.${streetType}`,
+          {
+            direction,
+            street: streetName,
+          }
+        );
+      }
+
+      case "continue":
+        return t(
+          `nearbyRestaurant.directions.instructions.continue.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+
+      case "merge":
+        return t(
+          `nearbyRestaurant.directions.instructions.merge.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+
+      case "on ramp":
+      case "off ramp":
+        return t(
+          `nearbyRestaurant.directions.instructions.ramp.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+
+      case "roundabout":
+        return t(
+          `nearbyRestaurant.directions.instructions.roundabout.${streetType}`,
+          {
+            exit: exit || 1,
+            street: streetName,
+          }
+        );
+
+      default:
+        return t(
+          `nearbyRestaurant.directions.instructions.fallback.${streetType}`,
+          {
+            street: streetName,
+          }
+        );
+    }
+  };
 
   const [userPosition, setUserPosition] = useState<{
     lat: number;
@@ -88,6 +205,18 @@ const NearbyRestaurantsPage = () => {
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [directions, setDirections] = useState<Array<{
+    instruction: string;
+    distance: number;
+    duration: number;
+    streetName?: string;
+    mode?: string;
+  }> | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{
+    totalDistance: number;
+    totalDuration: number;
+  } | null>(null);
+  const [showDirections, setShowDirections] = useState(false);
 
   // Lấy vị trí từ session hoặc hỏi người dùng
   useEffect(() => {
@@ -298,32 +427,100 @@ const NearbyRestaurantsPage = () => {
                             const destLat = restaurant.latitude;
 
                             fetch(
-                              `https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson`
+                              `https://router.project-osrm.org/route/v1/driving/${userLon},${userLat};${destLon},${destLat}?overview=full&geometries=geojson&steps=true`
                             )
                               .then((r) => r.json())
-                              .then((data) => {
+                              .then((data: { routes?: OSRMRoute[] }) => {
                                 if (
                                   data &&
                                   data.routes &&
                                   data.routes.length > 0
                                 ) {
+                                  const route: OSRMRoute = data.routes[0];
                                   const coords: Array<[number, number]> =
-                                    data.routes[0].geometry.coordinates.map(
+                                    route.geometry.coordinates.map(
                                       (c: [number, number]) => [c[1], c[0]]
                                     );
                                   setRouteCoords(coords);
+
+                                  // Lấy thông tin tổng quát về tuyến đường
+                                  setRouteInfo({
+                                    totalDistance: route.distance,
+                                    totalDuration: route.duration,
+                                  });
+
+                                  // Lấy các bước chỉ đường chi tiết
+                                  const steps: Array<{
+                                    instruction: string;
+                                    distance: number;
+                                    duration: number;
+                                    streetName?: string;
+                                    mode?: string;
+                                  }> = [];
+
+                                  route.legs.forEach((leg: OSRMLeg) => {
+                                    leg.steps.forEach((step: OSRMStep) => {
+                                      const streetName = step.name || "";
+                                      const mode = step.mode || "driving";
+                                      let instruction = "";
+
+                                      if (step.maneuver) {
+                                        const maneuver = step.maneuver;
+                                        const type = maneuver.type || "";
+                                        const modifier =
+                                          maneuver.modifier || "";
+                                        const exit = maneuver.exit;
+
+                                        // Sử dụng hàm tạo câu hướng dẫn đa ngôn ngữ
+                                        instruction = createInstruction(
+                                          type,
+                                          modifier,
+                                          streetName,
+                                          exit
+                                        );
+                                      } else {
+                                        // Fallback khi không có maneuver
+                                        const hasStreet = !!streetName;
+                                        instruction = t(
+                                          `nearbyRestaurant.directions.instructions.fallback.${
+                                            hasStreet
+                                              ? "withStreet"
+                                              : "withoutStreet"
+                                          }`,
+                                          { street: streetName }
+                                        );
+                                      }
+
+                                      if (instruction) {
+                                        steps.push({
+                                          instruction,
+                                          distance: step.distance,
+                                          duration: step.duration,
+                                          streetName,
+                                          mode,
+                                        });
+                                      }
+                                    });
+                                  });
+
+                                  setDirections(steps);
+                                  setShowDirections(true);
                                   return;
                                 }
                                 setRouteCoords([
                                   [userLat, userLon],
                                   [destLat, destLon],
                                 ]);
+                                setDirections(null);
+                                setRouteInfo(null);
                               })
                               .catch(() => {
                                 setRouteCoords([
                                   [userLat, userLon],
                                   [destLat, destLon],
                                 ]);
+                                setDirections(null);
+                                setRouteInfo(null);
                               });
                             if (isMobile) setMobileView("map");
                           }}
@@ -339,7 +536,11 @@ const NearbyRestaurantsPage = () => {
 
             {/* Bản đồ */}
             {(!isMobile || mobileView === "map") && (
-              <Box className={styles.map}>
+              <Box
+                className={`${styles.map} ${
+                  showDirections ? styles.withDirections : ""
+                }`}
+              >
                 <MapContainer
                   center={
                     userPosition
@@ -376,7 +577,11 @@ const NearbyRestaurantsPage = () => {
                   ))}
                   {routeCoords && (
                     <>
-                      <Polyline positions={routeCoords} color="blue" />
+                      <Polyline
+                        positions={routeCoords}
+                        color="blue"
+                        weight={4}
+                      />
                       {selectedRestaurantId &&
                         (() => {
                           const r = nearby.find(
@@ -404,6 +609,129 @@ const NearbyRestaurantsPage = () => {
                 </MapContainer>
               </Box>
             )}
+
+            {/* Panel hướng dẫn chỉ đường */}
+            {(!isMobile || mobileView === "map") &&
+              showDirections &&
+              directions && (
+                <Box className={styles.directionsPanel}>
+                  <Box className={styles.header}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <DirectionsIcon color="primary" />
+                      <Typography variant="h6" fontWeight="bold">
+                        {t("nearbyRestaurant.directions.title")}
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setShowDirections(false);
+                        setRouteCoords(null);
+                        setDirections(null);
+                        setRouteInfo(null);
+                        setSelectedRestaurantId(null);
+                      }}
+                      startIcon={<CloseIcon />}
+                    >
+                      {t("nearbyRestaurant.btn.close")}
+                    </Button>
+                  </Box>
+
+                  {routeInfo && (
+                    <Box className={styles.routeInfo}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        <strong>
+                          {t("nearbyRestaurant.directions.distance")}:
+                        </strong>{" "}
+                        {(routeInfo.totalDistance / 1000).toFixed(2)} km
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>
+                          {t("nearbyRestaurant.directions.duration")}:
+                        </strong>{" "}
+                        {Math.round(routeInfo.totalDuration / 60)}{" "}
+                        {t("nearbyRestaurant.directions.minutes")}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Box>
+                    {directions.map((step, index) => (
+                      <Box
+                        key={index}
+                        className={`${styles.stepCard} ${
+                          index === 0 ? styles.active : ""
+                        }`}
+                      >
+                        <Box display="flex" alignItems="flex-start" gap={2}>
+                          <Box
+                            sx={{
+                              minWidth: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              bgcolor:
+                                index === 0 ? "primary.dark" : "primary.main",
+                              color: "primary.contrastText",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: "bold",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          <Box flex={1}>
+                            <Typography
+                              variant="body2"
+                              fontWeight="medium"
+                              gutterBottom
+                            >
+                              {step.instruction}
+                            </Typography>
+                            {step.streetName && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "primary.main",
+                                  fontWeight: 500,
+                                  display: "block",
+                                  mb: 0.5,
+                                }}
+                              >
+                                📍 {step.streetName}
+                              </Typography>
+                            )}
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {step.distance > 0 && (
+                                <>
+                                  {step.distance >= 1000
+                                    ? `${(step.distance / 1000).toFixed(1)} km`
+                                    : `${Math.round(step.distance)} m`}
+                                  {step.duration > 0 && (
+                                    <>
+                                      {" • "}
+                                      {Math.round(step.duration / 60)}{" "}
+                                      {t("nearbyRestaurant.directions.minutes")}
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
           </Box>
         </>
       )}

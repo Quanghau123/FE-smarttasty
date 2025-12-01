@@ -117,6 +117,8 @@ const BodyPage = () => {
 
   // Ref và hàm scroll cho danh sách đề xuất (1 hàng, kéo ngang)
   const suggestedRef = useRef<HTMLDivElement | null>(null);
+  const suggestedScrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const scrollSuggested = (direction: "left" | "right") => {
     const el = suggestedRef.current;
     if (!el) return;
@@ -135,6 +137,20 @@ const BodyPage = () => {
       setSuggestedCanScrollRight(false);
       return;
     }
+
+    // Add scrolling class during scroll
+    el.classList.add(styles.scrolling);
+
+    // Clear previous timeout
+    if (suggestedScrollTimeout.current) {
+      clearTimeout(suggestedScrollTimeout.current);
+    }
+
+    // Remove scrolling class after scroll ends
+    suggestedScrollTimeout.current = setTimeout(() => {
+      el.classList.remove(styles.scrolling);
+    }, 150);
+
     const overflow = el.scrollWidth > el.clientWidth + 1;
     setSuggestedOverflow(overflow);
     setSuggestedCanScrollLeft(el.scrollLeft > 5);
@@ -162,6 +178,8 @@ const BodyPage = () => {
 
   // Ref + scroll cho danh sách khuyến mãi (1 hàng, kéo ngang)
   const promotionsRef = useRef<HTMLDivElement | null>(null);
+  const promotionsScrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const scrollPromotions = (direction: "left" | "right") => {
     const el = promotionsRef.current;
     if (!el) return;
@@ -180,6 +198,15 @@ const BodyPage = () => {
       setPromotionsCanScrollRight(false);
       return;
     }
+
+    el.classList.add(styles.scrolling);
+    if (promotionsScrollTimeout.current) {
+      clearTimeout(promotionsScrollTimeout.current);
+    }
+    promotionsScrollTimeout.current = setTimeout(() => {
+      el.classList.remove(styles.scrolling);
+    }, 150);
+
     const overflow = el.scrollWidth > el.clientWidth + 1;
     setPromotionsOverflow(overflow);
     setPromotionsCanScrollLeft(el.scrollLeft > 5);
@@ -208,6 +235,8 @@ const BodyPage = () => {
 
   // Top recipes (>= 4★) carousel
   const recipesRef = useRef<HTMLDivElement | null>(null);
+  const recipesScrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const scrollRecipes = (direction: "left" | "right") => {
     const el = recipesRef.current;
     if (!el) return;
@@ -226,6 +255,15 @@ const BodyPage = () => {
       setRecipesCanScrollRight(false);
       return;
     }
+
+    el.classList.add(styles.scrolling);
+    if (recipesScrollTimeout.current) {
+      clearTimeout(recipesScrollTimeout.current);
+    }
+    recipesScrollTimeout.current = setTimeout(() => {
+      el.classList.remove(styles.scrolling);
+    }, 150);
+
     const overflow = el.scrollWidth > el.clientWidth + 1;
     setRecipesOverflow(overflow);
     setRecipesCanScrollLeft(el.scrollLeft > 5);
@@ -253,6 +291,8 @@ const BodyPage = () => {
 
   // Dish promotions (món đang giảm giá) - ref + scroll giống suggested
   const dishPromotionsRef = useRef<HTMLDivElement | null>(null);
+  const dishPromotionsScrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const scrollDishPromotions = (direction: "left" | "right") => {
     const el = dishPromotionsRef.current;
     if (!el) return;
@@ -271,6 +311,15 @@ const BodyPage = () => {
       setDishPromotionsCanScrollRight(false);
       return;
     }
+
+    el.classList.add(styles.scrolling);
+    if (dishPromotionsScrollTimeout.current) {
+      clearTimeout(dishPromotionsScrollTimeout.current);
+    }
+    dishPromotionsScrollTimeout.current = setTimeout(() => {
+      el.classList.remove(styles.scrolling);
+    }, 150);
+
     const overflow = el.scrollWidth > el.clientWidth + 1;
     setDishPromotionsOverflow(overflow);
     setDishPromotionsCanScrollLeft(el.scrollLeft > 5);
@@ -318,7 +367,8 @@ const BodyPage = () => {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.2s, box-shadow 0.2s",
+          transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+          willChange: "transform",
           "&:hover": {
             transform: "translateY(-4px)",
             boxShadow: 4,
@@ -510,6 +560,7 @@ const BodyPage = () => {
       <Grid
         ref={suggestedRef}
         container
+        className={styles.carousel}
         // spacing={{ xs: 1, sm: 2, md: 2 }}
         onScroll={() => updateSuggestedState()}
         sx={{
@@ -562,7 +613,8 @@ const BodyPage = () => {
           minHeight: 200,
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.2s, box-shadow 0.2s",
+          transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+          willChange: "transform",
           "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
         }}
       >
@@ -724,7 +776,8 @@ const BodyPage = () => {
             height: "100%",
             display: "flex",
             flexDirection: "column",
-            transition: "transform 0.2s, box-shadow 0.2s",
+            transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+            willChange: "transform",
             "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
           }}
         >
@@ -899,7 +952,8 @@ const BodyPage = () => {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.2s, box-shadow 0.2s",
+          transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+          willChange: "transform",
           "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
         }}
       >
@@ -1002,16 +1056,23 @@ const BodyPage = () => {
       <Grid
         ref={recipesRef}
         container
+        className={styles.carousel}
         // spacing={{ xs: 1, sm: 1, md: 1 }}
         onScroll={() => updateRecipesState()}
         sx={{
           flexWrap: "nowrap",
           overflowX: "auto",
+          overflowY: "hidden",
           scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
           px: { xs: 1, sm: 2 },
           py: 1,
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
+          // Tối ưu performance
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          perspective: 1000,
         }}
       >
         {topRecipes.map((r, idx) => (
@@ -1047,6 +1108,7 @@ const BodyPage = () => {
       <Grid
         ref={promotionsRef}
         container
+        className={styles.carousel}
         // spacing={{ xs: 1, sm: 2, md: 2 }}
         onScroll={() => updatePromotionsState()}
         sx={{
@@ -1163,15 +1225,22 @@ const BodyPage = () => {
                 <Grid
                   ref={dishPromotionsRef}
                   container
+                  className={styles.carousel}
                   onScroll={() => updateDishPromotionsState()}
                   sx={{
                     flexWrap: "nowrap",
                     overflowX: "auto",
+                    overflowY: "hidden",
                     scrollBehavior: "smooth",
+                    WebkitOverflowScrolling: "touch",
                     px: { xs: 1, sm: 2 },
                     py: 1,
                     scrollbarWidth: "none",
                     "&::-webkit-scrollbar": { display: "none" },
+                    // Tối ưu performance
+                    transform: "translateZ(0)",
+                    backfaceVisibility: "hidden",
+                    perspective: 1000,
                   }}
                 >
                   {dishPromotions.map((d, idx) => (

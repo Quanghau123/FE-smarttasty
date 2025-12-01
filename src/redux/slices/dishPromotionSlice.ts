@@ -52,7 +52,27 @@ export const fetchDishPromotions = createAsyncThunk<
 
 /* -------------------------------------------
    🔹 2. GET /api/DishPromotions/{id}
+/* -------------------------------------------
+   🔹 3. GET /api/DishPromotions/restaurant/{restaurantId}
 ------------------------------------------- */
+export const fetchDishPromotionsByRestaurant = createAsyncThunk<
+  DishPromotion[],
+  number,
+  { rejectValue: string }
+>("dishPromotion/fetchByRestaurant", async (restaurantId, { rejectWithValue }) => {
+  try {
+    const token = getToken();
+    const res = await axiosInstance.get(`/api/DishPromotions/restaurant/${restaurantId}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return parseResponse<DishPromotion[]>(res.data);
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Không thể tải danh sách món khuyến mãi của nhà hàng");
+  }
+});
 export const fetchDishPromotionById = createAsyncThunk<
   DishPromotion,
   number,

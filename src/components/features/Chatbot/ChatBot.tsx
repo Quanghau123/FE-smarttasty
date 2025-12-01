@@ -84,8 +84,19 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto p-4 border rounded-lg shadow bg-white flex flex-col">
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4 h-96">
+    <div
+      className="w-full max-w-full sm:max-w-lg mx-auto p-2 sm:p-4 border rounded-lg shadow bg-white flex flex-col"
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        height: "60vh",
+        maxHeight: "100vh",
+      }}
+    >
+      <div className="flex-1 overflow-y-auto space-y-2 mb-2 sm:mb-4 h-[45vh] sm:h-96">
         {messages.map((m, i) => (
           <div
             key={i}
@@ -104,7 +115,7 @@ export default function ChatBox() {
         ))}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
         <input
           type="file"
           accept="image/*"
@@ -121,7 +132,7 @@ export default function ChatBox() {
         <button
           onClick={handleSend}
           disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-500 text-white px-4 py-2 rounded w-full sm:w-auto"
         >
           {loading ? "..." : "Gửi"}
         </button>

@@ -26,6 +26,7 @@ import type { RootState } from "@/redux/store";
 import { fetchRestaurantById } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
 import { getReviewsByRestaurant } from "@/redux/slices/reviewSlice";
+import { fetchDishPromotionsByRestaurant } from "@/redux/slices/dishPromotionSlice";
 import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice";
 import { fetchPromotions } from "@/redux/slices/promotionSlice";
 import { fetchUserById } from "@/redux/slices/userSlice";
@@ -266,6 +267,8 @@ const RestaurantDetailPage = () => {
       })
     );
     dispatch(getReviewsByRestaurant(rid));
+    // ✅ Sử dụng API lấy dish promotions theo restaurant ID
+    dispatch(fetchDishPromotionsByRestaurant(rid));
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
     // Load favorites for this restaurant (refresh-token handled by axiosInstance)
@@ -283,31 +286,22 @@ const RestaurantDetailPage = () => {
 
   // ================== GIẢM GIÁ ==================
   /**
-   * ✅ Lấy giá tốt nhất (đã giảm) từ BE - KHÔNG tự tính toán!
-   * BE đã tính sẵn giá giảm trong discountedPrice
-   * FE chỉ cần lấy giá thấp nhất từ các promotion
+   * ✅ Map dishPromotion để lấy giá đã giảm từ BE
+   * BE đã tính sẵn discountedPrice, originalPrice, và discountValue
    */
-  const bestDiscountByDishId = useMemo(() => {
-    const map = new Map<number, number>();
+  const dishPromotionMap = useMemo(() => {
+    const map = new Map<number, (typeof dishPromotions)[0]>();
 
-    for (const d of dishes) {
-      const originalPrice = d.price;
-      const relatedPromotions = dishPromotions.filter((p) => p.dishId === d.id);
-
-      if (relatedPromotions.length === 0) continue;
-
-      // ✅ Tìm giá thấp nhất từ discountedPrice mà BE đã tính sẵn
-      const bestPrice = Math.min(
-        ...relatedPromotions.map((p) => p.discountedPrice || originalPrice)
-      );
-
-      if (bestPrice < originalPrice) {
-        map.set(d.id, bestPrice);
+    for (const dp of dishPromotions) {
+      // Nếu món đã có promotion, lấy cái có giá tốt nhất
+      const existing = map.get(dp.dishId);
+      if (!existing || dp.discountedPrice < existing.discountedPrice) {
+        map.set(dp.dishId, dp);
       }
     }
 
     return map;
-  }, [dishes, dishPromotions]);
+  }, [dishPromotions]);
 
   // ================== SỐ LƯỢNG ==================
   const [qtyMap, setQtyMap] = useState<Record<number, number>>({});
@@ -425,11 +419,13 @@ const RestaurantDetailPage = () => {
         );
       });
 
-      const discounted =
-        bestDiscountByDishId.get(dishId) ??
+      // ✅ Lấy giá từ promotion nếu có, không thì lấy giá gốc
+      const promotion = dishPromotionMap.get(dishId);
+      const unitPrice =
+        promotion?.discountedPrice ??
         dishes.find((d) => d.id === dishId)?.price ??
         0;
-      const totalPrice = discounted * quantity;
+      const totalPrice = unitPrice * quantity;
 
       let orderId: number | null = null;
       let ok = false;
@@ -914,6 +910,198 @@ const RestaurantDetailPage = () => {
           )}
         </Box>
 
+        {/* Các món đang giảm giá */}
+        {(() => {
+          // Lọc các món đang có khuyến mãi
+          const dishesWithPromo = dishes.filter(
+            (dish) => dishPromotionMap.has(dish.id) && dish.isActive
+          );
+
+          if (dishesWithPromo.length === 0) return null;
+
+          return (
+            <Box
+              sx={{
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+                borderRadius: 2,
+                p: 2,
+                mt: 3,
+              }}
+            >
+              <Typography variant="h5" sx={{ mb: 2, color: "error.main" }}>
+                🔥 {t("discounted_dishes_title")}
+              </Typography>
+              <Box className={styles.dishGrid}>
+                {dishesWithPromo.map((dish) => {
+                  // ✅ Lấy thông tin promotion từ BE (đã có sẵn giá)
+                  const promotion = dishPromotionMap.get(dish.id);
+                  if (!promotion) return null;
+
+                  const qty = qtyMap[dish.id] || 0;
+                  const originalPrice = promotion.originalPrice;
+                  const discountedPrice = promotion.discountedPrice;
+                  const unitPrice = discountedPrice;
+
+                  // Lấy % giảm giá từ BE
+                  const discountPercent =
+                    promotion.discountType === "percent"
+                      ? Math.round(promotion.discountValue)
+                      : Math.round(
+                          ((originalPrice - discountedPrice) / originalPrice) *
+                            100
+                        );
+
+                  return (
+                    <Box
+                      key={dish.id}
+                      className={styles.dishCard}
+                      sx={{
+                        backgroundColor: theme.palette.background.default,
+                        color: theme.palette.text.primary,
+                        borderRadius: 2,
+                        p: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                        position: "relative",
+                      }}
+                    >
+                      {/* Badge giảm giá */}
+                      {discountPercent > 0 && (
+                        <Chip
+                          label={`-${discountPercent}%`}
+                          size="small"
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            backgroundColor: theme.palette.error.main,
+                            color: theme.palette.error.contrastText,
+                            fontWeight: "bold",
+                            zIndex: 1,
+                          }}
+                        />
+                      )}
+
+                      {/* Flip card wrapper */}
+                      <Box className={styles.dishImageWrapper}>
+                        <Box className={styles.dishFlipInner}>
+                          {/* Mặt trước - Ảnh món ăn */}
+                          <Box className={styles.dishImage}>
+                            {dish.imageUrl ? (
+                              <Image
+                                src={dish.imageUrl}
+                                alt={dish.name}
+                                fill
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : (
+                              <Box
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  backgroundColor: "#f5f5f5",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  borderRadius: 1,
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  {t("no_dish_image")}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+
+                          {/* Mặt sau - Mô tả món ăn */}
+                          <Box className={styles.dishDescription}>
+                            <Typography component="p">
+                              {dish.description || t("no_description")}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                      <Box className={styles.dishInfo}>
+                        <Typography variant="h6">{dish.name}</Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            alignItems: "baseline",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              textDecoration: "line-through",
+                              color: "text.secondary",
+                              fontSize: "0.95rem",
+                            }}
+                          >
+                            {originalPrice.toLocaleString()}đ
+                          </Typography>
+                          <Typography
+                            fontWeight="bold"
+                            sx={{ color: "error.main", fontSize: "1.1rem" }}
+                          >
+                            {discountedPrice.toLocaleString()}đ
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Chọn số lượng + Thêm vào giỏ */}
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        mt={1}
+                        gap={1}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <IconButton
+                            size="small"
+                            onClick={() => dec(dish.id)}
+                            disabled={qty === 0}
+                            aria-label={t("decrease_quantity")}
+                          >
+                            <RemoveIcon />
+                          </IconButton>
+                          <Typography minWidth={24} textAlign="center">
+                            {qty}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => inc(dish.id)}
+                            disabled={!dish.isActive}
+                            aria-label={t("increase_quantity")}
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </Stack>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          disabled={!dish.isActive || qty === 0}
+                          onClick={() => handleAddToCart(dish.id)}
+                          color="error"
+                        >
+                          {t("add_to_cart")} (
+                          {(unitPrice * qty).toLocaleString()}
+                          đ)
+                        </Button>
+                      </Stack>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          );
+        })()}
+
         {/* Thực đơn */}
         <Box
           ref={menuRef}
@@ -933,11 +1121,15 @@ const RestaurantDetailPage = () => {
           ) : (
             <Box className={styles.dishGrid}>
               {dishes.map((dish) => {
-                const discounted = bestDiscountByDishId.get(dish.id) ?? null;
-                const showDiscount =
-                  discounted !== null && discounted < dish.price;
+                // ✅ Lấy thông tin promotion từ BE nếu có
+                const promotion = dishPromotionMap.get(dish.id);
+                const hasDiscount = !!promotion;
                 const qty = qtyMap[dish.id] || 0;
-                const unitPrice = discounted ?? dish.price;
+
+                const originalPrice = promotion?.originalPrice ?? dish.price;
+                const discountedPrice =
+                  promotion?.discountedPrice ?? dish.price;
+                const unitPrice = discountedPrice;
 
                 return (
                   <Box
@@ -953,40 +1145,47 @@ const RestaurantDetailPage = () => {
                       gap: 1,
                     }}
                   >
-                    <Box
-                      className={styles.dishImage}
-                      sx={{
-                        position: "relative",
-                        width: "100%",
-                        height: 160,
-                        borderRadius: 1,
-                        overflow: "hidden",
-                      }}
-                    >
-                      {dish.imageUrl ? (
-                        <Image
-                          src={dish.imageUrl}
-                          alt={dish.name}
-                          fill
-                          style={{ objectFit: "cover" }}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "#f5f5f5",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: 1,
-                          }}
-                        >
-                          <Typography variant="body2" color="text.secondary">
-                            {t("no_dish_image")}
+                    {/* Flip card wrapper */}
+                    <Box className={styles.dishImageWrapper}>
+                      <Box className={styles.dishFlipInner}>
+                        {/* Mặt trước - Ảnh món ăn */}
+                        <Box className={styles.dishImage}>
+                          {dish.imageUrl ? (
+                            <Image
+                              src={dish.imageUrl}
+                              alt={dish.name}
+                              fill
+                              style={{ objectFit: "cover" }}
+                            />
+                          ) : (
+                            <Box
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                backgroundColor: "#f5f5f5",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {t("no_dish_image")}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* Mặt sau - Mô tả món ăn */}
+                        <Box className={styles.dishDescription}>
+                          <Typography component="p">
+                            {dish.description || t("no_description")}
                           </Typography>
                         </Box>
-                      )}
+                      </Box>
                     </Box>
                     <Box className={styles.dishInfo}>
                       <Typography variant="h6">
@@ -1003,7 +1202,7 @@ const RestaurantDetailPage = () => {
                           />
                         )}
                       </Typography>
-                      {showDiscount ? (
+                      {hasDiscount ? (
                         <Box
                           sx={{
                             display: "flex",
@@ -1018,13 +1217,13 @@ const RestaurantDetailPage = () => {
                               fontSize: "0.95rem",
                             }}
                           >
-                            {dish.price.toLocaleString()}đ
+                            {originalPrice.toLocaleString()}đ
                           </Typography>
                           <Typography
                             fontWeight="bold"
                             sx={{ color: "error.main", fontSize: "1rem" }}
                           >
-                            {discounted!.toLocaleString()}đ
+                            {discountedPrice.toLocaleString()}đ
                           </Typography>
                         </Box>
                       ) : (
@@ -1155,7 +1354,7 @@ const RestaurantDetailPage = () => {
         {(() => {
           const suggested = (allRestaurants || []).filter((r) => {
             const avg = r.averageRating ?? r.rating ?? 0;
-            return avg > 4 && r.id !== restaurant.id;
+            return avg >= 4 && r.id !== restaurant.id;
           });
 
           if (!suggested || suggested.length === 0) return null;
@@ -1265,8 +1464,7 @@ const RestaurantDetailPage = () => {
                   sx={{
                     flexWrap: "nowrap",
                     overflowX: "auto",
-                    px: 1,
-                    py: 0,
+                    p: 1,
                     scrollbarWidth: "none",
                     "&::-webkit-scrollbar": { display: "none" },
                   }}

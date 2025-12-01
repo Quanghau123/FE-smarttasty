@@ -190,11 +190,12 @@ const Chatbot: React.FC = () => {
         aria-label="chat"
         sx={{
           position: "fixed",
-          bottom: 96,
-          right: 24,
-          zIndex: 1000,
-          width: 70,
-          height: 70,
+          bottom: { xs: 70, sm: 84 },
+          right: { xs: 16, sm: 24 },
+          zIndex: 1300,
+          width: 60,
+          height: 60,
+          boxShadow: 3,
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -207,23 +208,27 @@ const Chatbot: React.FC = () => {
           elevation={8}
           sx={{
             position: "fixed",
-            bottom: 155,
-            right: 24,
-            width: 380,
-            height: 500,
+            bottom: { xs: 140, sm: 155 },
+            right: { xs: 8, sm: 24 },
+            left: { xs: 8, sm: "auto" },
+            width: { xs: "calc(100vw - 16px)", sm: 380 },
+            maxWidth: 420,
+            height: { xs: "60vh", sm: 500 },
+            maxHeight: "90vh",
             display: isOpen ? "flex" : "none",
             flexDirection: "column",
-            zIndex: 999,
+            zIndex: 1299,
             borderRadius: 2,
             overflow: "hidden",
             bgcolor: theme.palette.background.paper,
+            boxShadow: 6,
           }}
         >
           {/* Header */}
           <Box
             sx={{
               width: "100%",
-              height: 80,
+              height: 64,
               bgcolor: "primary.main",
               color: theme.palette.primary.contrastText,
               p: 2,
@@ -232,10 +237,13 @@ const Chatbot: React.FC = () => {
               gap: 1,
             }}
           >
-            <Box sx={{ width: 70, height: 70 }}>
+            <Box sx={{ width: 48, height: 48 }}>
               <RobotIcon scale={0.9} isTalking={isLoading} />
             </Box>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{ flexGrow: 1, fontSize: { xs: 16, sm: 20 } }}
+            >
               SmartTasty Assistant
             </Typography>
             <IconButton
@@ -252,11 +260,12 @@ const Chatbot: React.FC = () => {
             sx={{
               flexGrow: 1,
               overflowY: "auto",
-              p: 2,
+              p: { xs: 1, sm: 2 },
               bgcolor: theme.palette.background.default,
               display: "flex",
               flexDirection: "column",
               gap: 2,
+              minHeight: 0,
             }}
           >
             {messages.map((message) => (
@@ -272,7 +281,7 @@ const Chatbot: React.FC = () => {
               >
                 {message.sender === "bot" && (
                   <Avatar
-                    sx={{ bgcolor: "primary.main", width: 45, height: 45 }}
+                    sx={{ bgcolor: "primary.main", width: 36, height: 36 }}
                   >
                     <RobotIcon isTalking={isLoading} />
                   </Avatar>
@@ -299,7 +308,7 @@ const Chatbot: React.FC = () => {
                   )}
                   <Paper
                     sx={{
-                      p: 1.5,
+                      p: 1.2,
                       bgcolor:
                         message.sender === "user"
                           ? theme.palette.primary.main
@@ -331,7 +340,7 @@ const Chatbot: React.FC = () => {
                 </Box>
                 {message.sender === "user" && (
                   <Avatar
-                    sx={{ bgcolor: "secondary.main", width: 32, height: 32 }}
+                    sx={{ bgcolor: "secondary.main", width: 28, height: 28 }}
                   >
                     <PersonIcon fontSize="small" />
                   </Avatar>
@@ -340,12 +349,12 @@ const Chatbot: React.FC = () => {
             ))}
             {isLoading && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Avatar sx={{ bgcolor: "primary.main", width: 45, height: 45 }}>
+                <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36 }}>
                   <RobotIcon isTalking={isLoading} />
                 </Avatar>
                 <Paper
                   sx={{
-                    p: 1.5,
+                    p: 1.2,
                     borderRadius: 2,
                     bgcolor: theme.palette.background.paper,
                   }}
@@ -375,8 +384,8 @@ const Chatbot: React.FC = () => {
                 src={imagePreview}
                 alt="Preview"
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 48,
+                  height: 48,
                   objectFit: "cover",
                   borderRadius: 1,
                 }}
@@ -393,7 +402,7 @@ const Chatbot: React.FC = () => {
           {/* Input Area */}
           <Box
             sx={{
-              p: 2,
+              p: { xs: 1, sm: 2 },
               bgcolor: theme.palette.background.paper,
               borderTop: 1,
               borderColor: "divider",
@@ -414,6 +423,7 @@ const Chatbot: React.FC = () => {
                 color="primary"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
+                sx={{ minWidth: 36, minHeight: 36 }}
               >
                 <ImageIcon />
               </IconButton>
@@ -428,7 +438,10 @@ const Chatbot: React.FC = () => {
               onKeyPress={handleKeyPress}
               disabled={isLoading}
               size="small"
-              sx={{ bgcolor: theme.palette.background.paper }}
+              sx={{
+                bgcolor: theme.palette.background.paper,
+                fontSize: { xs: 14, sm: 16 },
+              }}
             />
             <Tooltip title="Gửi">
               <span>
@@ -436,6 +449,7 @@ const Chatbot: React.FC = () => {
                   color="primary"
                   onClick={handleSendMessage}
                   disabled={isLoading || (!inputText.trim() && !selectedImage)}
+                  sx={{ minWidth: 36, minHeight: 36 }}
                 >
                   <SendIcon />
                 </IconButton>

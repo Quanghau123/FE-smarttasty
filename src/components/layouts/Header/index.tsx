@@ -13,6 +13,8 @@ import {
   Badge,
   Autocomplete,
   Menu,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useSignalR } from "@/lib/signalr";
@@ -42,11 +44,15 @@ import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
 
 const Header = () => {
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const iconPx = isXs ? 22 : 26; // unified icon size for mobile
   const [localUserName, setLocalUserName] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
+  const [authAnchorEl, setAuthAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [categoryMenuAnchor, setCategoryMenuAnchor] =
     useState<HTMLElement | null>(null);
@@ -219,8 +225,17 @@ const Header = () => {
     setNotifAnchorEl(null);
   };
 
+  const handleAuthOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAuthAnchorEl(event.currentTarget);
+  };
+
+  const handleAuthClose = () => {
+    setAuthAnchorEl(null);
+  };
+
   const open = Boolean(anchorEl);
   const notifOpen = Boolean(notifAnchorEl);
+  const authOpen = Boolean(authAnchorEl);
 
   // Notifications state
   const [notifications, setNotifications] = useState<
@@ -320,7 +335,7 @@ const Header = () => {
                   "&:active": { backgroundColor: "transparent" },
                 }}
               >
-                <MenuIcon fontSize="large" />
+                <MenuIcon sx={{ fontSize: iconPx }} />
               </IconButton>
 
               <Menu
@@ -415,7 +430,7 @@ const Header = () => {
                     endAdornment: (
                       <SearchIcon
                         onClick={() => handleSearchSubmit()}
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: "pointer", fontSize: iconPx }}
                       />
                     ),
                   }}
@@ -440,13 +455,13 @@ const Header = () => {
                 sx={{
                   p: 1,
                   "& svg": {
-                    fontSize: { xs: 22, sm: 22, md: 26 },
-                    width: { xs: 22, sm: 22, md: 26 },
-                    height: { xs: 22, sm: 22, md: 26 },
+                    fontSize: iconPx,
+                    width: iconPx,
+                    height: iconPx,
                   },
                 }}
               >
-                <FaUserCircle />
+                <FaUserCircle size={iconPx} />
               </IconButton>
               <Popover
                 open={open}
@@ -550,16 +565,68 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link href="/login">
-                <Button size="small" variant="text">
-                  {t("login_btn_title")}
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="small" variant="text">
-                  {t("register_btn_title")}
-                </Button>
-              </Link>
+              {/* Desktop: keep separate buttons; Mobile: single icon with popover */}
+              <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
+                <Link href="/login">
+                  <Button size="small" variant="text">
+                    {t("login_btn_title")}
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="small" variant="text">
+                    {t("register_btn_title")}
+                  </Button>
+                </Link>
+              </Box>
+
+              <IconButton
+                onClick={handleAuthOpen}
+                sx={{ display: { xs: "inline-flex", sm: "none" }, p: 1 }}
+                aria-label="auth"
+              >
+                <FaUserCircle size={iconPx} />
+              </IconButton>
+
+              <Popover
+                open={authOpen}
+                anchorEl={authAnchorEl}
+                onClose={handleAuthClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              >
+                <Box
+                  sx={(theme) => ({
+                    width: 220,
+                    p: 1,
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    boxShadow: theme.shadows[4],
+                    border: `1px solid ${theme.palette.divider}`,
+                  })}
+                >
+                  <Link href="/login" onClick={handleAuthClose}>
+                    <Button
+                      fullWidth
+                      size="small"
+                      variant="text"
+                      sx={{ justifyContent: "flex-start", gap: 1, mb: 1 }}
+                    >
+                      <PersonOutlineIcon fontSize="small" />
+                      {t("login_btn_title")}
+                    </Button>
+                  </Link>
+                  <Link href="/register" onClick={handleAuthClose}>
+                    <Button
+                      fullWidth
+                      size="small"
+                      variant="text"
+                      sx={{ justifyContent: "flex-start", gap: 1 }}
+                    >
+                      <ReceiptLongIcon fontSize="small" />
+                      {t("register_btn_title")}
+                    </Button>
+                  </Link>
+                </Box>
+              </Popover>
             </>
           )}
 
@@ -568,7 +635,7 @@ const Header = () => {
             <Link href="/cart">
               <IconButton>
                 <Badge badgeContent={totalOrders} color="primary">
-                  <ShoppingCartIcon />
+                  <ShoppingCartIcon sx={{ fontSize: iconPx }} />
                 </Badge>
               </IconButton>
             </Link>
@@ -576,7 +643,7 @@ const Header = () => {
 
           <IconButton onClick={handleNotifOpen} aria-label="notifications">
             <Badge badgeContent={unreadCount} color="error">
-              <NotificationsNoneIcon />
+              <NotificationsNoneIcon sx={{ fontSize: "1.5rem" }} />
             </Badge>
           </IconButton>
 

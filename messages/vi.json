@@ -680,6 +680,7 @@
     "menu_title": "Thực đơn",
     "no_dishes": "Chưa có món ăn nào.",
     "no_dish_image": "Chưa có ảnh",
+    "no_description": "Chưa có mô tả món ăn",
     "out_of_stock": "Ngưng bán",
     "decrease_quantity": "Giảm số lượng",
     "increase_quantity": "Tăng số lượng",
@@ -711,7 +712,8 @@
     "no_image_alt": "Chưa có ảnh",
     "reserve_now": "Đặt chỗ ngay",
     "suggested_title": "Có thể bạn quan tâm",
-    "reviews_count": "đánh giá"
+    "reviews_count": "đánh giá",
+    "discounted_dishes_title": "Các món đang giảm giá"
   },
   "review": {
     "form_title": "Đánh giá nhà hàng",
@@ -884,7 +886,7 @@
         "title": "Cho phép truy cập vị trí",
         "content": "Cho phép SmartTasty truy cập vị trí của bạn để tìm nhà hàng gần bạn"
       },
-      "btn": { "later": "Để sau", "allow": "Cho phép", "reserve_now": "Đặt chỗ ngay", "get_directions": "Chỉ đường" },
+      "btn": { "later": "Để sau", "allow": "Cho phép", "reserve_now": "Đặt chỗ ngay", "get_directions": "Chỉ đường", "close": "Đóng" },
       "empty": { "no_nearby": "Không tìm thấy nhà hàng gần bạn hoặc chưa cho phép vị trí." },
       "aria": { "toggleView": "Chuyển chế độ xem" },
       "toggle": { "list": "Danh sách", "map": "Bản đồ" },
@@ -894,7 +896,57 @@
         "permission_needed": "Vui lòng cho phép vị trí để xem đường đi."
       },
       "map": { "youAreHere": "Bạn đang ở đây" },
-      "labels": { "distance": "Cách bạn {distance} km" }
+      "labels": { "distance": "Cách bạn {distance} km" },
+      "directions": {
+        "title": "Hướng dẫn đi đường",
+        "distance": "Khoảng cách",
+        "duration": "Thời gian di chuyển",
+        "minutes": "phút",
+        "noDirections": "Không có hướng dẫn đi đường",
+        "locale": "vi",
+        "instructions": {
+          "depart": {
+            "withStreet": "Bắt đầu trên {street}",
+            "withoutStreet": "Bắt đầu hành trình"
+          },
+          "arrive": {
+            "withStreet": "Đến nơi tại {street}",
+            "withoutStreet": "Đến nơi"
+          },
+          "turn": {
+            "withStreet": "Rẽ {direction} vào {street}",
+            "withoutStreet": "Rẽ {direction}",
+            "directions": {
+              "left": "trái",
+              "right": "phải",
+              "slight left": "trái nhẹ",
+              "slight right": "phải nhẹ",
+              "sharp left": "gắt trái",
+              "sharp right": "gắt phải"
+            }
+          },
+          "continue": {
+            "withStreet": "Tiếp tục đi thẳng trên {street}",
+            "withoutStreet": "Tiếp tục đi thẳng"
+          },
+          "merge": {
+            "withStreet": "Nhập vào {street}",
+            "withoutStreet": "Nhập vào đường chính"
+          },
+          "ramp": {
+            "withStreet": "Đi vào {street}",
+            "withoutStreet": "Đi vào đường nhánh"
+          },
+          "roundabout": {
+            "withStreet": "Vào bùng binh và ra ở lối {exit} vào {street}",
+            "withoutStreet": "Vào bùng binh và ra ở lối {exit}"
+          },
+          "fallback": {
+            "withStreet": "{street}",
+            "withoutStreet": "Tiếp tục"
+          }
+        }
+      }
     }
   },
   "payment": {

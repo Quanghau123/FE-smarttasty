@@ -15,7 +15,7 @@
   .headerInner {
     max-width: 1300px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 10px;
     height: 100%;
     display: flex;
     align-items: center;
@@ -35,12 +35,12 @@
       img {
         @media (max-width: 600px) {
           max-width: 50px !important;
-          max-height: 36px !important;
+        //  max-height: 36px !important;
         }
 
         @media (max-width: 480px) {
           max-width: 45px !important;
-          max-height: 32px !important;
+          // max-height: 32px !important;
         }
       }
     }
@@ -154,14 +154,14 @@
     button,
     a,
     :global(.MuiButton-root) {
-      padding: 4px 8px !important;
-      font-size: 0.7rem !important;
+     // padding: 4px 8px !important;
+   //   font-size: 0.7rem !important;
       min-width: auto !important;
       line-height: 1.05;
     }
 
     svg {
-      font-size: 1.2rem;
+      font-size: 1.5rem;
     }
   }
 
@@ -211,7 +211,7 @@
   }
 
   .rightSection {
-    gap: 2px;
+    gap: 0.4px;
 
     button,
     a,
@@ -224,7 +224,7 @@
     }
 
     svg {
-      font-size: 0.9rem; /* thu nhỏ icon cho đồng bộ */
+      font-size: 1.5rem; /* tăng kích thước icon mobile để dễ nhìn hơn */
     }
   }
 }

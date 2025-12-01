@@ -683,6 +683,7 @@
     "menu_title": "Menu",
     "no_dishes": "No dishes available.",
     "no_dish_image": "No image",
+    "no_description": "No description available",
     "out_of_stock": "Out of stock",
     "decrease_quantity": "Decrease quantity",
     "increase_quantity": "Increase quantity",
@@ -714,7 +715,8 @@
     "no_image_alt": "No image",
     "reserve_now": "Reserve now",
     "suggested_title": "You may also like",
-    "reviews_count": "reviews"
+    "reviews_count": "reviews",
+    "discounted_dishes_title": "Discounted Dishes"
   },
   "review": {
     "form_title": "Rate this restaurant",
@@ -950,7 +952,7 @@
         "title": "Allow location access",
         "content": "Allow SmartTasty to access your location to find nearby restaurants"
       },
-      "btn": { "later": "Later", "allow": "Allow", "reserve_now": "Reserve now", "get_directions": "Get directions" },
+      "btn": { "later": "Later", "allow": "Allow", "reserve_now": "Reserve now", "get_directions": "Get directions", "close": "Close" },
       "empty": { "no_nearby": "No nearby restaurants found or location permission not granted." },
       "aria": { "toggleView": "Toggle view mode" },
       "toggle": { "list": "List", "map": "Map" },
@@ -960,11 +962,61 @@
         "permission_needed": "Please allow location to view directions."
       },
       "map": { "youAreHere": "You are here" },
-      "labels": { "distance": "Distance: {distance} km" }
+      "labels": { "distance": "Distance: {distance} km" },
+      "directions": {
+        "title": "Turn-by-turn Directions",
+        "distance": "Distance",
+        "duration": "Travel Time",
+        "minutes": "mins",
+        "noDirections": "No directions available",
+        "locale": "en",
+        "instructions": {
+          "depart": {
+            "withStreet": "Start on {street}",
+            "withoutStreet": "Start your journey"
+          },
+          "arrive": {
+            "withStreet": "Arrive at {street}",
+            "withoutStreet": "Arrive at destination"
+          },
+          "turn": {
+            "withStreet": "Turn {direction} onto {street}",
+            "withoutStreet": "Turn {direction}",
+            "directions": {
+              "left": "left",
+              "right": "right",
+              "slight left": "slight left",
+              "slight right": "slight right",
+              "sharp left": "sharp left",
+              "sharp right": "sharp right"
+            }
+          },
+          "continue": {
+            "withStreet": "Continue straight on {street}",
+            "withoutStreet": "Continue straight"
+          },
+          "merge": {
+            "withStreet": "Merge onto {street}",
+            "withoutStreet": "Merge onto main road"
+          },
+          "ramp": {
+            "withStreet": "Take {street}",
+            "withoutStreet": "Take the ramp"
+          },
+          "roundabout": {
+            "withStreet": "Enter roundabout and take exit {exit} onto {street}",
+            "withoutStreet": "Enter roundabout and take exit {exit}"
+          },
+          "fallback": {
+            "withStreet": "{street}",
+            "withoutStreet": "Continue"
+          }
+        }
+      }
     }
   },
   "payment": {
-    "header": { "title": "Payment", "subtitle": "Choose your payment method and confirm your order" },
+    "header": { "title": "Payment", "subtitle": "Choose your payment method and confirm your order" },  
     "address": {
       "title": "Delivery address",
       "add_new": "Add new address",
