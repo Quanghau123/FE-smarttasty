@@ -85,8 +85,7 @@ const VNPayReturnPage: React.FC = () => {
     };
 
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  }, [query, dispatch, searchParams, t]);
 
   const formatCurrency = (value?: number) => {
     if (typeof value !== "number") return "-";
