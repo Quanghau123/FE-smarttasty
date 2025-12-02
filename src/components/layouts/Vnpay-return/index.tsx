@@ -62,24 +62,21 @@ const VNPayReturnPage: React.FC = () => {
     const run = async () => {
       setLoading(true);
       setError(null);
+
       try {
+        // Gọi API ngay lập tức
         const result = await dispatch(handleVNPayReturn({ query })).unwrap();
         setPayment(result);
 
-        // show toast for success/failure depending on returned status
-        const statusStr = (result?.status || "").toString().toLowerCase();
-        if (statusStr.includes("success") || statusStr === "1") {
-          toast.success(t("success_toast"));
-        } else {
-          toast.info(
-            t("result_toast") + ": " + (result?.status ?? t("unknown"))
-          );
-        }
+        // Đợi 5 giây
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        // Reload trang
+        window.location.reload();
       } catch (e: unknown) {
         const msg = (e as Error)?.message ?? t("error_processing");
         setError(msg);
         toast.error(msg);
-      } finally {
         setLoading(false);
       }
     };
