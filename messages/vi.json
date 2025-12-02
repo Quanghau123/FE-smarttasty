@@ -1069,6 +1069,7 @@
       "errors": {
         "fetch_failed": "Tải đơn hàng thất bại.",
         "no_permission": "Bạn không có quyền truy cập.",
+        "order_not_paid": "Không thể cập nhật trạng thái giao hàng. Đơn hàng chưa được xác nhận thanh toán.",
         "cannot_mark_delivered": "Không thể đánh dấu 'Đã giao' — kiểm tra trạng thái giao hàng/thanh toán.",
         "update_failed": "Cập nhật thất bại.",
         "action_failed": "Thao tác thất bại."
@@ -1152,9 +1153,19 @@
         "write_title": "Viết đánh giá của bạn",
         "rating_label": "Đánh giá:",
         "placeholder": "Chia sẻ cảm nhận về công thức này...",
-        "send_btn": "Gửi đánh giá"
+        "send_btn": "Gửi đánh giá",
+        "count_label": "đánh giá",
+        "no_reviews": "Chưa có đánh giá nào. Hãy là người đầu tiên!",
+        "anonymous_user": "Ẩn danh"
       },
-      "dialog": { "create_title": "Tạo công thức", "update_title": "Cập nhật công thức" },
+      "dialog": { 
+        "create_title": "Tạo công thức", 
+        "update_title": "Cập nhật công thức",
+        "delete_recipe_title": "Xác nhận xóa công thức",
+        "delete_recipe_text": "Bạn có chắc chắn muốn xóa công thức này không? Hành động này không thể hoàn tác.",
+        "delete_review_title": "Xác nhận xóa",
+        "delete_review_text": "Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không thể hoàn tác."
+      },
       "form": {
         "title": { "label": "Tiêu đề", "placeholder": "Nhập tiêu đề công thức" },
         "category": { "label": "Danh mục" },

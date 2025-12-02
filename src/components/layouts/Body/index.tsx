@@ -25,7 +25,6 @@ import { fetchAllRecipes } from "@/redux/slices/recipesSlice";
 import { fetchRecipeReviews } from "@/redux/slices/recipeReviewsSlice";
 import { Recipe } from "@/types/recipes";
 import StarIcon from "@mui/icons-material/Star";
-// chevron icons are provided inside HorizontalArrows component
 import HorizontalArrows from "@/components/commons/HorizontalArrows";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./styles.module.scss";
@@ -38,11 +37,16 @@ import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { Promotion } from "@/types/promotion";
 import { DishPromotion } from "@/types/dishpromotion";
+import { useScrollContext } from "@/components/commons/contexts/ScrollContext";
 
 const BodyPage = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
+  const { setScrollToAllRestaurants } = useScrollContext();
+
+  // Ref cho phần "Tất cả nhà hàng"
+  const allRestaurantsRef = useRef<HTMLDivElement | null>(null);
 
   const t = useTranslations("layout.body");
 
@@ -87,6 +91,16 @@ const BodyPage = () => {
 
   const searchParams = useSearchParams();
   const q = searchParams?.get("q") ?? "";
+
+  // Đăng ký hàm scroll với context
+  useEffect(() => {
+    setScrollToAllRestaurants(() => {
+      allRestaurantsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [setScrollToAllRestaurants]);
 
   // Load danh sách nhà hàng khi mở trang (initial load / when search changes)
   useEffect(() => {
@@ -1326,7 +1340,10 @@ const BodyPage = () => {
             </Paper>
           )}
 
-          <Paper sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2 }}>
+          <Paper
+            ref={allRestaurantsRef}
+            sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2 }}
+          >
             <Typography variant="h5" fontWeight={700} mb={2}>
               {t("sections.all_restaurants")}
             </Typography>

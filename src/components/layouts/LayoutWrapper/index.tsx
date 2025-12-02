@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import ScrollToTop from "@/components/layouts/ScrollToTop";
+import { ScrollProvider } from "@/components/commons/contexts/ScrollContext";
 
 export default function LocaleLayout({
   children,
@@ -21,11 +22,13 @@ export default function LocaleLayout({
   const hideHeaderFooter = authRoutes.some((route) => pathname.includes(route));
 
   return (
-    <>
-      {!hideHeaderFooter && <Header />}
-      <main>{children}</main>
-      {!hideHeaderFooter && <ScrollToTop />}
-      {!hideHeaderFooter && <Footer />}
-    </>
+    <ScrollProvider>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        {!hideHeaderFooter && <Header />}
+        <main style={{ flex: "1 0 auto" }}>{children}</main>
+        {!hideHeaderFooter && <ScrollToTop />}
+        {!hideHeaderFooter && <Footer />}
+      </div>
+    </ScrollProvider>
   );
 }

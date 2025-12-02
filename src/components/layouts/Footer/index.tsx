@@ -89,7 +89,7 @@ const Footer = () => {
                 <li className="flex items-center gap-2">
                   <LocationOnIcon className="text-[var(--text-color)] opacity-80" />
                   <span>
-                    12 Nguyễn Văn Bảo, phường Hạnh Thông, Quận Gò Vấp, TP.HCM
+                    12 Nguyễn Văn Bảo, Phường Hạnh Thông, Quận Gò Vấp, TP.HCM
                   </span>
                 </li>
                 <li className="flex items-center gap-2">

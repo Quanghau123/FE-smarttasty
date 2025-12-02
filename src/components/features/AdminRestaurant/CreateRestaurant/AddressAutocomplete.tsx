@@ -16,6 +16,7 @@ type Props = {
   onChange: (v: string) => void;
   onSelect: (address: string, lat: number, lon: number) => void;
   placeholder?: string;
+  preserveHouseNumber?: boolean;
 };
 
 const AddressAutocomplete: React.FC<Props> = ({
@@ -23,6 +24,7 @@ const AddressAutocomplete: React.FC<Props> = ({
   onChange,
   onSelect,
   placeholder,
+  preserveHouseNumber = true,
 }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -83,7 +85,32 @@ const AddressAutocomplete: React.FC<Props> = ({
       e.preventDefault();
       if (activeIndex >= 0 && suggestions[activeIndex]) {
         const s = suggestions[activeIndex];
-        onSelect(s.display_name, parseFloat(s.lat), parseFloat(s.lon));
+        // Build label similar to click handler
+        const house = s.address?.house_number;
+        const road =
+          s.address?.road ||
+          s.address?.pedestrian ||
+          s.address?.residential ||
+          "";
+        const city =
+          s.address?.city || s.address?.town || s.address?.village || "";
+        let label =
+          house && road
+            ? `${house} ${road}${city ? `, ${city}` : ""}`
+            : s.display_name;
+
+        // Preserve leading house number typed by user
+        if (preserveHouseNumber && value) {
+          const m = value.match(/^\s*([0-9]+[A-Za-z0-9\-\/]*)\b/);
+          if (m) {
+            const typedHouse = m[1];
+            const re = new RegExp(`^\s*${typedHouse}\b`);
+            if (!re.test(label)) {
+              label = `${typedHouse} ${label}`;
+            }
+          }
+        }
+        onSelect(label, parseFloat(s.lat), parseFloat(s.lon));
         setOpen(false);
       }
     } else if (e.key === "Escape") {
@@ -133,7 +160,18 @@ const AddressAutocomplete: React.FC<Props> = ({
                   selected={idx === activeIndex}
                   onMouseDown={(ev) => ev.preventDefault()} // prevent blur
                   onClick={() => {
-                    onSelect(label, parseFloat(s.lat), parseFloat(s.lon));
+                    let finalLabel = label;
+                    if (preserveHouseNumber && value) {
+                      const m = value.match(/^\s*([0-9]+[A-Za-z0-9\-\/]*)\b/);
+                      if (m) {
+                        const typedHouse = m[1];
+                        const re = new RegExp(`^\s*${typedHouse}\b`);
+                        if (!re.test(finalLabel)) {
+                          finalLabel = `${typedHouse} ${finalLabel}`;
+                        }
+                      }
+                    }
+                    onSelect(finalLabel, parseFloat(s.lat), parseFloat(s.lon));
                     setOpen(false);
                   }}
                 >

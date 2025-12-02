@@ -38,6 +38,45 @@ import {
   deleteReview,
 } from "@/redux/slices/reviewSlice";
 import ReviewList from "@/components/features/Review/ReviewList";
+import dynamic from "next/dynamic";
+import AddressAutocomplete from "@/components/features/AdminRestaurant/CreateRestaurant/AddressAutocomplete";
+
+const MapPicker = dynamic(() => import("@/components/layouts/MapPicker"), {
+  ssr: false,
+});
+
+// Simple reverse geocoding via Nominatim to build a friendly address
+async function reverseGeocode(
+  lat: number,
+  lon: number
+): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+    const data = (await res.json()) as {
+      display_name?: string;
+      address?: Record<string, string>;
+    };
+    if (!data) return null;
+    // Prefer a compact address when possible
+    const house = data.address?.house_number || "";
+    const road =
+      data.address?.road ||
+      data.address?.pedestrian ||
+      data.address?.residential ||
+      "";
+    const city =
+      data.address?.city || data.address?.town || data.address?.village || "";
+    const composed = `${house ? house + " " : ""}${road}${
+      city ? `, ${city}` : ""
+    }`.trim();
+    if (composed) return composed;
+    return data.display_name ?? null;
+  } catch {
+    return null;
+  }
+}
 // import { Description } from "@mui/icons-material");
 
 const RestaurantPage = () => {
@@ -98,9 +137,12 @@ const RestaurantPage = () => {
     description: "",
     openTime: "",
     closeTime: "",
-
+    latitude: 0,
+    longitude: 0,
     file: null as File | null,
   });
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -141,6 +183,8 @@ const RestaurantPage = () => {
         description: restaurantInfo.description || "",
         openTime: restaurantInfo.openTime || "",
         closeTime: restaurantInfo.closeTime || "",
+        latitude: restaurantInfo.latitude ?? 0,
+        longitude: restaurantInfo.longitude ?? 0,
         file: null,
       });
     }
@@ -162,6 +206,8 @@ const RestaurantPage = () => {
       description: formState.description,
       openTime: formState.openTime,
       closeTime: formState.closeTime,
+      latitude: formState.latitude,
+      longitude: formState.longitude,
       file: formState.file,
     };
 
@@ -186,6 +232,8 @@ const RestaurantPage = () => {
       description: restaurantInfo.description || "",
       openTime: restaurantInfo.openTime || "",
       closeTime: restaurantInfo.closeTime || "",
+      latitude: restaurantInfo.latitude ?? 0,
+      longitude: restaurantInfo.longitude ?? 0,
       file: null,
     });
     setIsEditing(false);
@@ -433,15 +481,53 @@ const RestaurantPage = () => {
                       size="medium"
                       sx={{ "& .MuiInputBase-root": { fontSize: "1rem" } }}
                     />
-                    <TextField
-                      fullWidth
-                      label={t("label.address")}
+                    <AddressAutocomplete
                       value={formState.address}
-                      onChange={(e) =>
-                        setFormState({ ...formState, address: e.target.value })
+                      onChange={(v) =>
+                        setFormState({ ...formState, address: v })
                       }
-                      size="medium"
+                      onSelect={(address, lat, lon) => {
+                        setFormState({
+                          ...formState,
+                          address,
+                          latitude: lat,
+                          longitude: lon,
+                        });
+                      }}
+                      placeholder={t("label.address") as string}
                     />
+                    {mounted && (
+                      <Box mt={1}>
+                        <Box
+                          sx={{
+                            height: 300,
+                            borderRadius: 1,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <MapPicker
+                            lat={formState.latitude || 10.762622}
+                            lng={formState.longitude || 106.660172}
+                            onChange={({ lat, lng }) => {
+                              setFormState({
+                                ...formState,
+                                latitude: lat,
+                                longitude: lng,
+                              });
+                              // reverse geocode to update address
+                              reverseGeocode(lat, lng).then((addr) => {
+                                if (addr) {
+                                  setFormState((prev) => ({
+                                    ...prev,
+                                    address: addr,
+                                  }));
+                                }
+                              });
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    )}
                     <TextField
                       fullWidth
                       label={t("label.description")}

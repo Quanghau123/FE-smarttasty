@@ -42,8 +42,10 @@ import LanguageSelector from "@/components/layouts/LanguageSelector";
 import ThemeToggleButton from "@/components/layouts/ThemeToggleButton";
 import { useTranslations } from "next-intl";
 import styles from "./styles.module.scss";
+import { useScrollContext } from "@/components/commons/contexts/ScrollContext";
 
 const Header = () => {
+  const { scrollToAllRestaurants } = useScrollContext();
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const iconPx = isXs ? 22 : 26; // unified icon size for mobile
@@ -374,6 +376,10 @@ const Header = () => {
                     onClick={() => {
                       setSelectedCategory(item.key);
                       setCategoryMenuAnchor(null);
+                      // Cuộn xuống phần "Tất cả nhà hàng"
+                      if (scrollToAllRestaurants) {
+                        setTimeout(() => scrollToAllRestaurants(), 100);
+                      }
                     }}
                     sx={{
                       border: "1px solid #e0e0e0",

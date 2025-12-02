@@ -336,7 +336,13 @@ const CartPage = () => {
     );
 
   return (
-    <Box sx={{ bgcolor: "#f5f5f5", minHeight: "100vh", py: 3 }}>
+    <Box
+      sx={(theme) => ({
+        bgcolor: theme.palette.background.default,
+        minHeight: "100vh",
+        py: 3,
+      })}
+    >
       <Container maxWidth="lg">
         {/* Header */}
         <Paper sx={{ p: 2, mb: 2 }}>
@@ -380,14 +386,14 @@ const CartPage = () => {
                 <Paper key={order.id} sx={{ mb: 2, overflow: "hidden" }}>
                   {/* Restaurant Header */}
                   <Box
-                    sx={{
-                      bgcolor: "#fff",
+                    sx={(theme) => ({
+                      bgcolor: theme.palette.background.paper,
                       p: 2,
-                      borderBottom: "1px solid #e0e0e0",
+                      borderBottom: `1px solid ${theme.palette.divider}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                    }}
+                    })}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Checkbox
@@ -434,14 +440,14 @@ const CartPage = () => {
                       return (
                         <Box
                           key={item.id}
-                          sx={{
+                          sx={(theme) => ({
                             p: 2,
-                            borderBottom: "1px solid #f0f0f0",
+                            borderBottom: `1px solid ${theme.palette.divider}`,
                             display: "flex",
                             alignItems: "center",
                             gap: 2,
-                            "&:hover": { bgcolor: "#fafafa" },
-                          }}
+                            "&:hover": { bgcolor: theme.palette.action.hover },
+                          })}
                         >
                           <Checkbox
                             checked={selectedItems.has(item.id)}
@@ -450,18 +456,18 @@ const CartPage = () => {
 
                           {/* Item Image */}
                           <Box
-                            sx={{
+                            sx={(theme) => ({
                               width: 80,
                               height: 80,
                               borderRadius: 1,
                               overflow: "hidden",
-                              bgcolor: "#f0f0f0",
+                              bgcolor: theme.palette.action.selected,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               position: "relative",
                               flexShrink: 0,
-                            }}
+                            })}
                           >
                             {item.image && !imageErrors.has(item.id) ? (
                               <Image
@@ -506,7 +512,7 @@ const CartPage = () => {
                             <Typography fontWeight="500" mb={0.5}>
                               {item.dishName}
                             </Typography>
-                            <Box>
+                            <Box sx={{ flex: 1 }}>
                               {typeof item.originalPrice === "number" &&
                               item.originalPrice > unitPrice ? (
                                 <Typography
@@ -528,12 +534,12 @@ const CartPage = () => {
 
                           {/* Quantity Controls */}
                           <Box
-                            sx={{
+                            sx={(theme) => ({
                               display: "flex",
                               alignItems: "center",
-                              border: "1px solid #e0e0e0",
+                              border: `1px solid ${theme.palette.divider}`,
                               borderRadius: 1,
-                            }}
+                            })}
                           >
                             <IconButton
                               size="small"
@@ -602,13 +608,13 @@ const CartPage = () => {
 
                   {/* Order Footer */}
                   <Box
-                    sx={{
+                    sx={(theme) => ({
                       p: 2,
-                      bgcolor: "#fafafa",
+                      bgcolor: theme.palette.action.hover,
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                    }}
+                    })}
                   >
                     <Button
                       size="small"

@@ -1021,15 +1021,17 @@ const RecipesLayout: React.FC = () => {
                 onClick={closeDetail}
                 sx={{
                   position: "absolute",
-                  top: 12,
-                  right: 12,
+                  top: 8,
+                  right: 8,
                   bgcolor: "rgba(0,0,0,0.5)",
                   color: "white",
                   zIndex: 10,
                   "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                  width: { xs: 32, sm: 40 },
+                  height: { xs: 32, sm: 40 },
                 }}
               >
-                <CloseIcon />
+                <CloseIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
               </IconButton>
 
               <Box
@@ -1043,7 +1045,7 @@ const RecipesLayout: React.FC = () => {
                 <Box
                   sx={{
                     width: { xs: "100%", sm: "50%" },
-                    height: { xs: 250, sm: 300 },
+                    height: { xs: 180, sm: 300 },
                     position: "relative",
                     overflow: "hidden",
                     flexShrink: 0,
@@ -1070,44 +1072,70 @@ const RecipesLayout: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    p: 3,
+                    p: { xs: 2, sm: 3 },
                     bgcolor: "var(--recipes-primary-rgba)",
                     flexShrink: 0,
                   }}
                 >
-                  <Typography variant="h4" fontWeight="bold" gutterBottom>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    gutterBottom
+                    sx={{
+                      fontSize: { xs: "1.25rem", sm: "1.5rem", md: "2rem" },
+                      lineHeight: { xs: 1.3, sm: 1.4 },
+                      mb: { xs: 1, sm: 2 },
+                    }}
+                  >
                     {selectedRecipe.title}
                   </Typography>
 
-                  <Stack spacing={2}>
+                  <Stack spacing={{ xs: 1, sm: 2 }}>
                     <Chip
                       label={
                         RecipeCategoryDisplayNames[
                           selectedRecipe.category as RecipeCategory
                         ] ?? selectedRecipe.category
                       }
+                      size="small"
                       sx={{
                         width: "fit-content",
                         fontWeight: "bold",
                         bgcolor: "var(--recipes-primary)",
                         color: "white",
+                        fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                        height: { xs: 24, sm: 32 },
                       }}
                     />
 
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <PersonIcon
-                        sx={{ fontSize: 18, color: "text.secondary" }}
+                        sx={{
+                          fontSize: { xs: 14, sm: 18 },
+                          color: "text.secondary",
+                        }}
                       />
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                      >
                         {selectedRecipe.user?.userName || t("anonymous")}
                       </Typography>
                     </Stack>
 
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <TimeIcon
-                        sx={{ fontSize: 18, color: "text.secondary" }}
+                        sx={{
+                          fontSize: { xs: 14, sm: 18 },
+                          color: "text.secondary",
+                        }}
                       />
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                      >
                         {new Date(
                           selectedRecipe.createdAt
                         ).toLocaleDateString()}
@@ -1143,7 +1171,8 @@ const RecipesLayout: React.FC = () => {
                         readOnly
                       />
                       <Typography variant="body2" color="text.secondary">
-                        {getRecipeReviews(selectedRecipe.id).length} đánh giá
+                        {getRecipeReviews(selectedRecipe.id).length}{" "}
+                        {t("review.count_label")}
                       </Typography>
                     </Box>
                   </Stack>
@@ -1262,7 +1291,7 @@ const RecipesLayout: React.FC = () => {
                         textAlign="center"
                         sx={{ py: 3 }}
                       >
-                        Chưa có đánh giá nào. Hãy là người đầu tiên!
+                        {t("review.no_reviews")}
                       </Typography>
                     ) : (
                       getRecipeReviews(selectedRecipe.id).map((review) => (
@@ -1286,7 +1315,8 @@ const RecipesLayout: React.FC = () => {
                                     variant="subtitle2"
                                     fontWeight="bold"
                                   >
-                                    {review.userName || "Ẩn danh"}
+                                    {review.userName ||
+                                      t("review.anonymous_user")}
                                   </Typography>
                                   <Stack
                                     direction="row"
@@ -1343,23 +1373,20 @@ const RecipesLayout: React.FC = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogTitle>{t("dialog.delete_review_title")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không
-            thể hoàn tác.
-          </Typography>
+          <Typography>{t("dialog.delete_review_text")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteReviewDialog} color="inherit">
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button
             onClick={handleDeleteReview}
             color="error"
             variant="contained"
           >
-            Xóa
+            {t("btn.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1371,19 +1398,16 @@ const RecipesLayout: React.FC = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Xác nhận xóa công thức</DialogTitle>
+        <DialogTitle>{t("dialog.delete_recipe_title")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa công thức này không? Hành động này không
-            thể hoàn tác.
-          </Typography>
+          <Typography>{t("dialog.delete_recipe_text")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteRecipeDialog} color="inherit">
-            Hủy
+            {t("btn.cancel")}
           </Button>
           <Button onClick={handleDelete} color="error" variant="contained">
-            Xóa
+            {t("btn.delete")}
           </Button>
         </DialogActions>
       </Dialog>

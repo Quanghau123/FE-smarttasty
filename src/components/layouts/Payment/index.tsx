@@ -117,24 +117,24 @@ const PaymentPage = () => {
       name: t("delivery.priority.name"),
       description: t("delivery.priority.description"),
       price: 25000,
-      estimatedTime: t("delivery.priority.estimatedTime"),
-      icon: <FlashOnIcon sx={{ color: "#ff6b35" }} />,
+      estimatedTime: t("delivery.priority.estimatedTime", { min: 15, max: 25 }),
+      icon: <FlashOnIcon sx={{ color: "warning.main" }} />,
     },
     {
       id: "fast",
       name: t("delivery.fast.name"),
       description: t("delivery.fast.description"),
       price: 15000,
-      estimatedTime: t("delivery.fast.estimatedTime"),
-      icon: <LocalShippingIcon sx={{ color: "#1976d2" }} />,
+      estimatedTime: t("delivery.fast.estimatedTime", { min: 25, max: 40 }),
+      icon: <LocalShippingIcon sx={{ color: "primary.main" }} />,
     },
     {
       id: "economy",
       name: t("delivery.economy.name"),
       description: t("delivery.economy.description"),
       price: 10000,
-      estimatedTime: t("delivery.economy.estimatedTime"),
-      icon: <SavingsIcon sx={{ color: "#2e7d32" }} />,
+      estimatedTime: t("delivery.economy.estimatedTime", { min: 40, max: 60 }),
+      icon: <SavingsIcon sx={{ color: "success.main" }} />,
     },
   ];
 
@@ -442,22 +442,22 @@ const PaymentPage = () => {
   /* ------------------------------- RENDER UI ------------------------------- */
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         minHeight: "100vh",
-        bgcolor: "#f5f5f5",
+        bgcolor: theme.palette.background.default,
         pb: 4,
-      }}
+      })}
     >
       {/* Header */}
       <Box
-        sx={{
-          bgcolor: "white",
-          borderBottom: "1px solid #e0e0e0",
+        sx={(theme) => ({
+          bgcolor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
           position: "sticky",
           top: 0,
           zIndex: 10,
-          boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-        }}
+          boxShadow: theme.shadows[1],
+        })}
       >
         <Box
           sx={{
@@ -491,14 +491,14 @@ const PaymentPage = () => {
       >
         {/* Delivery Address Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            boxShadow: theme.shadows[1],
             "&:hover": {
-              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+              boxShadow: theme.shadows[3],
             },
             transition: "all 0.3s ease",
-          }}
+          })}
         >
           <CardContent>
             <Box
@@ -575,10 +575,10 @@ const PaymentPage = () => {
 
         {/* Restaurant & Order Items Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <CardContent>
             <Box display="flex" alignItems="center" gap={1.5} mb={2}>
@@ -603,24 +603,24 @@ const PaymentPage = () => {
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
-                  sx={{
+                  sx={(theme) => ({
                     p: 1.5,
-                    bgcolor: "#f9f9f9",
+                    bgcolor: theme.palette.action.hover,
                     borderRadius: 1,
-                  }}
+                  })}
                 >
                   <Box display="flex" alignItems="center" gap={1.5} flex={1}>
                     <Box
-                      sx={{
+                      sx={(theme) => ({
                         width: 48,
                         height: 48,
-                        bgcolor: "#e3f2fd",
+                        bgcolor: theme.palette.action.selected,
                         borderRadius: 1,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
-                      }}
+                      })}
                     >
                       {item.image ? (
                         <Box
@@ -657,10 +657,10 @@ const PaymentPage = () => {
 
         {/* Delivery Options Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <CardContent>
             <Box display="flex" alignItems="center" gap={1.5} mb={2}>
@@ -680,23 +680,25 @@ const PaymentPage = () => {
                 {deliveryOptions.map((option) => (
                   <Box
                     key={option.id}
-                    sx={{
+                    sx={(theme) => ({
                       border: "2px solid",
                       borderColor:
                         selectedDelivery === option.id
                           ? "primary.main"
-                          : "#e0e0e0",
+                          : theme.palette.divider,
                       borderRadius: 2,
                       p: 2,
                       cursor: "pointer",
                       transition: "all 0.3s ease",
                       bgcolor:
-                        selectedDelivery === option.id ? "#f0f7ff" : "white",
+                        selectedDelivery === option.id
+                          ? theme.palette.action.selected
+                          : theme.palette.background.paper,
                       "&:hover": {
                         borderColor: "primary.main",
-                        bgcolor: "#f0f7ff",
+                        bgcolor: theme.palette.action.hover,
                       },
-                    }}
+                    })}
                     onClick={() => setSelectedDelivery(option.id)}
                   >
                     <FormControlLabel
@@ -756,10 +758,10 @@ const PaymentPage = () => {
 
         {/* Voucher Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <CardContent>
             <Box
@@ -800,17 +802,19 @@ const PaymentPage = () => {
                   }
                   onClick={() => setOpenVoucherDialog(true)}
                   disabled={applyingVoucher}
-                  sx={{
+                  sx={(theme) => ({
                     textTransform: "none",
                     justifyContent: "space-between",
                     p: 1.5,
-                    borderColor: voucherCode ? "success.main" : "#e0e0e0",
+                    borderColor: voucherCode
+                      ? "success.main"
+                      : theme.palette.divider,
                     color: voucherCode ? "success.main" : "text.primary",
                     "&:hover": {
                       borderColor: "primary.main",
-                      bgcolor: "#f0f7ff",
+                      bgcolor: theme.palette.action.hover,
                     },
-                  }}
+                  })}
                 >
                   <Typography>
                     {voucherCode
@@ -832,10 +836,10 @@ const PaymentPage = () => {
 
         {/* Payment Method Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <CardContent>
             <Box display="flex" alignItems="center" gap={1.5} mb={2}>
@@ -857,20 +861,25 @@ const PaymentPage = () => {
             >
               <Stack spacing={1.5}>
                 <Box
-                  sx={{
+                  sx={(theme) => ({
                     border: "2px solid",
                     borderColor:
-                      paymentMethod === "COD" ? "primary.main" : "#e0e0e0",
+                      paymentMethod === "COD"
+                        ? "primary.main"
+                        : theme.palette.divider,
                     borderRadius: 2,
                     p: 2,
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    bgcolor: paymentMethod === "COD" ? "#f0f7ff" : "white",
+                    bgcolor:
+                      paymentMethod === "COD"
+                        ? theme.palette.action.selected
+                        : theme.palette.background.paper,
                     "&:hover": {
                       borderColor: "primary.main",
-                      bgcolor: "#f0f7ff",
+                      bgcolor: theme.palette.action.hover,
                     },
-                  }}
+                  })}
                   onClick={() => setPaymentMethod("COD")}
                 >
                   <FormControlLabel
@@ -894,20 +903,25 @@ const PaymentPage = () => {
                 </Box>
 
                 <Box
-                  sx={{
+                  sx={(theme) => ({
                     border: "2px solid",
                     borderColor:
-                      paymentMethod === "VNPAY" ? "primary.main" : "#e0e0e0",
+                      paymentMethod === "VNPAY"
+                        ? "primary.main"
+                        : theme.palette.divider,
                     borderRadius: 2,
                     p: 2,
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    bgcolor: paymentMethod === "VNPAY" ? "#f0f7ff" : "white",
+                    bgcolor:
+                      paymentMethod === "VNPAY"
+                        ? theme.palette.action.selected
+                        : theme.palette.background.paper,
                     "&:hover": {
                       borderColor: "primary.main",
-                      bgcolor: "#f0f7ff",
+                      bgcolor: theme.palette.action.hover,
                     },
-                  }}
+                  })}
                   onClick={() => setPaymentMethod("VNPAY")}
                 >
                   <FormControlLabel
@@ -936,10 +950,10 @@ const PaymentPage = () => {
 
         {/* Payment Summary Section */}
         <Card
-          sx={{
+          sx={(theme) => ({
             mb: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
+            boxShadow: theme.shadows[1],
+          })}
         >
           <CardContent>
             <Typography variant="h6" fontWeight="600" mb={2}>
@@ -1017,16 +1031,16 @@ const PaymentPage = () => {
           size="large"
           disabled={loading}
           onClick={handleConfirmPayment}
-          sx={{
+          sx={(theme) => ({
             py: 2,
             fontSize: "1.1rem",
             fontWeight: "700",
             textTransform: "none",
-            boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+            boxShadow: theme.shadows[4],
             "&:hover": {
-              boxShadow: "0 6px 16px rgba(25, 118, 210, 0.4)",
+              boxShadow: theme.shadows[6],
             },
-          }}
+          })}
         >
           {loading ? (
             <Box display="flex" alignItems="center" gap={1}>
@@ -1187,18 +1201,22 @@ const PaymentPage = () => {
           <Stack spacing={2} sx={{ mt: 1 }}>
             {/* No voucher option */}
             <Box
-              sx={{
+              sx={(theme) => ({
                 border: "2px solid",
-                borderColor: !voucherCode ? "primary.main" : "#e0e0e0",
+                borderColor: !voucherCode
+                  ? "primary.main"
+                  : theme.palette.divider,
                 borderRadius: 2,
                 p: 2,
                 cursor: "pointer",
-                bgcolor: !voucherCode ? "#f0f7ff" : "white",
+                bgcolor: !voucherCode
+                  ? theme.palette.action.selected
+                  : theme.palette.background.paper,
                 "&:hover": {
                   borderColor: "primary.main",
-                  bgcolor: "#f0f7ff",
+                  bgcolor: theme.palette.action.hover,
                 },
-              }}
+              })}
               onClick={async () => {
                 if (!order) return;
                 setApplyingVoucher(true);
@@ -1271,32 +1289,32 @@ const PaymentPage = () => {
               return (
                 <Box
                   key={i}
-                  sx={{
+                  sx={(theme) => ({
                     border: "2px solid",
                     borderColor:
                       voucherCode === opt.value
                         ? "primary.main"
                         : !isEligible
-                        ? "#d32f2f"
-                        : "#e0e0e0",
+                        ? theme.palette.error.main
+                        : theme.palette.divider,
                     borderRadius: 2,
                     p: 2,
                     cursor: isEligible ? "pointer" : "not-allowed",
                     bgcolor:
                       voucherCode === opt.value
-                        ? "#f0f7ff"
+                        ? theme.palette.action.selected
                         : !isEligible
-                        ? "#f5f5f5"
-                        : "white",
+                        ? theme.palette.action.disabledBackground
+                        : theme.palette.background.paper,
                     opacity: isEligible ? 1 : 0.6,
                     position: "relative",
                     "&:hover": isEligible
                       ? {
                           borderColor: "primary.main",
-                          bgcolor: "#f0f7ff",
+                          bgcolor: theme.palette.action.hover,
                         }
                       : {},
-                  }}
+                  })}
                   onClick={async (e) => {
                     // Block action if not eligible
                     if (!isEligible) {

@@ -126,6 +126,12 @@ export default function StaffRestaurantOrders() {
     );
     const currentOrder = paymentForOrder?.order;
 
+    // Check if order is paid before allowing any delivery status change
+    if (String(currentOrder?.status || "").toLowerCase() !== "paid") {
+      toast.error(t("errors.order_not_paid"));
+      return;
+    }
+
     // Prevent setting Delivered unless order is in shipping/delivering and COD (if present) is collected
     if (
       mapped === DeliveryStatus.Delivered &&
@@ -608,6 +614,11 @@ export default function StaffRestaurantOrders() {
                                             o?.id ?? 0,
                                             e.target.value as DeliveryStatus
                                           )
+                                        }
+                                        disabled={
+                                          String(
+                                            o?.status || ""
+                                          ).toLowerCase() !== "paid"
                                         }
                                       >
                                         {statusOptions.map((s) => {

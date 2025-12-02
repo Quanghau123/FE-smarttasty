@@ -826,6 +826,7 @@
       "errors": {
         "fetch_failed": "Failed to fetch orders.",
         "no_permission": "You don't have permission to access these orders.",
+        "order_not_paid": "Cannot update delivery status. Order payment has not been confirmed yet.",
         "cannot_mark_delivered": "Cannot mark as delivered — check delivery/payment status.",
         "update_failed": "Update failed.",
         "action_failed": "Action failed."
@@ -1156,9 +1157,19 @@
       "write_title": "Write your review",
       "rating_label": "Rating:",
       "placeholder": "Share your thoughts about this recipe...",
-      "send_btn": "Send Review"
+      "send_btn": "Send Review",
+      "count_label": "reviews",
+      "no_reviews": "No reviews yet. Be the first!",
+      "anonymous_user": "Anonymous"
     },
-    "dialog": { "create_title": "Create Recipe", "update_title": "Update Recipe" },
+    "dialog": { 
+      "create_title": "Create Recipe", 
+      "update_title": "Update Recipe",
+      "delete_recipe_title": "Confirm delete recipe",
+      "delete_recipe_text": "Are you sure you want to delete this recipe? This action cannot be undone.",
+      "delete_review_title": "Confirm delete",
+      "delete_review_text": "Are you sure you want to delete this review? This action cannot be undone."
+    },
     "form": {
       "title": { "label": "Title", "placeholder": "Enter recipe title" },
       "category": { "label": "Category" },
