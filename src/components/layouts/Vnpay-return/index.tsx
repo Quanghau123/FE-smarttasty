@@ -52,44 +52,64 @@ const VNPayReturnPage: React.FC = () => {
   useEffect(() => {
     if (!query) return;
 
-    // Extract VNPay parameters from URL
     const params: VNPayParams = {};
     searchParams?.forEach((value, key) => {
       params[key as keyof VNPayParams] = value;
     });
     setVnpayParams(params);
 
-    const run = async () => {
+    let isMounted = true;
+
+    const fetchPaymentStatus = async () => {
       setLoading(true);
       setError(null);
 
-      try {
-        // Đợi 5 giây để backend IPN xử lý xong
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+      const maxAttempts = 24; // Poll tối đa 24 lần (2 phút nếu interval 5s)
+      const interval = 5000; // 5 giây
 
-        // Sau đó mới gọi API
-        const result = await dispatch(handleVNPayReturn({ query })).unwrap();
-        setPayment(result);
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const result = await dispatch(handleVNPayReturn({ query })).unwrap();
 
-        // show toast for success/failure depending on returned status
-        const statusStr = (result?.status || "").toString().toLowerCase();
-        if (statusStr.includes("success") || statusStr === "1") {
-          toast.success(t("success_toast"));
-        } else {
-          toast.info(
-            t("result_toast") + ": " + (result?.status ?? t("unknown"))
-          );
+          if (!isMounted) return;
+
+          const statusStr = (result?.status || "").toString().toLowerCase();
+          setPayment(result);
+
+          if (statusStr.includes("success") || statusStr === "1") {
+            toast.success(t("success_toast"));
+            break; // thành công, thoát polling
+          }
+
+          // Nếu pending thì chờ lần tiếp theo
+          if (statusStr === "pending" || statusStr === "0") {
+            await new Promise((res) => setTimeout(res, interval));
+          } else {
+            toast.info(t("result_toast") + ": " + statusStr);
+            break;
+          }
+        } catch (err: unknown) {
+          const msg = (err as Error)?.message ?? t("error_processing");
+          if (!isMounted) return;
+          setError(msg);
+
+          // Nếu chưa hết attempt, đợi interval trước khi retry
+          if (attempt < maxAttempts) {
+            await new Promise((res) => setTimeout(res, interval));
+          } else {
+            toast.error(msg);
+          }
         }
-      } catch (e: unknown) {
-        const msg = (e as Error)?.message ?? t("error_processing");
-        setError(msg);
-        toast.error(msg);
-      } finally {
-        setLoading(false);
       }
+
+      if (isMounted) setLoading(false);
     };
 
-    run();
+    fetchPaymentStatus();
+
+    return () => {
+      isMounted = false; // clean-up tránh setState khi unmounted
+    };
   }, [query, dispatch, searchParams, t]);
 
   const formatCurrency = (value?: number) => {
