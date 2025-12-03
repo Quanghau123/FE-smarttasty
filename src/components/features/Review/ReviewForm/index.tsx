@@ -19,7 +19,7 @@ const ReviewForm = () => {
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
 
-  // 🔑 Lấy userId từ localStorage
+  // Lấy userId từ localStorage
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user"); // key "user"
@@ -53,10 +53,10 @@ const ReviewForm = () => {
       setRating(null);
       setComment("");
 
-      // 🔄 Reload reviews list để hiển thị review mới
+      // Reload reviews list để hiển thị review mới
       await dispatch(getReviewsByRestaurant(restaurant.id));
 
-      // 🔄 KHÔNG reload restaurant info - để socket tự động update
+      // KHÔNG reload restaurant info - để socket tự động update
       // Backend sẽ gửi event qua Kafka → Socket broadcast →
       // → Tất cả users (kể cả user vừa submit) nhận realtime update
     } catch (err) {

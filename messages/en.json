@@ -49,12 +49,14 @@
       "no_restaurant": "You don't have a restaurant",
       "create_restaurant": "Create restaurant",
       "success": {
-        "update_success": "Restaurant updated successfully!"
+        "update_success": "Restaurant updated successfully!",
+        "delete_review_success": "Review deleted successfully!"
       },
       "errors": {
         "no_permission": "You don't have access.",
         "no_token": "Token not found, please log in again.",
-        "update_failed": "Update failed."
+        "update_failed": "Update failed.",
+        "delete_review_failed": "Cannot delete review. Please try again."
       }
     },
     "promotion": {
@@ -133,7 +135,22 @@
         "delete_text": "Are you sure you want to delete this promotion?"
       },
       "errors": {
-        "no_restaurant_account": "Account has no restaurant!"
+        "no_restaurant_account": "Account has no restaurant!",
+        "missing_restaurant": "Restaurant is missing!",
+        "missing_title": "Enter a title!",
+        "missing_dates": "Select start & end dates!",
+        "operation_failed": "Operation failed. Please try again!",
+        "delete_failed": "Cannot delete. Please try again!",
+        "assign_failed": "Cannot assign. Please try again later",
+        "cancel_failed": "Cannot cancel. Please try again",
+        "invalid_min_order": "Please enter a valid amount greater than 0"
+      },
+      "success": {
+        "update_success": "Promotion updated successfully",
+        "create_success": "Promotion created successfully",
+        "delete_success": "Promotion deleted successfully",
+        "assign_min_order": "Minimum order value assigned successfully",
+        "cancel_min_order": "Minimum order value assignment cancelled successfully"
       },
       "aria": {
         "assign_min_order": "Assign minimum order value"

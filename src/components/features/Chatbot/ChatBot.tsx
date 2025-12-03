@@ -30,7 +30,7 @@ const sendChatMessage = async (text: string, image?: File) => {
   const token = localStorage.getItem("access_token"); // lấy token từ localStorage
 
   const formData = new FormData();
-  formData.append("accessToken", token || ""); // 👈 thêm token vào form-data
+  formData.append("accessToken", token || ""); // thêm token vào form-data
   formData.append("text", text);
   if (image) {
     formData.append("image", image);

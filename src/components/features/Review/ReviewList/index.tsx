@@ -180,7 +180,7 @@ const ReviewList = ({
             )}
           </Box>
 
-          {/* ⭐ Rating component của MUI */}
+          {/* Rating component của MUI */}
           <Rating
             name={`review-${r.id}`}
             value={r.rating}

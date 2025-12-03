@@ -107,7 +107,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
           onChange={(e) => setAdultCount(Number(e.target.value))}
           sx={{ flex: 1 }}
         >
-          {[1, 2, 3, 4, 5, 6].map((num) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
             <MenuItem key={num} value={num}>
               {num}
             </MenuItem>
@@ -121,7 +121,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
           onChange={(e) => setChildCount(Number(e.target.value))}
           sx={{ flex: 1 }}
         >
-          {[0, 1, 2, 3, 4].map((num) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
             <MenuItem key={num} value={num}>
               {num}
             </MenuItem>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Box,
@@ -21,6 +21,7 @@ import {
   ListItemAvatar,
   ListItemText,
   Divider,
+  Pagination,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -170,6 +171,9 @@ export default function AdminRestaurantOrdersPage() {
     error,
   } = useAppSelector((s) => s.payment);
 
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
+
   useEffect(() => {
     const token = getAccessToken();
     if (!restaurant && token) {
@@ -190,6 +194,19 @@ export default function AdminRestaurantOrdersPage() {
   }, [error]);
 
   const rows = useMemo(() => restaurantPayments || [], [restaurantPayments]);
+
+  const totalPages = Math.ceil(rows.length / itemsPerPage);
+  const paginatedRows = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    return rows.slice(startIndex, startIndex + itemsPerPage);
+  }, [rows, page]);
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
 
   const handleChangeOrderStatus = async (orderId: number, status: string) => {
     // Guard: prevent reverting to a previous status
@@ -294,7 +311,7 @@ export default function AdminRestaurantOrdersPage() {
       </Typography>
 
       <Stack spacing={1}>
-        {rows.map((p: InfoPayment) => (
+        {paginatedRows.map((p: InfoPayment) => (
           <Paper key={p.id} variant="outlined" sx={{ p: 2 }}>
             <Box
               display="flex"
@@ -521,6 +538,18 @@ export default function AdminRestaurantOrdersPage() {
           </Paper>
         )}
       </Stack>
+
+      {rows.length > 0 && (
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            size="small"
+          />
+        </Box>
+      )}
     </Container>
   );
 }

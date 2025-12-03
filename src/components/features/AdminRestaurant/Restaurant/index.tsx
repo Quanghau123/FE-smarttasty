@@ -279,13 +279,13 @@ const RestaurantPage = () => {
 
     try {
       await dispatch(deleteReview(reviewToDelete)).unwrap();
-      toast.success("Đã xóa đánh giá thành công!");
+      toast.success(t("success.delete_review_success"));
       // Refresh reviews after deletion
       if (restaurantInfo?.id) {
         dispatch(getReviewsByRestaurant(restaurantInfo.id));
       }
     } catch (error) {
-      toast.error("Không thể xóa đánh giá. Vui lòng thử lại.");
+      toast.error(t("errors.delete_review_failed"));
       console.error("Delete review error:", error);
     } finally {
       setDeleteDialogOpen(false);

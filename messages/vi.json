@@ -49,12 +49,14 @@
       "no_restaurant": "Bạn chưa có nhà hàng",
       "create_restaurant": "Tạo nhà hàng",
       "success": {
-        "update_success": "Cập nhật nhà hàng thành công!"
+        "update_success": "Cập nhật nhà hàng thành công!",
+        "delete_review_success": "Đã xóa đánh giá thành công!"
       },
       "errors": {
         "no_permission": "Bạn không có quyền truy cập.",
         "no_token": "Không tìm thấy token, vui lòng đăng nhập lại.",
-        "update_failed": "Cập nhật thất bại."
+        "update_failed": "Cập nhật thất bại.",
+        "delete_review_failed": "Không thể xóa đánh giá. Vui lòng thử lại."
       }
     },
     "promotion": {
@@ -133,7 +135,22 @@
         "delete_text": "Bạn có chắc chắn muốn xoá khuyến mãi này không?"
       },
       "errors": {
-        "no_restaurant_account": "Tài khoản chưa có nhà hàng!"
+        "no_restaurant_account": "Tài khoản chưa có nhà hàng!",
+        "missing_restaurant": "Thiếu nhà hàng!",
+        "missing_title": "Nhập tiêu đề!",
+        "missing_dates": "Chọn ngày bắt đầu & kết thúc!",
+        "operation_failed": "Thao tác thất bại. Vui lòng thử lại!",
+        "delete_failed": "Không thể xoá. Vui lòng thử lại!",
+        "assign_failed": "Không thể gán. Vui lòng thử lại sau",
+        "cancel_failed": "Không thể huỷ. Vui lòng thử lại",
+        "invalid_min_order": "Vui lòng nhập số tiền hợp lệ lớn hơn 0"
+      },
+      "success": {
+        "update_success": "Cập nhật khuyến mãi thành công",
+        "create_success": "Thêm khuyến mãi thành công",
+        "delete_success": "Xoá khuyến mãi thành công",
+        "assign_min_order": "Gán số tiền tối thiểu cho khuyến mãi thành công",
+        "cancel_min_order": "Huỷ gán số tiền tối thiểu thành công"
       },
       "aria": {
         "assign_min_order": "Gán số tiền tối thiểu"

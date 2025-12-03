@@ -75,7 +75,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     if (changePasswordSuccess) {
       toast.success(t("success.reset"));
 
-      // ✅ Xóa tokens từ cookie và Redux user
+      // Xóa tokens từ cookie và Redux user
       clearTokens();
       dispatch(clearUser());
 

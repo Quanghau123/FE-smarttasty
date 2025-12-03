@@ -34,7 +34,7 @@ const LoginPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const t = useTranslations("login"); // ✅ dùng namespace "login"
+  const t = useTranslations("login"); // dùng namespace "login"
 
   const { loading, error, user } = useSelector(
     (state: RootState) => state.user
@@ -53,7 +53,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (user && !hasShownSuccessToast) {
       setHasShownSuccessToast(true);
-      toast.success(t("login_success")); // ✅ thêm key login_success trong file dịch
+      toast.success(t("login_success")); // thêm key login_success trong file dịch
       switch (user.role) {
         case "admin":
           router.push("/admin");

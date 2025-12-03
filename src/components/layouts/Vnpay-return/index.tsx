@@ -163,6 +163,7 @@ const VNPayReturnPage: React.FC = () => {
         maxWidth: 920,
         mx: "auto",
         mt: { xs: 4, md: 8 },
+        mb: { xs: 4, md: 8 },
         px: { xs: 2, md: 4 },
         py: { xs: 3, md: 5 },
         bgcolor: "background.paper",

@@ -89,7 +89,7 @@ const Register = () => {
     const action = await dispatch(createUser({ ...formValues, role: "user" }));
 
     if (createUser.fulfilled.match(action)) {
-      toast.success("✅ " + t_register("register_btn_title") + " thành công!");
+      toast.success(t_register("register_btn_title") + " thành công!");
       router.push("/login");
     } else {
       toast.error(action.payload as string);

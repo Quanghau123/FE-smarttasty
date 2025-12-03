@@ -234,7 +234,7 @@ const ProductPage = () => {
     setVoucherDish(dish);
     setSelectedPromotionId("");
     setOpenVoucherDialog(true);
-    // ❌ không cần gọi fetch theo dish id nữa
+    //không cần gọi fetch theo dish id nữa
   };
 
   const handleCloseVoucherModal = () => {
@@ -263,7 +263,7 @@ const ProductPage = () => {
     if (!selectedPromotionId)
       return toast.warning(t("errors.select_promotion"));
     try {
-      // ✅ Chỉ cần gửi dishId và promotionId, BE sẽ tự tính toán giá
+      //Chỉ cần gửi dishId và promotionId, BE sẽ tự tính toán giá
       const payload = {
         dishId: voucherDish.id,
         promotionId: Number(selectedPromotionId),
@@ -331,7 +331,7 @@ const ProductPage = () => {
       : Math.ceil(dishes.length / itemsPerPage);
 
   /**
-   * ✅ Helper: Lấy giá tốt nhất (thấp nhất) từ danh sách khuyến mãi
+   *Helper: Lấy giá tốt nhất (thấp nhất) từ danh sách khuyến mãi
    *
    * BE đã tính toán sẵn giá giảm qua API GET /api/DishPromotions
    * FE chỉ cần lấy giá thấp nhất từ các discountedPrice mà BE đã tính
@@ -813,7 +813,7 @@ const ProductPage = () => {
               fullWidth
               disabled
             />
-
+            
             {voucherDish &&
               (() => {
                 const related = dishPromotions.filter(

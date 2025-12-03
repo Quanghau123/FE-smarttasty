@@ -8,6 +8,7 @@ type ShineProps = {
   initialRuns?: number; // number of sweeps to run on mount
   intervalMs?: number; // interval for repeated sweeps after initial
 };
+// Tạo hiệu ứng shine/glass sweep trên component con
 
 /**
  * Shine/glass sweep overlay wrapper.

@@ -210,10 +210,10 @@ const PromotionPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!restaurantId) return toast.error("Thiếu nhà hàng!");
-    if (!formData.title.trim()) return toast.warning("Nhập tiêu đề!");
+    if (!restaurantId) return toast.error(t("errors.missing_restaurant"));
+    if (!formData.title.trim()) return toast.warning(t("errors.missing_title"));
     if (!formData.startDate || !formData.endDate)
-      return toast.warning("Chọn ngày bắt đầu & kết thúc!");
+      return toast.warning(t("errors.missing_dates"));
 
     const payload = {
       restaurantId,
@@ -232,15 +232,15 @@ const PromotionPage = () => {
         await dispatch(
           updatePromotion({ id: editingPromo.id, data: payload, file })
         ).unwrap();
-        toast.success("Cập nhật khuyến mãi thành công");
+        toast.success(t("success.update_success"));
       } else {
         await dispatch(addPromotion({ data: payload, file })).unwrap();
-        toast.success("Thêm khuyến mãi thành công");
+        toast.success(t("success.create_success"));
       }
       handleCloseModal();
       dispatch(fetchPromotions(restaurantId));
     } catch {
-      toast.error("Thao tác thất bại. Vui lòng thử lại!");
+      toast.error(t("errors.operation_failed"));
     }
   };
 
@@ -253,10 +253,10 @@ const PromotionPage = () => {
     if (!selectedPromoId) return;
     try {
       await dispatch(deletePromotion(selectedPromoId)).unwrap();
-      toast.success("Xoá khuyến mãi thành công");
+      toast.success(t("success.delete_success"));
       if (restaurantId) dispatch(fetchPromotions(restaurantId));
     } catch {
-      toast.error("Không thể xoá. Vui lòng thử lại!");
+      toast.error(t("errors.delete_failed"));
     } finally {
       setOpenDeleteDialog(false);
       setSelectedPromoId(null);
@@ -284,7 +284,7 @@ const PromotionPage = () => {
     const sanitized = minOrderValue.replace(/[^0-9.-]+/g, "");
     const value = Number(sanitized);
     if (!Number.isFinite(value) || value <= 0) {
-      toast.warning("Vui lòng nhập số tiền hợp lệ lớn hơn 0");
+      toast.warning(t("errors.invalid_min_order"));
       return;
     }
 
@@ -297,12 +297,12 @@ const PromotionPage = () => {
         })
       ).unwrap();
 
-      toast.success("Gán số tiền tối thiểu cho khuyến mãi thành công");
+      toast.success(t("success.assign_min_order"));
       handleCloseMinOrderDialog();
       if (restaurantId) dispatch(fetchPromotions(restaurantId));
     } catch (err) {
       console.error(err);
-      toast.error("Không thể gán. Vui lòng thử lại sau");
+      toast.error(t("errors.assign_failed"));
     }
   };
 
@@ -310,14 +310,14 @@ const PromotionPage = () => {
   const handleCancelOrderPromotion = async (orderPromotionId: number) => {
     try {
       await dispatch(deleteOrderPromotion(orderPromotionId)).unwrap();
-      toast.success("Huỷ gán số tiền tối thiểu thành công");
+      toast.success(t("success.cancel_min_order"));
       if (restaurantId) {
         dispatch(getOrderPromotionsForUser({ restaurantId }));
         dispatch(fetchPromotions(restaurantId));
       }
     } catch (err) {
       console.error("Error cancelling order promotion:", err);
-      toast.error("Không thể huỷ. Vui lòng thử lại");
+      toast.error(t("errors.cancel_failed"));
     }
   };
 
