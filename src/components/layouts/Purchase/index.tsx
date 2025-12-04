@@ -60,43 +60,6 @@ const PurchaseHistoryPage = () => {
 
   const normalize = (s?: string | null) => (s ? String(s).toLowerCase() : "");
 
-  const paymentLabel = (status?: string) => {
-    switch (normalize(status)) {
-      case "success":
-      case "paid":
-        return t("payment.paid");
-      case "pending":
-        return t("payment.pending");
-      case "failed":
-        return t("payment.failed");
-      case "cancelled":
-      case "canceled":
-        return t("payment.canceled");
-      case "refunded":
-        return t("payment.refunded");
-      default:
-        return status ?? t("unknown");
-    }
-  };
-
-  const paymentChipColor = (status?: string) => {
-    switch (normalize(status)) {
-      case "success":
-      case "paid":
-        return "success" as const;
-      case "pending":
-        return "warning" as const;
-      case "failed":
-      case "cancelled":
-      case "canceled":
-        return "error" as const;
-      case "refunded":
-        return "info" as const;
-      default:
-        return "default" as const;
-    }
-  };
-
   const orderStatusLabel = (status?: string) => {
     switch (normalize(status)) {
       case "pending":
@@ -185,7 +148,7 @@ const PurchaseHistoryPage = () => {
 
   const handleCancelOrder = (orderId: number, orderStatus?: string) => {
     if (!canCancelOrder(orderStatus)) {
-      toast.error("Không thể hủy đơn hàng đã thanh toán");
+      toast.error(t("cannot_cancel_paid"));
       return;
     }
     setConfirmDialog({ open: true, orderId, orderStatus });
@@ -209,7 +172,7 @@ const PurchaseHistoryPage = () => {
 
     try {
       await dispatch(cancelOrder({ orderId, userId: uid })).unwrap();
-      toast.success("Hủy đơn hàng thành công");
+      toast.success(t("cancel_success"));
       setConfirmDialog({ open: false });
       // Fetch lại danh sách để cập nhật UI
       if (uid) {
@@ -217,7 +180,7 @@ const PurchaseHistoryPage = () => {
       }
     } catch (error: unknown) {
       toast.error(
-        (error as { message?: string })?.message || "Không thể hủy đơn hàng"
+        (error as { message?: string })?.message || t("cancel_failed")
       );
       setConfirmDialog({ open: false });
     }
@@ -231,12 +194,6 @@ const PurchaseHistoryPage = () => {
 
   const getOrderFrom = (h: InfoPayment | OrderResponse): OrderResponse =>
     isInfoPayment(h) ? (h as InfoPayment).order : (h as OrderResponse);
-
-  const getPaymentStatus = (
-    h: InfoPayment | OrderResponse,
-    ord: OrderResponse
-  ): string =>
-    isInfoPayment(h) ? (h as InfoPayment).status : String(ord.status ?? "");
 
   const getDisplayAmount = (
     h: InfoPayment | OrderResponse,
@@ -258,14 +215,27 @@ const PurchaseHistoryPage = () => {
     );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h5" fontWeight="bold" mb={1}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 3 } }}
+    >
+      <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 3 }}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          mb={1}
+          sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+        >
           {t("title")}
         </Typography>
 
         <Box mb={2}>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            sx={{ gap: { xs: 0.5, sm: 1 } }}
+          >
             {ORDER_STATUSES.map((s) => {
               const count = historyList.filter((h) => {
                 if (s.key === "all") return true;
@@ -281,7 +251,11 @@ const PurchaseHistoryPage = () => {
                   size="small"
                   variant={selectedStatus === s.key ? "contained" : "outlined"}
                   onClick={() => setSelectedStatus(s.key)}
-                  sx={{ textTransform: "none" }}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    px: { xs: 1, sm: 2 },
+                  }}
                 >
                   {s.label} ({count})
                 </Button>
@@ -317,20 +291,27 @@ const PurchaseHistoryPage = () => {
                   <Paper
                     key={ord?.id ?? (isInfoPayment(h) ? h.id : Math.random())}
                     variant="outlined"
-                    sx={{ p: 1.5 }}
+                    sx={{ p: { xs: 1, sm: 1.5 } }}
                   >
                     <Box
                       display="flex"
+                      flexDirection={{ xs: "column", sm: "row" }}
                       justifyContent="space-between"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      gap={1}
+                      alignItems={{ xs: "stretch", sm: "center" }}
+                      gap={{ xs: 1.5, sm: 1 }}
                     >
-                      <Box>
-                        <Typography fontWeight={600}>
+                      <Box flex={1}>
+                        <Typography
+                          fontWeight={600}
+                          sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                        >
                           {t("order_prefix")}#{ord?.id ?? "-"}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                        >
                           {ord?.createdAt
                             ? new Date(ord.createdAt).toLocaleString()
                             : "-"}
@@ -343,18 +324,31 @@ const PurchaseHistoryPage = () => {
                         <Box
                           mt={0.5}
                           display="flex"
-                          gap={1}
+                          gap={{ xs: 0.5, sm: 1 }}
                           alignItems="center"
+                          flexWrap="wrap"
                         >
                           <Chip
-                            label={orderStatusLabel(ord?.status)}
+                            label={`${t(
+                              "order_info_label"
+                            )}: ${orderStatusLabel(ord?.status)}`}
                             color={orderStatusColor(ord?.status)}
                             size="small"
+                            sx={{
+                              fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                              height: { xs: 24, sm: 32 },
+                            }}
                           />
                           <Chip
-                            label={deliveryStatusLabel(ord?.deliveryStatus)}
+                            label={`${t(
+                              "delivery_info_label"
+                            )}: ${deliveryStatusLabel(ord?.deliveryStatus)}`}
                             color={deliveryStatusColor(ord?.deliveryStatus)}
                             size="small"
+                            sx={{
+                              fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                              height: { xs: 24, sm: 32 },
+                            }}
                           />
                         </Box>
                         {ord?.items && ord.items.length > 0 && (
@@ -406,13 +400,14 @@ const PurchaseHistoryPage = () => {
                           </>
                         )}
                       </Box>
-                      <Box textAlign="right">
-                        <Chip
-                          label={paymentLabel(getPaymentStatus(h, ord))}
-                          color={paymentChipColor(getPaymentStatus(h, ord))}
-                          size="small"
-                          sx={{ mr: 1 }}
-                        />
+                      <Box
+                        sx={{
+                          textAlign: { xs: "left", sm: "right" },
+                          pt: { xs: 1, sm: 0 },
+                          borderTop: { xs: "1px solid", sm: "none" },
+                          borderColor: { xs: "divider", sm: "transparent" },
+                        }}
+                      >
                         {typeof ord?.totalPrice === "number" &&
                           typeof ord?.finalPrice === "number" &&
                           ord.totalPrice > ord.finalPrice && (
@@ -427,12 +422,20 @@ const PurchaseHistoryPage = () => {
                         <Typography fontWeight={700}>
                           {Number(getDisplayAmount(h, ord)).toLocaleString()}đ
                         </Typography>
-                        <Box mt={0.5}>
+                        <Box
+                          mt={0.5}
+                          display="flex"
+                          flexDirection={{ xs: "column", sm: "row" }}
+                          gap={{ xs: 1, sm: 0 }}
+                        >
                           <Button
                             size="small"
                             color="error"
                             variant="outlined"
-                            sx={{ mr: 1 }}
+                            sx={{
+                              mr: { xs: 0, sm: 1 },
+                              width: { xs: "100%", sm: "auto" },
+                            }}
                             disabled={!canCancelOrder(ord?.status)}
                             onClick={() => {
                               if (ord?.id) {
@@ -445,6 +448,7 @@ const PurchaseHistoryPage = () => {
                           <Button
                             size="small"
                             variant="outlined"
+                            sx={{ width: { xs: "100%", sm: "auto" } }}
                             onClick={() => {
                               const rid =
                                 ord?.restaurant?.id ?? ord?.restaurantId;
@@ -459,6 +463,7 @@ const PurchaseHistoryPage = () => {
                           display="block"
                           mt={0.5}
                           color="text.secondary"
+                          sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
                         >
                           {ord?.items?.length ?? 0} {t("labels.items")} •
                           {typeof ord?.totalPrice === "number" && (

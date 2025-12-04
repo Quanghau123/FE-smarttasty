@@ -1141,6 +1141,11 @@
     "order": { "pending": "Pending", "paid": "Paid", "processing": "Processing", "canceled": "Canceled", "failed": "Failed" },
     "delivery": { "preparing": "Preparing", "delivering": "Delivering", "delivered": "Delivered", "canceled": "Canceled" },
     "unknown": "Unknown",
+    "order_info_label": "Order information",
+    "delivery_info_label": "Delivery information",
+    "cannot_cancel_paid": "Cannot cancel paid order",
+    "cancel_success": "Order canceled successfully",
+    "cancel_failed": "Cannot cancel order",
     "labels": { "restaurant": "Restaurant:", "items": "items", "original_price": "Original price:", "total": "Total:" },
     "btn": { "more_items": "+{count} more", "cancel_order": "Cancel order", "view_restaurant": "View restaurant", "no": "No", "confirm_cancel": "Confirm cancel" },
     "dialog": { "title": "Confirm cancel order", "confirm_text": "Are you sure you want to cancel order #{id}? This action cannot be undone." }

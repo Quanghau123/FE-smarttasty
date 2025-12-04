@@ -1074,6 +1074,11 @@
     "order": { "pending": "Chờ xử lý", "paid": "Đã hoàn thành", "processing": "Đang xử lý", "canceled": "Đã hủy", "failed": "Thất bại" },
     "delivery": { "preparing": "Đang chuẩn bị", "delivering": "Đang giao", "delivered": "Đã giao", "canceled": "Đã hủy" },
     "unknown": "Không rõ",
+    "order_info_label": "Thông tin đơn hàng",
+    "delivery_info_label": "Thông tin giao hàng",
+    "cannot_cancel_paid": "Không thể hủy đơn hàng đã thanh toán",
+    "cancel_success": "Hủy đơn hàng thành công",
+    "cancel_failed": "Không thể hủy đơn hàng",
     "labels": { "restaurant": "Nhà hàng:", "items": "món", "original_price": "Giá gốc:", "total": "Tổng:" },
     "btn": { "more_items": "+{count} món khác", "cancel_order": "Hủy đơn", "view_restaurant": "Xem nhà hàng", "no": "Không", "confirm_cancel": "Xác nhận hủy" },
     "dialog": { "title": "Xác nhận hủy đơn hàng", "confirm_text": "Bạn có chắc chắn muốn hủy đơn hàng #{id}? Hành động này không thể hoàn tác." }
