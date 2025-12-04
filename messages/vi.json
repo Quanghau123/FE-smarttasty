@@ -190,7 +190,7 @@
         "order": {
           "pending": "Đang chờ",
           "processing": "Đang xử lý",
-          "paid": "Đã thanh toán",
+          "paid": "Đã hoàn thành",
           "cancelled": "Đã hủy",
           "failed": "Thất bại",
           "unknown": "Không rõ"
@@ -1071,7 +1071,7 @@
       "canceled": "Đã hủy"
     },
     "payment": { "paid": "Đã thanh toán", "pending": "Chờ thanh toán", "failed": "Thanh toán thất bại", "canceled": "Đã hủy", "refunded": "Đã hoàn tiền" },
-    "order": { "pending": "Chờ xử lý", "paid": "Đã thanh toán", "processing": "Đang xử lý", "canceled": "Đã hủy", "failed": "Thất bại" },
+    "order": { "pending": "Chờ xử lý", "paid": "Đã hoàn thành", "processing": "Đang xử lý", "canceled": "Đã hủy", "failed": "Thất bại" },
     "delivery": { "preparing": "Đang chuẩn bị", "delivering": "Đang giao", "delivered": "Đã giao", "canceled": "Đã hủy" },
     "unknown": "Không rõ",
     "labels": { "restaurant": "Nhà hàng:", "items": "món", "original_price": "Giá gốc:", "total": "Tổng:" },
@@ -1100,7 +1100,7 @@
         "order": {
           "pending": "Đang chờ",
           "processing": "Đang xử lý",
-          "paid": "Đã thanh toán",
+          "paid": "Đã hoàn thành",
           "cancelled": "Đã hủy",
           "failed": "Thất bại",
           "unknown": "Không rõ"
@@ -1225,5 +1225,18 @@
     "secure_hash": "Mã bảo mật",
     "payment_info": "Thông tin thanh toán",
     "transaction_info": "Thông tin giao dịch"
+  },
+  "orderSuccess": {
+    "title": "Đặt hàng thành công!",
+    "description_cod": "Cảm ơn bạn đã đặt hàng! Vui lòng chuẩn bị tiền mặt khi nhận hàng.",
+    "description_other": "Cảm ơn bạn đã đặt hàng! Đơn hàng của bạn đang được xử lý.",
+    "order_id": "Mã đơn hàng",
+    "total_amount": "Tổng tiền",
+    "payment_method": "Phương thức thanh toán",
+    "payment_method_cod": "Thanh toán khi nhận hàng (COD)",
+    "btn_view_orders": "Xem đơn hàng của tôi",
+    "btn_go_home": "Về trang chủ",
+    "note": "💡 Bạn có thể theo dõi trạng thái đơn hàng trong phần",
+    "note_bold": "Đơn mua"
   }
   }

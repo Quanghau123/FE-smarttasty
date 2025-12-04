@@ -1229,5 +1229,18 @@
     "secure_hash": "Secure Hash",
     "payment_info": "Payment Information",
     "transaction_info": "Transaction Information"
+  },
+  "orderSuccess": {
+    "title": "Order Successful!",
+    "description_cod": "Thank you for your order! Please prepare cash for payment upon delivery.",
+    "description_other": "Thank you for your order! Your order is being processed.",
+    "order_id": "Order ID",
+    "total_amount": "Total Amount",
+    "payment_method": "Payment Method",
+    "payment_method_cod": "Cash on Delivery (COD)",
+    "btn_view_orders": "View My Orders",
+    "btn_go_home": "Back to Home",
+    "note": "💡 You can track your order status in",
+    "note_bold": "My Orders"
   }
 }

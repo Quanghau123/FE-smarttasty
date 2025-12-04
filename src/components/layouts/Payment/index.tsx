@@ -408,11 +408,10 @@ const PaymentPage = () => {
           createCODPayment({ orderId: order.id, amount })
         ).unwrap();
 
-        toast.success(
-          "Đặt hàng thành công! Vui lòng chuẩn bị tiền khi nhận hàng."
+        // Redirect to success page with order info
+        router.push(
+          `/order-success?orderId=${order.id}&amount=${amount}&method=COD`
         );
-        localStorage.removeItem("checkoutOrder");
-        router.push("/purchase");
         return;
       }
     } catch (error: unknown) {
