@@ -146,7 +146,7 @@ class SignalRService {
         console.log("   Message:", message);
         console.log("   Has callback registered?", !!this.notificationCallback);
         if (this.notificationCallback) {
-          console.log("   Invoking callback...");
+         console.log("   Invoking callback...");
           this.notificationCallback(title, message);
         } else {
           console.log("   No callback yet — buffering notification");

@@ -19,7 +19,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 import RobotIcon from "@/components/layouts/ChatbotIcon/RobotIcon";
 import PersonIcon from "@mui/icons-material/Person";
-import { getAccessToken } from "@/lib/utils/tokenHelper";
+import { getAccessToken, getUser } from "@/lib/utils/tokenHelper";
 
 import axios from "axios";
 
@@ -31,13 +31,25 @@ interface Message {
   image?: string;
 }
 
+// Function to get welcome message based on user role
+const getWelcomeMessage = (): string => {
+  const user = getUser();
+  const role = user?.role?.toLowerCase() || "user";
+
+  if (role === "user") {
+    return "Xin chào! Tôi là SmartTasty, trợ lý ảo ẩm thực của bạn. Tôi có thể gợi ý món ăn phù hợp khẩu vị, mood hoặc sức khỏe, tìm nhà hàng ngon, cung cấp công thức nấu ăn, lập thực đơn thông minh, và nhận diện món ăn qua ảnh. Bạn muốn khám phá gì hôm nay?";
+  }
+
+  return "Xin chào! Tôi là trợ lý ảo SmartTasty. Tôi có thể giúp gì cho bạn?";
+};
+
 const Chatbot: React.FC = () => {
   const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      text: "Xin chào! Tôi là trợ lý ảo SmartTasty. Tôi có thể giúp gì cho bạn?",
+      text: getWelcomeMessage(),
       sender: "bot",
       timestamp: new Date(),
     },
