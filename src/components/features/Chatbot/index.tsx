@@ -142,13 +142,6 @@ const Chatbot: React.FC = () => {
         formData.append("Image", imageToSend);
       }
 
-      // console.log("Sending to chatbot:", {
-      //   url: `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
-      //   hasToken: !!accessToken,
-      //   textLength: textToSend.length,
-      //   hasImage: !!imageToSend,
-      // });
-
       // Call chatbot API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
@@ -161,22 +154,21 @@ const Chatbot: React.FC = () => {
       );
 
       // Add bot response
+      let botText =
+        response.data.bot || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+      botText = botText.replace(/\\n/g, "\n");
+      botText = botText.replace(/\*\*(.*?)\*\*/g, "$1");
+      botText = botText.replace(/^\s*\*\s+/gm, "• ");
+      botText = botText.replace(/\*/g, "");
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.bot || "Xin lỗi, tôi không hiểu câu hỏi của bạn.",
+        text: botText,
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
-
-      // Log detailed error info
-      // if (axios.isAxiosError(error)) {
-      //   console.error("Response data:", error.response?.data);
-      //   console.error("Response status:", error.response?.status);
-      //   console.error("Request URL:", error.config?.url);
-      // }
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -337,7 +329,9 @@ const Chatbot: React.FC = () => {
                       wordBreak: "break-word",
                     }}
                   >
-                    <Typography variant="body2">{message.text}</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                      {message.text}
+                    </Typography>
                   </Paper>
                   <Typography
                     variant="caption"
