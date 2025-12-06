@@ -40,6 +40,10 @@ const getWelcomeMessage = (): string => {
     return "Xin chào! Tôi là SmartTasty, trợ lý ảo ẩm thực của bạn. Tôi có thể gợi ý món ăn phù hợp khẩu vị, mood hoặc sức khỏe, tìm nhà hàng ngon, cung cấp công thức nấu ăn, lập thực đơn thông minh, và nhận diện món ăn qua ảnh. Bạn muốn khám phá gì hôm nay?";
   }
 
+  if (role === "business") {
+    return "Chào bạn, mình là AI phân tích/đánh giá dữ liệu nhà hàng. Bạn có thể hỏi về doanh thu, khách hàng, giao hàng, khuyến mãi hoặc dự báo, mình sẽ phân tích ngay cho bạn.";
+  }
+
   return "Xin chào! Tôi là trợ lý ảo SmartTasty. Tôi có thể giúp gì cho bạn?";
 };
 
