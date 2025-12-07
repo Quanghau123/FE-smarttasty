@@ -133,6 +133,10 @@ const Chatbot: React.FC = () => {
         formData.append("Image", imageToSend);
       }
 
+<<<<<<< HEAD
+=======
+      // Call chatbot API
+>>>>>>> origin
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
         formData,
@@ -143,15 +147,29 @@ const Chatbot: React.FC = () => {
         }
       );
 
+<<<<<<< HEAD
+=======
+      // Add bot response
+      let botText =
+        response.data.bot || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+      botText = botText.replace(/\\n/g, "\n");
+      botText = botText.replace(/\*\*(.*?)\*\*/g, "$1");
+      botText = botText.replace(/^\s*\*\s+/gm, "• ");
+      botText = botText.replace(/\*/g, "");
+>>>>>>> origin
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.bot || "Xin lỗi, tôi không hiểu câu hỏi của bạn.",
+        text: botText,
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
@@ -306,7 +324,9 @@ const Chatbot: React.FC = () => {
                       wordBreak: "break-word",
                     }}
                   >
-                    <Typography variant="body2">{message.text}</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                      {message.text}
+                    </Typography>
                   </Paper>
                   <Typography
                     variant="caption"
