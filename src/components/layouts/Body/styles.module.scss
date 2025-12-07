@@ -63,11 +63,11 @@
   justify-content: center;
 }
 
-/* Keep an element square using padding trick (works on all browsers) */
+
 .aspectSquare {
   position: relative;
   width: 100%;
-  padding-top: 100%; /* 1:1 */
+  padding-top: 100%; 
   overflow: hidden;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
@@ -83,14 +83,11 @@
   }
 }
 
-/* Utility to clamp multi-line text cleanly */
 .textClamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
-/* Description clamp for recipe cards: 2 lines with ellipsis and safe wrapping */
 .descClamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -99,30 +96,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.5;
-  min-height: 3em; /* reserve space to avoid layout shift */
+  min-height: 3em; 
   word-break: break-word;
   overflow-wrap: anywhere;
   white-space: normal;
 }
 
-/* Two-line title block with reserved height to avoid layout shift when text wraps */
 .titleTwoLines {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  /* Reserve approx two lines of type so cards keep equal heights */
+
   min-height: 3.4em;
 }
 
-/* Helpers for consistent card content spacing on mobile */
 .cardContentCompact {
   padding: 12px;
 }
 
-// Tối ưu performance cho tất cả items trong carousel
 .carousel > * {
-  // Giảm chi phí repaints/reflows khi scroll
   contain: layout style paint;
   content-visibility: auto;
 }

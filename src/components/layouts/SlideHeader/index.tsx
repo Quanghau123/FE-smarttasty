@@ -42,12 +42,8 @@ const SlideHeader: React.FC = () => {
           lg: "calc(36vh + 50px)",
           xl: "calc(43vh + 50px)",
         },
-        // On small devices in landscape the viewport height is much smaller
-        // (so `vh` values look tiny). Increase header height specifically
-        // for mobile landscape using a media query.
         "@media (orientation: landscape) and (max-width:600px)": {
           height: "44vh",
-          // keep a reasonable cap so images don't overflow on some devices
           maxHeight: 520,
         },
         maxHeight: 900,
@@ -63,7 +59,6 @@ const SlideHeader: React.FC = () => {
             key={idx}
             sx={{ position: "relative", flex: "0 0 100%", height: "100%" }}
           >
-            {/* Wrapped slide content with Shine; programmatic sweeping enabled */}
             <Shine
               hoverOnly={false}
               initialRuns={1}
@@ -90,19 +85,6 @@ const SlideHeader: React.FC = () => {
           </Box>
         ))}
       </Box>
-
-      {/* subtle overlay if needed */}
-      {/* <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.12))",
-          pointerEvents: "none",
-        }}
-      /> */}
-
-      {/* dots */}
       <Box
         sx={{
           position: "absolute",
@@ -214,9 +196,7 @@ function Shine({
       style={{ position: "relative", overflow: "hidden", ...style }}
     >
       {children}
-      {/* overlay element that moves across */}
       <div className="shine-overlay" aria-hidden="true" />
-      {/* scoped styles for the shine effect */}
       <style jsx>{`
         .shine {
           position: relative;

@@ -62,9 +62,6 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
         <Typography variant="h6" fontWeight="bold" textAlign="center">
           {t("admin_restaurant_title")}
         </Typography>
-        {/* <Typography variant="body2" color="text.secondary">
-          Quản lý cửa hàng
-        </Typography> */}
       </Box>
 
       <Divider sx={{ my: 2 }} />

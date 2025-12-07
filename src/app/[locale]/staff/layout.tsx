@@ -19,7 +19,6 @@ export default function RestaurantLayout({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // Lấy token từ cookie
     const token = getAccessToken();
 
     if (!token) {
@@ -32,7 +31,6 @@ export default function RestaurantLayout({
       const decoded = jwtDecode<JwtPayload>(token);
 
       if (decoded.role !== "staff") {
-        console.warn("Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");
       } else {
         setAuthorized(true);

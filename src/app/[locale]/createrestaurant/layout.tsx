@@ -19,11 +19,9 @@ export default function RestaurantLayout({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // ✅ Lấy token từ cookie
     const token = getAccessToken();
 
     if (!token) {
-      console.warn("❌ Không tìm thấy token");
       router.replace("/ErrorPages/notfound");
       return;
     }
@@ -32,13 +30,12 @@ export default function RestaurantLayout({
       const decoded = jwtDecode<JwtPayload>(token);
 
       if (decoded.role !== "business") {
-        console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");
       } else {
         setAuthorized(true);
       }
     } catch (error) {
-      console.error("❌ Token không hợp lệ:", error);
+      console.error("Token không hợp lệ:", error);
       router.replace("/ErrorPages/notfound");
     }
   }, [router]);

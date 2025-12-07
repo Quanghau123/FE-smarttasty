@@ -12,29 +12,22 @@ export interface RatingUpdateData {
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private currentRestaurantId: string | null = null;
-  // Stored callbacks that will be invoked by internal handlers
   private ratingCallback: ((data: RatingUpdateData) => void) | null = null;
   private notificationCallback:
     | ((title: string, message: string) => void)
     | null = null;
-  // Buffer notifications that arrive before a consumer binds a callback.
+
   private notificationBuffer: Array<{ title: string; message: string }> = [];
-  private readonly NOTIFICATION_BUFFER_LIMIT = 100; // avoid unbounded growth
-  // use browser number for interval id to avoid NodeJS/browser mismatches
+  private readonly NOTIFICATION_BUFFER_LIMIT = 100; 
+
   private pingIntervalId: number | null = null;
   private readonly PING_INTERVAL = 30000;
-
-  /**
-   * Start periodic ping heartbeat. Clears any existing interval first.
-   */
   private startPing(): void {
-    // Clear any previous interval to avoid duplicates
     if (this.pingIntervalId !== null) {
       window.clearInterval(this.pingIntervalId);
       this.pingIntervalId = null;
     }
 
-    // Only schedule when running in browser (window available)
     if (typeof window === "undefined") return;
 
     this.pingIntervalId = window.setInterval(() => {
@@ -42,9 +35,6 @@ class SignalRService {
     }, this.PING_INTERVAL);
   }
 
-  /**
-   * Stop periodic ping if running.
-   */
   private stopPing(): void {
     if (this.pingIntervalId !== null && typeof window !== "undefined") {
       window.clearInterval(this.pingIntervalId);
@@ -52,9 +42,6 @@ class SignalRService {
     }
   }
 
-  /**
-   * Safely invoke server PingHeartbeat once.
-   */
   private async invokePing(): Promise<void> {
     if (
       !this.connection ||
@@ -73,10 +60,9 @@ class SignalRService {
 
   /**
    * Kết nối đến SignalR Hub
-   * @param accessToken - JWT token để xác thực
+   * @param accessToken 
    */
   async connect(accessToken?: string): Promise<void> {
-    // Prevent starting a new connect if connection already exists and is not Disconnected.
     if (
       this.connection &&
       this.connection.state !== signalR.HubConnectionState.Disconnected
@@ -88,7 +74,6 @@ class SignalRService {
       return;
     }
 
-    // Ensure no leftover ping interval if we are re-initializing
     this.stopPing();
 
     const hubUrl =
@@ -105,7 +90,6 @@ class SignalRService {
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
-          // Exponential backoff: 0s, 2s, 10s, 30s, then 30s
           if (retryContext.previousRetryCount === 0) return 0;
           if (retryContext.previousRetryCount === 1) return 2000;
           if (retryContext.previousRetryCount === 2) return 10000;
@@ -116,7 +100,6 @@ class SignalRService {
 
     this.connection = connectionBuilder.build();
 
-    // Debug: Setup a generic listener to catch all server events
     const originalOn = this.connection.on.bind(this.connection);
     this.connection.on = ((
       eventName: string,
@@ -129,7 +112,6 @@ class SignalRService {
       return originalOn(eventName, wrappedCallback);
     }) as typeof this.connection.on;
 
-    // Internal event handlers (registered before start so server calls won't be missed)
     this.connection.on(
       "ReceiveRestaurantUpdate",
       (message: RatingUpdateData) => {
@@ -141,7 +123,7 @@ class SignalRService {
     this.connection.on(
       "ReceiveNotification",
       (title: string, message: string) => {
-        console.log("📥 [SignalR Service] ReceiveNotification event fired!");
+        console.log("[SignalR Service] ReceiveNotification event fired!");
         console.log("   Title:", title);
         console.log("   Message:", message);
         console.log("   Has callback registered?", !!this.notificationCallback);
@@ -150,7 +132,6 @@ class SignalRService {
           this.notificationCallback(title, message);
         } else {
           console.log("   No callback yet — buffering notification");
-          // keep buffer size bounded
           this.notificationBuffer.push({ title, message });
           if (this.notificationBuffer.length > this.NOTIFICATION_BUFFER_LIMIT) {
             this.notificationBuffer.shift();
@@ -159,20 +140,16 @@ class SignalRService {
       }
     );
 
-    // Event handlers for connection lifecycle
     this.connection.onreconnecting((error) => {
       console.warn("SignalR reconnecting...", error);
-      // Stop periodic ping while reconnecting to avoid duplicate intervals
       this.stopPing();
     });
 
     this.connection.onreconnected((connectionId) => {
       console.log("SignalR reconnected:", connectionId);
-      // Rejoin restaurant room if was in one
       if (this.currentRestaurantId) {
         this.joinRestaurantRoom(this.currentRestaurantId);
       }
-      // Restart periodic ping after reconnection only if truly connected
       if (
         this.connection &&
         this.connection.state === signalR.HubConnectionState.Connected
@@ -183,20 +160,15 @@ class SignalRService {
 
     this.connection.onclose((error) => {
       console.error("SignalR connection closed:", error);
-      // Ensure periodic ping stopped
       this.stopPing();
     });
 
     try {
       await this.connection.start();
       console.log("SignalR connected successfully");
-
-      // Debug: print connection id and attempt PingHeartbeat so server marks user online
       try {
         const cid = this.connection.connectionId;
         console.log("SignalR connectionId:", cid);
-
-        // Mask token when logging (do not log full token in production)
         if (accessToken) {
           const masked =
             accessToken.length > 10
@@ -204,7 +176,6 @@ class SignalRService {
               : accessToken;
           console.log("SignalR using accessToken (masked):", masked);
 
-          // Decode JWT to check claims
           try {
             const base64Url = accessToken.split(".")[1];
             const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -228,7 +199,6 @@ class SignalRService {
           console.warn("No accessToken provided to SignalR connect");
         }
 
-        // Call PingHeartbeat once immediately and start periodic ping.
         if (
           this.connection &&
           this.connection.state === signalR.HubConnectionState.Connected
@@ -239,9 +209,6 @@ class SignalRService {
           } catch (pingErr) {
             console.warn("PingHeartbeat invoke failed (initial):", pingErr);
           }
-
-          // Start periodic ping (startPing handles clearing any previous interval)
-          // ensure connection.state is still Connected
           if (this.connection.state === signalR.HubConnectionState.Connected) {
             this.startPing();
           }
@@ -262,7 +229,7 @@ class SignalRService {
     if (this.connection) {
       await this.connection.stop();
       this.stopPing();
-      this.clearAllHandlers(); // clear callbacks/buffer on actual disconnect
+      this.clearAllHandlers(); 
       this.connection = null;
       this.currentRestaurantId = null;
       console.log("SignalR disconnected");
@@ -329,36 +296,22 @@ class SignalRService {
     }
   }
 
-  /**
-   * Hủy đăng ký tất cả event handlers
-   */
   offAllHandlers(): void {
-    // Intentionally do NOT clear callbacks here so that component unmounts
-    // don't remove service-level callbacks. Real cleanup happens on disconnect().
     console.debug(
       "offAllHandlers called — no-op to preserve callbacks until disconnect"
     );
   }
 
-  /**
-   * Clear stored callbacks and buffers — to be used on real disconnect.
-   */
   private clearAllHandlers(): void {
     this.ratingCallback = null;
     this.notificationCallback = null;
     this.notificationBuffer = [];
   }
 
-  /**
-   * Kiểm tra trạng thái kết nối
-   */
   isConnected(): boolean {
     return this.connection?.state === signalR.HubConnectionState.Connected;
   }
 
-  /**
-   * Gửi test notification (for debugging)
-   */
   async sendTestNotification(userId: number): Promise<void> {
     if (
       !this.connection ||
@@ -372,22 +325,18 @@ class SignalRService {
       await this.connection.invoke(
         "SendTestNotification",
         userId,
-        "🧪 Test Notification",
+        "Test Notification",
         `Test at ${new Date().toLocaleTimeString()}`
       );
       console.log("✅ Test notification sent via SignalR");
     } catch (error) {
-      console.error("❌ Error sending test notification:", error);
+      console.error("Error sending test notification:", error);
     }
   }
 
-  /**
-   * Lấy connection ID hiện tại
-   */
   getConnectionId(): string | null {
     return this.connection?.connectionId || null;
   }
 }
 
-// Export singleton instance
 export const signalRService = new SignalRService();

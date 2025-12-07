@@ -25,7 +25,7 @@ import { useState, useEffect } from "react";
 
 type ChangePasswordFormProps = {
   onSuccess?: () => void;
-  embedded?: boolean; // true when used inside Account page
+  embedded?: boolean;
 };
 
 const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
@@ -75,15 +75,12 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     if (changePasswordSuccess) {
       toast.success(t("success.reset"));
 
-      // Xóa tokens từ cookie và Redux user
       clearTokens();
       dispatch(clearUser());
 
-      // Nếu có callback từ cha, gọi trước
       if (onSuccess) {
         onSuccess();
       } else {
-        // Push login page sau khi chắc chắn user đã được xóa
         router.push("/login");
       }
 
@@ -91,7 +88,6 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     }
 
     if (changePasswordError) {
-      // server returns a message string; show it if present, otherwise a generic message
       const msg = changePasswordError || t("errors.generic");
       toast.error(msg);
       dispatch(resetChangePasswordState());
@@ -155,12 +151,10 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     </Box>
   );
 
-  // If embedded (used in Account page), return form without Card wrapper
   if (embedded) {
     return <Box sx={{ maxWidth: isMobile ? "100%" : 600 }}>{formContent}</Box>;
   }
 
-  // Standalone page: use Card wrapper
   return (
     <Box className={styles.loginContainer}>
       <Card className={styles.loginCard}>

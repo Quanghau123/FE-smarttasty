@@ -135,8 +135,6 @@ const OrderSuccessPage = () => {
               />
             </Box>
           </Box>
-
-          {/* Title */}
           <Typography
             variant="h4"
             fontWeight="700"
@@ -163,8 +161,6 @@ const OrderSuccessPage = () => {
           </Typography>
 
           <Divider sx={{ my: 3 }} />
-
-          {/* Order Info */}
           <Stack spacing={2} sx={{ mb: 4 }}>
             {orderInfo.orderId && (
               <Box
@@ -216,7 +212,6 @@ const OrderSuccessPage = () => {
 
           <Divider sx={{ mb: 4 }} />
 
-          {/* Action Buttons */}
           <Stack spacing={2}>
             <Button
               fullWidth
@@ -250,8 +245,6 @@ const OrderSuccessPage = () => {
               {t("btn_go_home")}
             </Button>
           </Stack>
-
-          {/* Additional Info */}
           <Box
             sx={(theme) => ({
               mt: 4,

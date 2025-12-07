@@ -25,27 +25,22 @@ export default function AdminLayout({
   const isMobile = useMediaQuery("(max-width:768px)");
 
   useEffect(() => {
-    // ✅ Lấy token từ cookie
     const token = getAccessToken();
 
     if (!token) {
-      // console.warn("❌ Không tìm thấy token");
       router.replace("/ErrorPages/notfound");
       return;
     }
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      //      console.log("✅ Token decode:", decoded);
 
       if (decoded.role !== "admin") {
-        // console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");
       } else {
         setAuthorized(true);
       }
     } catch {
-      //   console.error("❌ Lỗi khi decode token:", error);
       router.replace("/ErrorPages/notfound");
     }
   }, [router]);
@@ -54,7 +49,6 @@ export default function AdminLayout({
 
   return (
     <Box sx={{ display: "flex", mt: "20px", position: "relative" }}>
-      {/* Mobile menu button */}
       {isMobile && (
         <IconButton
           onClick={() => setDrawerOpen(true)}
@@ -74,14 +68,12 @@ export default function AdminLayout({
         </IconButton>
       )}
 
-      {/* Desktop Sidebar */}
       {!isMobile && (
         <Box>
           <Sidebar />
         </Box>
       )}
 
-      {/* Mobile Drawer */}
       <Drawer
         anchor="left"
         open={drawerOpen}
@@ -90,7 +82,6 @@ export default function AdminLayout({
         <Sidebar inDrawer={true} onNavigate={() => setDrawerOpen(false)} />
       </Drawer>
 
-      {/* Main content */}
       <Box sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>{children}</Box>
     </Box>
   );

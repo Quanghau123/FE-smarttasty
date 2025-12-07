@@ -1,4 +1,4 @@
-// src/redux/slices/favoritesSlice.ts
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";

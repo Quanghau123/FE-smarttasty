@@ -33,7 +33,6 @@ export default function LayoutClient({
         pauseOnHover
         theme="colored"
       />
-      {/* Chatbot floating button - hiển thị ở mọi trang */}
       {!hideChatbot && <Chatbot />}
     </Providers>
   );

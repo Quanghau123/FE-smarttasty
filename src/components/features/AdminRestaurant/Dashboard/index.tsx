@@ -39,7 +39,6 @@ import type { ApexOptions } from "apexcharts";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-// Animation variants for scroll animations - optimized for performance
 const fadeInUpVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -70,7 +69,7 @@ const DashboardChart = () => {
   const theme = useTheme();
   const chartTextColor =
     theme.palette.mode === "dark"
-      ? // use solid white in dark mode so chart text/numbers are clear
+      ? 
         theme.palette.common.white
       : theme.palette.text.secondary;
   const tooltipTheme = theme.palette.mode === "dark" ? "dark" : "light";
@@ -115,14 +114,10 @@ const DashboardChart = () => {
         })
       );
       dispatch(fetchPromotions(restaurant.id.toString()));
-      // fetch revenue for the restaurant (month/year optional)
       dispatch(fetchRestaurantRevenue({ restaurantId: restaurant.id }));
-      // fetch reservations for booking stats
       dispatch(fetchReservationsByRestaurant(restaurant.id));
     }
   }, [dispatch, restaurant]);
-
-  // Fetch staff accounts (child accounts) with ensured auth header
   useEffect(() => {
     if (!token) return;
     try {
@@ -133,7 +128,6 @@ const DashboardChart = () => {
     dispatch(fetchStaffsByBusiness());
   }, [dispatch, token]);
 
-  // Month/Year selectors to filter revenue
   const [selectedMonth, setSelectedMonth] = useState<number | "all">(
     new Date().getMonth() + 1
   );
@@ -141,7 +135,6 @@ const DashboardChart = () => {
     new Date().getFullYear()
   );
 
-  // Fetch revenue when selection changes
   useEffect(() => {
     if (!restaurant?.id) return;
     const args: { restaurantId: number; month?: number; year?: number } = {
@@ -166,9 +159,6 @@ const DashboardChart = () => {
     return counts;
   }, [dishes]);
 
-  // (legacy bar options removed; using donut for dishes)
-
-  // Dishes by category as donut
   const dishesDonutSeries = useMemo(
     () => [
       countByCategory.ThucAn,
@@ -183,7 +173,6 @@ const DashboardChart = () => {
       ({
         chart: {
           id: "dishes-donut",
-          // ensure Apex uses this as the default text color
           foreColor: chartTextColor,
           animations: { enabled: false },
           toolbar: { show: false },
@@ -229,7 +218,6 @@ const DashboardChart = () => {
     [t, chartTextColor]
   );
 
-  // Count promotions by target type
   const promotionCounts = useMemo(() => {
     const dishCount = promotions.filter((p) => p.targetType === "dish").length;
     const orderCount = promotions.filter(
@@ -238,9 +226,7 @@ const DashboardChart = () => {
     return { dish: dishCount, order: orderCount };
   }, [promotions]);
 
-  // (legacy bar options removed; using polar area for promotions)
 
-  // Promotions by type as a polished donut (with total in center)
   const promotionDonutSeries = useMemo(
     () => [promotionCounts.dish, promotionCounts.order],
     [promotionCounts]
@@ -301,11 +287,7 @@ const DashboardChart = () => {
     [t, chartTextColor]
   );
 
-  // (legacy bar series removed; using number[] for donut)
 
-  // (legacy bar series removed; using number[] for polar area)
-
-  // ====== Booking stats (status distribution) ======
   const statusCounts = useMemo(() => {
     const counts: Record<(typeof BOOKING_STATUS_CATEGORIES)[number], number> = {
       Pending: 0,
@@ -328,11 +310,7 @@ const DashboardChart = () => {
     return counts;
   }, [reservations]);
 
-  // (legacy bar series removed; using radial bar)
 
-  // (legacy bar options removed; using radial bar)
-
-  // Reservations status as horizontal bar chart with counts and total
   const bookingStatusBarSeries = useMemo(
     () => [
       {
@@ -390,7 +368,7 @@ const DashboardChart = () => {
     };
   }, [t, chartTextColor]);
 
-  // ====== Staff stats (created per month: last 6 months) ======
+  //nhan viên được tạo trong 6 tháng gần đây
   const staffTrend = useMemo(() => {
     const months: { label: string; key: string }[] = [];
     const now = dayjs();
@@ -417,7 +395,6 @@ const DashboardChart = () => {
     () => ({
       chart: {
         id: "staff-trend",
-        // ensure chart text is visible in dark mode
         foreColor: chartTextColor,
         animations: { enabled: false },
         toolbar: { show: false },
@@ -438,7 +415,6 @@ const DashboardChart = () => {
     [staffTrend.data, t]
   );
 
-  // Small reusable KPI card used in the dashboard - memoized for performance
   const KPICard = React.memo<{
     title: string;
     value: string | number;

@@ -45,7 +45,6 @@ const BodyPage = () => {
   const prefersReducedMotion = useReducedMotion();
   const { setScrollToAllRestaurants } = useScrollContext();
 
-  // Ref cho phần "Tất cả nhà hàng"
   const allRestaurantsRef = useRef<HTMLDivElement | null>(null);
 
   const t = useTranslations("layout.body");
@@ -67,15 +66,9 @@ const BodyPage = () => {
     totalRecords,
   } = useAppSelector((state) => state.restaurant);
 
-  // Current page stored by restaurant slice (server-side pagination)
   const pageNumber = useAppSelector(
     (state) => state.restaurant.pageNumber ?? 1
   );
-
-  // Pagination: use server-side paging via the shared `Pagination` component.
-  // Do not keep a separate local `page` state here — rely on the store's
-  // `pageNumber` and let the pagination component request data when user
-  // changes page.
   const itemsPerPage = 10;
   const { allItems: allRecipes = [], loading: recipesLoading } = useAppSelector(
     (state) => state.recipes
@@ -92,7 +85,6 @@ const BodyPage = () => {
   const searchParams = useSearchParams();
   const q = searchParams?.get("q") ?? "";
 
-  // Đăng ký hàm scroll với context
   useEffect(() => {
     setScrollToAllRestaurants(() => {
       allRestaurantsRef.current?.scrollIntoView({
@@ -102,26 +94,20 @@ const BodyPage = () => {
     });
   }, [setScrollToAllRestaurants]);
 
-  // Load danh sách nhà hàng khi mở trang (initial load / when search changes)
   useEffect(() => {
     if (q && q.trim().length > 0) {
-      // Search mode: server returns full list for search endpoint
       dispatch(searchRestaurants(q));
     } else {
-      // Fetch paged restaurants from server (initial page = 1)
       dispatch(fetchRestaurants({ pageNumber: 1, pageSize: itemsPerPage }));
     }
 
-    // Fetch all restaurants for featured section (>= 4 stars)
     dispatch(fetchAllRestaurants());
     dispatch(fetchAllPromotions());
     dispatch(fetchDishPromotions());
-    // Load recipes and their reviews so we can show top-rated recipes on the home page
     dispatch(fetchAllRecipes({ pageNumber: 1, pageSize: 1000 }));
     dispatch(fetchRecipeReviews());
   }, [dispatch, q, itemsPerPage]);
 
-  // Lọc nhà hàng đề xuất: từ 4 sao trở lên từ allRestaurants
   const visibleRestaurants = useMemo(() => {
     return allRestaurants.filter((restaurant) => {
       const avg = restaurant.averageRating ?? restaurant.rating ?? 0;
@@ -129,7 +115,6 @@ const BodyPage = () => {
     });
   }, [allRestaurants]);
 
-  // Ref và hàm scroll cho danh sách đề xuất (1 hàng, kéo ngang)
   const suggestedRef = useRef<HTMLDivElement | null>(null);
   const suggestedScrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -152,15 +137,11 @@ const BodyPage = () => {
       return;
     }
 
-    // Add scrolling class during scroll
     el.classList.add(styles.scrolling);
 
-    // Clear previous timeout
     if (suggestedScrollTimeout.current) {
       clearTimeout(suggestedScrollTimeout.current);
     }
-
-    // Remove scrolling class after scroll ends
     suggestedScrollTimeout.current = setTimeout(() => {
       el.classList.remove(styles.scrolling);
     }, 150);
@@ -173,7 +154,6 @@ const BodyPage = () => {
     );
   };
 
-  // Suggested arrows visibility state
   const [suggestedOverflow, setSuggestedOverflow] = useState(false);
   const [suggestedCanScrollLeft, setSuggestedCanScrollLeft] = useState(false);
   const [suggestedCanScrollRight, setSuggestedCanScrollRight] = useState(false);
@@ -190,7 +170,6 @@ const BodyPage = () => {
     };
   }, [visibleRestaurants]);
 
-  // Ref + scroll cho danh sách khuyến mãi (1 hàng, kéo ngang)
   const promotionsRef = useRef<HTMLDivElement | null>(null);
   const promotionsScrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -229,7 +208,6 @@ const BodyPage = () => {
     );
   };
 
-  // Promotion arrows visibility state
   const [promotionsOverflow, setPromotionsOverflow] = useState(false);
   const [promotionsCanScrollLeft, setPromotionsCanScrollLeft] = useState(false);
   const [promotionsCanScrollRight, setPromotionsCanScrollRight] =
@@ -247,7 +225,6 @@ const BodyPage = () => {
     };
   }, [promotions]);
 
-  // Top recipes (>= 4★) carousel
   const recipesRef = useRef<HTMLDivElement | null>(null);
   const recipesScrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -286,7 +263,7 @@ const BodyPage = () => {
     );
   };
 
-  // Recipes arrows visibility state
+
   const [recipesOverflow, setRecipesOverflow] = useState(false);
   const [recipesCanScrollLeft, setRecipesCanScrollLeft] = useState(false);
   const [recipesCanScrollRight, setRecipesCanScrollRight] = useState(false);
@@ -303,7 +280,6 @@ const BodyPage = () => {
     };
   }, [allRecipes, recipeReviews]);
 
-  // Dish promotions (món đang giảm giá) - ref + scroll giống suggested
   const dishPromotionsRef = useRef<HTMLDivElement | null>(null);
   const dishPromotionsScrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -348,7 +324,6 @@ const BodyPage = () => {
   const [dishPromotionsCanScrollRight, setDishPromotionsCanScrollRight] =
     useState(false);
 
-  // Select dish promotions from redux
   const { items: dishPromotions = [], loading: dishPromotionsLoading } =
     useAppSelector(
       (state) =>
@@ -367,8 +342,6 @@ const BodyPage = () => {
     };
   }, [dishPromotions]);
 
-  // Hàm render danh sách nhà hàng (có thể bật nhãn 'Được đề xuất')
-  // Card dùng chung cho cả 2 section
   const renderRestaurantCard = (
     restaurant: (typeof restaurants)[number],
     showSuggestedBadge: boolean,
@@ -398,7 +371,6 @@ const BodyPage = () => {
             cursor: "pointer",
           }}
         >
-          {/* Ảnh nhà hàng (bắt buộc 1:1 để giữ layout ổn định) */}
           {restaurant.imageUrl ? (
             <Shine hoverOnly={false}>
               <Box className={`${styles.aspectSquare} shine`}>
@@ -477,7 +449,6 @@ const BodyPage = () => {
           )}
 
           <CardContent sx={{ flexGrow: 1, width: "100%" }}>
-            {/* Tên nhà hàng */}
             <Typography
               variant="subtitle1"
               fontWeight="bold"
@@ -488,7 +459,6 @@ const BodyPage = () => {
               {restaurant.name}
             </Typography>
 
-            {/* Rating + tổng sao */}
             <Box display="flex" alignItems="center" mb={1}>
               {(() => {
                 const avg = restaurant.averageRating ?? restaurant.rating ?? 0;
@@ -509,7 +479,6 @@ const BodyPage = () => {
               })()}
             </Box>
 
-            {/* Địa chỉ */}
             <Typography
               variant="body2"
               color="text.secondary"
@@ -522,7 +491,6 @@ const BodyPage = () => {
           </CardContent>
         </Box>
 
-        {/* Button đặt chỗ */}
         <Box sx={{ p: 2, pt: 0 }}>
           <Button
             variant="outlined"
@@ -548,7 +516,6 @@ const BodyPage = () => {
     <Grid
       container
       rowSpacing={2}
-      // spacing={{ xs: 1, sm: 2, md: 2 }}
     >
       {list.map((restaurant, idx) => (
         <Grid
@@ -568,20 +535,17 @@ const BodyPage = () => {
     </Grid>
   );
 
-  // Hiển thị danh sách đề xuất theo dạng 1 hàng kéo ngang cho gọn
   const renderSuggestedCarousel = () => (
     <Box position="relative">
       <Grid
         ref={suggestedRef}
         container
         className={styles.carousel}
-        // spacing={{ xs: 1, sm: 2, md: 2 }}
         onScroll={() => updateSuggestedState()}
         sx={{
           flexWrap: "nowrap",
           overflowX: "auto",
           scrollBehavior: "smooth",
-          // Thêm khoảng “đệm” hai bên để item đầu/cuối không dính sát lề
           px: { xs: 1, sm: 2 },
           py: 1,
           scrollbarWidth: "none",
@@ -615,7 +579,6 @@ const BodyPage = () => {
     </Box>
   );
 
-  // --- Promotion helpers/UI ---
 
   const renderPromotionCard = (p: Promotion, index: number = 0) => (
     <motion.div {...getMotionProps(index)}>
@@ -632,7 +595,6 @@ const BodyPage = () => {
           "&:hover": { transform: "translateY(-4px)", boxShadow: 4 },
         }}
       >
-        {/* Image area similar to restaurant card */}
         {p.imageUrl ? (
           <Shine hoverOnly={false}>
             <Box className={`${styles.aspectSquare} shine`}>
@@ -705,7 +667,6 @@ const BodyPage = () => {
         <CardContent
           sx={{ pt: 2, flexGrow: 1, display: "flex", flexDirection: "column" }}
         >
-          {/* 1) Tên nhà hàng */}
           <Typography
             variant="subtitle1"
             fontWeight={700}
@@ -722,7 +683,6 @@ const BodyPage = () => {
             {p.restaurant?.name ?? `#${p.restaurantId}`}
           </Typography>
 
-          {/* 2) Tiêu đề khuyến mãi to và nổi bật ngay dưới tên nhà hàng */}
           <Typography
             variant="h6"
             fontWeight={600}
@@ -733,17 +693,15 @@ const BodyPage = () => {
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              minHeight: "2.6em", // Ensures consistent space for 2 lines
+              minHeight: "2.6em", 
             }}
             title={p.title}
           >
             {p.title}
           </Typography>
 
-          {/* Spacer to push details to bottom when title is short, making card heights consistent */}
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* 3) Thời gian hiệu lực */}
           <Typography variant="body2" color="text.secondary">
             {t("promotion.valid_until_prefix")}{" "}
             {dayjs(p.endDate).isValid()
@@ -767,9 +725,7 @@ const BodyPage = () => {
     </motion.div>
   );
 
-  // Render card for dish promotions (styled similarly to restaurant card)
   const renderDishCard = (d: DishPromotion, index: number = 0) => {
-    // Local helpers: prefer flat API fields, fall back to nested `dish` shape.
     const flat = d as unknown as { [k: string]: unknown };
     const imageSrc = (flat["image"] as string | undefined) ?? d.dish?.imageUrl;
     const name = d.dish?.name ?? (flat["dishName"] as string | undefined) ?? "";
@@ -885,10 +841,6 @@ const BodyPage = () => {
                 {d.dish?.name ?? d.dishName}
               </Typography>
 
-              {/* <Typography variant="body2" color="text.secondary" mb={1}>
-            {d.promotion?.title ?? d.promotionTitle}
-          </Typography> */}
-
               <Box display="flex" alignItems="center" gap={1}>
                 <Typography variant="subtitle1" fontWeight={700} color="error">
                   {(discounted as number)?.toLocaleString() ?? "0"}₫
@@ -920,7 +872,6 @@ const BodyPage = () => {
     );
   };
 
-  // --- Top recipes helpers ---
   type EnrichedRecipe = Recipe & {
     averageRating?: number;
     totalReviews?: number;
@@ -930,7 +881,6 @@ const BodyPage = () => {
     if (!Array.isArray(allRecipes) || allRecipes.length === 0)
       return [] as Recipe[];
 
-    // Compute average rating for each recipe from recipeReviews
     const byId = new Map<number, { sum: number; cnt: number }>();
     recipeReviews.forEach((r) => {
       const cur = byId.get(r.recipeId) ?? { sum: 0, cnt: 0 };
@@ -1071,7 +1021,6 @@ const BodyPage = () => {
         ref={recipesRef}
         container
         className={styles.carousel}
-        // spacing={{ xs: 1, sm: 1, md: 1 }}
         onScroll={() => updateRecipesState()}
         sx={{
           flexWrap: "nowrap",
@@ -1083,7 +1032,6 @@ const BodyPage = () => {
           py: 1,
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
-          // Tối ưu performance
           transform: "translateZ(0)",
           backfaceVisibility: "hidden",
           perspective: 1000,
@@ -1129,7 +1077,6 @@ const BodyPage = () => {
           flexWrap: "nowrap",
           overflowX: "auto",
           scrollBehavior: "smooth",
-          // Thêm khoảng “đệm” hai bên để item đầu/cuối không dính sát lề
           px: { xs: 1, sm: 2 },
           py: 1,
           scrollbarWidth: "none",
@@ -1186,7 +1133,6 @@ const BodyPage = () => {
         </Typography>
       ) : (
         <>
-          {/* Khuyến mãi - tất cả, dạng 1 hàng kéo ngang */}
           <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 4, borderRadius: 2 }}>
             <Box
               display="flex"
@@ -1217,7 +1163,6 @@ const BodyPage = () => {
               {renderSuggestedCarousel()}
             </Paper>
           )}
-          {/* Món đang khuyến mãi (hiển thị dạng carousel ngang giống nhà hàng được đề xuất) */}
           <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 4, borderRadius: 2 }}>
             <Box
               display="flex"
@@ -1251,7 +1196,6 @@ const BodyPage = () => {
                     py: 1,
                     scrollbarWidth: "none",
                     "&::-webkit-scrollbar": { display: "none" },
-                    // Tối ưu performance
                     transform: "translateZ(0)",
                     backfaceVisibility: "hidden",
                     perspective: 1000,
@@ -1294,7 +1238,6 @@ const BodyPage = () => {
               </Box>
             )}
           </Paper>
-          {/* Banner trước phần công thức - sử dụng ảnh banerV2 */}
           <Paper
             sx={{ mb: 4, borderRadius: 3, overflow: "hidden", boxShadow: 3 }}
           >
@@ -1348,7 +1291,6 @@ const BodyPage = () => {
               {t("sections.all_restaurants")}
             </Typography>
             {renderRestaurants(restaurants, false)}
-            {/* Pagination for restaurant listing (server-side) */}
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Pagination
                 page={pageNumber}
@@ -1366,7 +1308,6 @@ const BodyPage = () => {
             </Box>
           </Paper>
 
-          {/* Hình hợp tác (giống banner) đặt cuối trang */}
           <Paper
             sx={{
               mb: 4,

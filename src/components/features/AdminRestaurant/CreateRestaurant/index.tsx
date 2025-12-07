@@ -81,9 +81,6 @@ const RestaurantCreatePage = () => {
   };
 
   const handleAddressSelect = (address: string, lat: number, lon: number) => {
-    // When a suggestion is selected, keep only the string up to and including the first
-    // occurrence of Ho Chi Minh (various spellings). This ensures the stored address
-    // ends at the city level as requested.
     const variants = [
       "Hồ Chí Minh",
       "Ho Chi Minh",
@@ -106,16 +103,12 @@ const RestaurantCreatePage = () => {
     }
 
     setForm((prev) => {
-      // If the user already typed a house number at the start of the address input
-      // (e.g. "123 Nguyen Hue"), preserve it by prepending to the selected label
-      // unless the selected label already begins with that number.
       const m = prev.address.match(/^\s*([0-9]+[A-Za-z0-9\-\/]*)\s*(.*)$/);
       let preserved = "";
       if (m) preserved = m[1];
 
       let finalAddress = newAddress;
       if (preserved) {
-        // if finalAddress doesn't already start with preserved number, prepend it
         const re = new RegExp(`^\\s*${preserved}\\b`);
         if (!re.test(finalAddress)) {
           finalAddress = `${preserved} ${finalAddress}`;

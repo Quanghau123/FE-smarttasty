@@ -55,7 +55,6 @@ const BusinessUserPage = () => {
   const pageSize = 7;
 
   useEffect(() => {
-    // Use fetchAllRestaurants so we have the full list (not limited by paging)
     dispatch(fetchAllRestaurants());
     dispatch(fetchUsers());
   }, [dispatch]);
@@ -74,8 +73,6 @@ const BusinessUserPage = () => {
       }
     }
   };
-
-  // 🔹 Lọc user role = business và ghép nhà hàng
   const businessUsers: ExtendedUser[] = useMemo(() => {
     return users
       .filter((u) => u.role === "business")
@@ -92,7 +89,6 @@ const BusinessUserPage = () => {
       });
   }, [users, restaurants, allRestaurants, t]);
 
-  // 🔹 Filter + Search
   const filteredData = businessUsers.filter(
     (user) =>
       user.userName.toLowerCase().includes(search.toLowerCase()) ||
@@ -109,7 +105,6 @@ const BusinessUserPage = () => {
     setCurrentPage(value);
   };
 
-  // 🔹 Loading UI
   if (loading) {
     return (
       <Box
@@ -125,7 +120,6 @@ const BusinessUserPage = () => {
     );
   }
 
-  // 🔹 Error UI
   if (error) {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>

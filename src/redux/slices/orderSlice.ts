@@ -16,9 +16,6 @@ import {
 } from "@/types/order";
 import { RestaurantRevenue } from "@/types/order";
 
-/* -------------------------------------------------------------------------- */
-/*                                 STATE TYPE                                 */
-/* -------------------------------------------------------------------------- */
 
 interface OrderState {
   orders: OrderResponse[];
@@ -38,12 +35,6 @@ const initialState: OrderState = {
   revenueByRestaurant: {},
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                   UTILS                                    */
-/* -------------------------------------------------------------------------- */
-
-// Note: Token attachment is handled in axiosInstance interceptor.
-
 const resolveApiData = (body: unknown): unknown => body as unknown;
 
 const isApiEnvelope = (v: unknown): v is ApiEnvelope<unknown> => {
@@ -52,7 +43,6 @@ const isApiEnvelope = (v: unknown): v is ApiEnvelope<unknown> => {
   return "errCode" in obj && "errMessage" in obj;
 };
 
-// Normalize various backend shapes into an array of raw order objects (or null)
 const extractItemsArray = (payload: unknown): unknown[] | null => {
   if (!payload) return null;
   if (Array.isArray(payload)) return payload as unknown[];
@@ -66,8 +56,6 @@ const extractItemsArray = (payload: unknown): unknown[] | null => {
   return null;
 };
 
-// Helper: if API returns only { data: { id: number } } or a single object,
-// fetch the full order by id or normalize the provided object.
 const fetchOrderByIdInternal = async (
   id: number
 ): Promise<OrderResponse | null> => {
@@ -84,11 +72,7 @@ const fetchOrderByIdInternal = async (
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                  THUNKS                                    */
-/* -------------------------------------------------------------------------- */
 
-// 1️⃣ POST /api/Order - Tạo đơn hàng mới
 export const createOrder = createAsyncThunk<
   OrderResponse,
   OrderRequest,
@@ -101,19 +85,15 @@ export const createOrder = createAsyncThunk<
     const items = extractItemsArray(envelope);
     if (Array.isArray(items) && items.length > 0)
       return normalizeOrderResponse(items[0] as RawOrderResponse);
-
-    // Trường hợp BE trả về object data
     if (
       isApiEnvelope(envelope) &&
       envelope.data &&
       typeof envelope.data === "object"
     ) {
       const dataObj = envelope.data as Record<string, unknown>;
-      // Nếu BE trả về full object order
       if ("items" in dataObj || "restaurant" in dataObj) {
         return normalizeOrderResponse(dataObj as unknown as RawOrderResponse);
       }
-      // Nếu chỉ có id -> thử fetch chi tiết đơn hàng rồi trả về
       const idVal = dataObj["id"];
       if (typeof idVal === "number") {
         try {
@@ -125,9 +105,7 @@ export const createOrder = createAsyncThunk<
           if (Array.isArray(items2) && items2.length > 0)
             return normalizeOrderResponse(items2[0] as RawOrderResponse);
         } catch {
-          // ignore, fallback phía dưới
         }
-        // Fallback: dựng object tối thiểu từ payload
         return normalizeOrderResponse({
           id: idVal,
           userId: payload.userId,
@@ -152,8 +130,6 @@ export const createOrder = createAsyncThunk<
         } as RawOrderResponse);
       }
     }
-
-    // Trường hợp BE trả về mảng trực tiếp
     if (Array.isArray(envelope) && envelope.length > 0)
       return normalizeOrderResponse(envelope[0] as RawOrderResponse);
 
@@ -165,7 +141,6 @@ export const createOrder = createAsyncThunk<
   }
 });
 
-// 2️⃣ POST /api/Order/{id}/items - thêm món vào đơn hàng
 export const addItemToOrder = createAsyncThunk<
   OrderResponse,
   {
@@ -181,19 +156,14 @@ export const addItemToOrder = createAsyncThunk<
     const items = extractItemsArray(envelope);
     if (Array.isArray(items) && items.length > 0)
       return normalizeOrderResponse(items[0] as RawOrderResponse);
-
-    // Nếu BE trả về success nhưng data không phải mảng -> xem như thành công,
-    // cố gắng lấy chi tiết đơn hàng; nếu thất bại thì trả về một order tối thiểu
-    // để frontend coi là thành công (tránh hiển thị toast lỗi mặc dù BE trả success).
     if (isApiEnvelope(envelope) && envelope.errCode === "success") {
       try {
         const fetched = await fetchOrderByIdInternal(orderId);
         if (fetched) return fetched;
       } catch {
-        // ignore
       }
 
-      // Fallback: tạo một OrderResponse tối thiểu để coi là thành công
+
       const fallbackOrder: RawOrderResponse = {
         id: orderId,
         userId: 0,
@@ -213,7 +183,6 @@ export const addItemToOrder = createAsyncThunk<
       return normalizeOrderResponse(fallbackOrder);
     }
 
-    // Trường hợp trả về mảng trực tiếp
     if (Array.isArray(envelope) && envelope.length > 0)
       return normalizeOrderResponse(envelope[0] as RawOrderResponse);
 
@@ -227,7 +196,6 @@ export const addItemToOrder = createAsyncThunk<
   }
 });
 
-// 3️⃣ GET /api/Order/{id}
 export const fetchOrderById = createAsyncThunk<
   OrderResponse,
   number,
@@ -250,7 +218,6 @@ export const fetchOrderById = createAsyncThunk<
   }
 });
 
-// 4️⃣ PUT /api/Order/{id} - Cập nhật đơn hàng
 export const updateOrder = createAsyncThunk<
   OrderResponse,
   { id: number; payload: OrderRequest },
@@ -273,7 +240,6 @@ export const updateOrder = createAsyncThunk<
   }
 });
 
-// 5️⃣ DELETE /api/Order/{id}
 export const deleteOrder = createAsyncThunk<
   number,
   number,
@@ -288,7 +254,6 @@ export const deleteOrder = createAsyncThunk<
   }
 });
 
-// 6️⃣ DELETE /api/Order/{orderId}/items/{orderItemId}
 export const deleteOrderItem = createAsyncThunk<
   OrderResponse,
   { orderId: number; orderItemId: number },
@@ -315,8 +280,6 @@ export const deleteOrderItem = createAsyncThunk<
     }
   }
 );
-
-// 7️⃣ GET /api/Order/user/{userId}
 export const fetchOrdersByUser = createAsyncThunk<
   OrderResponse[],
   number,
@@ -340,7 +303,6 @@ export const fetchOrdersByUser = createAsyncThunk<
   }
 });
 
-// 8️⃣ GET /api/Order/status/{status}
 export const fetchOrdersByStatus = createAsyncThunk<
   OrderResponse[],
   string,
@@ -364,7 +326,6 @@ export const fetchOrdersByStatus = createAsyncThunk<
   }
 });
 
-// 9️⃣ PATCH /api/Order/{id}/status
 export const updateOrderStatus = createAsyncThunk<
   OrderResponse,
   { id: number; status: OrderStatus },
@@ -389,7 +350,6 @@ export const updateOrderStatus = createAsyncThunk<
   }
 });
 
-// 🔟 PATCH /api/Order/{id}/delivery-status
 export const updateDeliveryStatus = createAsyncThunk<
   OrderResponse,
   { id: number; deliveryStatus: DeliveryStatus },
@@ -419,7 +379,6 @@ export const updateDeliveryStatus = createAsyncThunk<
   }
 );
 
-// 11️⃣ GET /api/Order/restaurant/{restaurantId}/revenue?year=&month=
 export const fetchRestaurantRevenue = createAsyncThunk<
   RestaurantRevenue | null,
   { restaurantId: number; year?: number; month?: number },
@@ -442,9 +401,6 @@ export const fetchRestaurantRevenue = createAsyncThunk<
   }
 );
 
-/* -------------------------------------------------------------------------- */
-/*                                   SLICE                                    */
-/* -------------------------------------------------------------------------- */
 
 const orderSlice = createSlice({
   name: "order",
@@ -516,15 +472,13 @@ const orderSlice = createSlice({
           >
         ) => {
           state.loading = false;
-          // action.payload may not include restaurantId if BE returns a bare object
-          // use the original thunk arg (action.meta.arg.restaurantId) as fallback
           const argRestaurantId = action.meta?.arg?.restaurantId;
 
           const payload = action.payload;
           if (payload) {
             const key = (payload.restaurantId ?? argRestaurantId) as number;
             if (typeof key === "number") {
-              // ensure stored object contains restaurantId for later lookups
+
               state.revenueByRestaurant[key] = {
                 ...(payload as RestaurantRevenue),
                 restaurantId: (payload as RestaurantRevenue).restaurantId ?? key,

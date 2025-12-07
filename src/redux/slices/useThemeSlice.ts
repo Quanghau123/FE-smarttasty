@@ -21,16 +21,13 @@ const getInitialTheme = (): ThemeMode => {
     localStorage.setItem(LOCAL_STORAGE_THEME_KEY, theme);
   }
 
-  // Không set data-theme ở đây để tránh hydration mismatch
-  // Sẽ set trong useEffect của component
   return theme;
 };
 
 const initialState: ThemeState = {
-  themeMode: "light", // Luôn bắt đầu với "light" để khớp với server
+  themeMode: "light",
 };
 
-// Export hàm này để gọi trong useEffect
 export const initializeTheme = () => {
   if (typeof window !== "undefined") {
     const theme = getInitialTheme();

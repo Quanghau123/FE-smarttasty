@@ -64,8 +64,8 @@ const VNPayReturnPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const maxAttempts = 24; // Poll tối đa 24 lần (2 phút nếu interval 5s)
-      const interval = 5000; // 5 giây
+      const maxAttempts = 24; 
+      const interval = 5000; 
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -78,10 +78,8 @@ const VNPayReturnPage: React.FC = () => {
 
           if (statusStr.includes("success") || statusStr === "1") {
             toast.success(t("success_toast"));
-            break; // thành công, thoát polling
+            break; 
           }
-
-          // Nếu pending thì chờ lần tiếp theo
           if (statusStr === "pending" || statusStr === "0") {
             await new Promise((res) => setTimeout(res, interval));
           } else {
@@ -93,7 +91,6 @@ const VNPayReturnPage: React.FC = () => {
           if (!isMounted) return;
           setError(msg);
 
-          // Nếu chưa hết attempt, đợi interval trước khi retry
           if (attempt < maxAttempts) {
             await new Promise((res) => setTimeout(res, interval));
           } else {
@@ -108,7 +105,7 @@ const VNPayReturnPage: React.FC = () => {
     fetchPaymentStatus();
 
     return () => {
-      isMounted = false; // clean-up tránh setState khi unmounted
+      isMounted = false; 
     };
   }, [query, dispatch, searchParams, t]);
 
@@ -122,7 +119,6 @@ const VNPayReturnPage: React.FC = () => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr || dateStr.length !== 14) return dateStr || "-";
-    // Format: YYYYMMDDHHmmss -> DD/MM/YYYY HH:mm:ss
     const year = dateStr.substring(0, 4);
     const month = dateStr.substring(4, 6);
     const day = dateStr.substring(6, 8);
@@ -277,8 +273,6 @@ const VNPayReturnPage: React.FC = () => {
                 {formatDate(vnpayParams.vnp_PayDate)}
               </Typography>
             </Box>
-
-            {/* Transaction Information */}
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
                 {t("transaction_info")}

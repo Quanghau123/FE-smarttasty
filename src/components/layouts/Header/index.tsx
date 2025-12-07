@@ -48,7 +48,7 @@ const Header = () => {
   const { scrollToAllRestaurants } = useScrollContext();
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-  const iconPx = isXs ? 22 : 26; // unified icon size for mobile
+  const iconPx = isXs ? 22 : 26;
   const [localUserName, setLocalUserName] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -71,30 +71,21 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const t = useTranslations("header");
   const router = useRouter();
-  // Determine role from Redux or localStorage
   const [currentRole, setCurrentRole] = useState<string | null>(null);
 
-  // suggestions from redux
   const { suggestions: searchSuggestions = [], loadingSuggestions } =
     useAppSelector((s) => s.restaurant);
 
-  // Lấy user từ Redux để detect khi login thành công
   const currentUser = useAppSelector((state) => state.user.user);
 
-  // ✅ Lấy thông tin giỏ hàng từ Redux
-  // ✅ Lấy toàn bộ danh sách đơn hàng của user
   const orders = useAppSelector((state) => state.order.orders);
 
-  // ✅ Đếm số lượng đơn hàng
   const totalOrders = orders?.length || 0;
 
   useEffect(() => {
-    // Khi user đăng nhập (Redux hoặc localStorage), gọi API lấy giỏ hàng hiện tại
     let id: number | undefined | null = undefined;
 
-    // 1) Nếu có user trong Redux (thường xảy ra ngay khi login thành công)
     if (currentUser && typeof currentUser === "object") {
-      // backend/user shape có thể là userId hoặc id
       const cu = currentUser as unknown as {
         userId?: number;
         id?: number;
@@ -102,7 +93,6 @@ const Header = () => {
       id = cu.userId ?? cu.id;
     }
 
-    // 2) Fallback: kiểm tra localStorage (trường hợp reload trang)
     if (!id) {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -110,13 +100,12 @@ const Header = () => {
           const parsed = JSON.parse(storedUser);
           id = parsed?.userId ?? parsed?.id;
         } catch {
-          // ignore parse error
         }
       }
     }
 
     if (id) {
-      console.log("🧩 Fetching orders for user:", id);
+      console.log("Fetching orders for user:", id);
       dispatch(fetchOrdersByUser(Number(id)));
     }
   }, [dispatch, currentUser]);
@@ -124,12 +113,10 @@ const Header = () => {
   useEffect(() => {
     setHydrated(true);
 
-    // ✅ Kiểm tra access_token từ cookie
     const token = getAccessToken();
     setIsLoggedIn(!!token);
 
     try {
-      // Prefer Redux user (available immediately after login), fallback to localStorage
       if (currentUser && typeof currentUser === "object") {
         const cu = currentUser as unknown as {
           userName?: string;
@@ -140,7 +127,7 @@ const Header = () => {
         const userName = cu.userName || cu.fullName || cu.name || "User";
         setLocalUserName(userName);
         setCurrentRole(cu.role ?? null);
-        setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong Redux
+        setIsLoggedIn(true); 
       } else {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -152,7 +139,7 @@ const Header = () => {
             "User";
           setLocalUserName(userName);
           setCurrentRole(parsedUser?.role ?? null);
-          setIsLoggedIn(true); // ✅ Đảm bảo set isLoggedIn khi có user trong localStorage
+          setIsLoggedIn(true); 
         } else {
           setIsLoggedIn(false);
           setLocalUserName(null);
@@ -167,10 +154,9 @@ const Header = () => {
     }
   }, [currentUser]);
 
-  // Chỉ fetch danh sách nhà hàng khi hiển thị khối tìm kiếm (user hoặc chưa đăng nhập)
   useEffect(() => {
     const canShowSearch = !isLoggedIn || currentRole === "user";
-    if (!canShowSearch) return; // tránh gọi API khi role khác -> giảm lỗi 502
+    if (!canShowSearch) return; 
     if (selectedCategory === "All") {
       dispatch(fetchRestaurants());
     } else {
@@ -181,29 +167,23 @@ const Header = () => {
   const handleSearchSubmit = (q?: string) => {
     const finalQ = (q ?? query).trim();
     if (!finalQ) {
-      // empty -> go home and show all
       dispatch(fetchRestaurants());
       router.push("/");
       return;
     }
-    // Navigate to dedicated search results page
     router.push(`/search?q=${encodeURIComponent(finalQ)}`);
   };
 
   const handleLogout = () => {
-    // ✅ Gọi API logout để revoke refresh tokens ở BE
     const userId = currentUser?.userId;
 
     if (userId) {
-      // Có userId, gọi API logout
       dispatch(logoutUser(userId)).finally(() => {
-        // Sau khi logout (thành công hoặc thất bại), redirect về login
         setIsLoggedIn(false);
         setLocalUserName(null);
         window.location.href = "/login";
       });
     } else {
-      // Không có userId (trường hợp bất thường), vẫn clear local data
       dispatch(clearUser());
       setIsLoggedIn(false);
       setLocalUserName(null);
@@ -252,13 +232,9 @@ const Header = () => {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Register SignalR for realtime notifications when logged in
   useSignalR({
     enabled: isLoggedIn,
     onNotification: (title?: string, message?: string) => {
-      console.log("🔔 [Header] onNotification callback triggered!");
-      console.log("   Title:", title);
-      console.log("   Message:", message);
       try {
         const id = String(Date.now()) + Math.random().toString(36).slice(2, 8);
         const newNotif = {
@@ -275,7 +251,7 @@ const Header = () => {
           return updated;
         });
       } catch (e) {
-        console.error("❌ Error handling realtime notification:", e);
+        console.error("Error handling realtime notification:", e);
       }
     },
   });
@@ -297,7 +273,6 @@ const Header = () => {
           justifyContent: "space-between !important",
         }}
       >
-        {/* Left: Logo */}
         {currentRole === "user" ? (
           <Link href="/">
             <Image
@@ -320,7 +295,6 @@ const Header = () => {
           </Box>
         )}
 
-        {/* Middle: Filter + Search - hiển thị cho user hoặc chưa đăng nhập */}
         {(!isLoggedIn || currentRole === "user") && (
           <Box className={styles.searchSection}>
             <>
@@ -353,7 +327,7 @@ const Header = () => {
                 MenuListProps={{
                   sx: {
                     display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)", // 3 cột đều
+                    gridTemplateColumns: "repeat(3, 1fr)",
                     gap: 1,
                     padding: 0,
                   },
@@ -376,7 +350,6 @@ const Header = () => {
                     onClick={() => {
                       setSelectedCategory(item.key);
                       setCategoryMenuAnchor(null);
-                      // Cuộn xuống phần "Tất cả nhà hàng"
                       if (scrollToAllRestaurants) {
                         setTimeout(() => scrollToAllRestaurants(), 100);
                       }
@@ -452,7 +425,6 @@ const Header = () => {
             />
           </Box>
         )}
-        {/* Right: Auth, Notification, Language, Theme */}
         <Box className={styles.rightSection}>
           {isLoggedIn ? (
             <>
@@ -571,7 +543,6 @@ const Header = () => {
             </>
           ) : (
             <>
-              {/* Desktop: keep separate buttons; Mobile: single icon with popover */}
               <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
                 <Link href="/login">
                   <Button size="small" variant="text">
@@ -636,7 +607,6 @@ const Header = () => {
             </>
           )}
 
-          {/* ✅ Icon giỏ hàng có badge hiển thị số lượng món - Only show for User role */}
           {currentRole === "user" && (
             <Link href="/cart">
               <IconButton>

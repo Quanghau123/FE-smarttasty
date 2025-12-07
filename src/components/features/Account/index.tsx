@@ -46,21 +46,17 @@ const AccountPage = () => {
   const isMobile = useMediaQuery("(max-width:768px)");
   const router = useRouter();
 
-  // ✅ Nếu thiếu thông tin chi tiết, gọi API để lấy user từ server (source of truth)
   useEffect(() => {
     const token = getAccessToken();
 
-    // Ưu tiên id từ Redux, fallback sang localStorage (đã lưu tối thiểu userId)
     const local = getUserLocal();
     const userId = user?.userId ?? local?.userId;
 
     if (token && userId) {
-      // Nếu Redux chưa có user hoặc cần làm mới, gọi API detail
       if (!user || !user.email || !user.phone || !user.address) {
         dispatch(fetchUserById(userId));
       }
     } else if (!user && token) {
-      // Không có userId -> thử khôi phục từ localStorage nguyên bản
       const storedUser =
         typeof window !== "undefined" ? localStorage.getItem("user") : null;
       if (storedUser) {
@@ -71,7 +67,6 @@ const AccountPage = () => {
             dispatch(fetchUserById(parsedUser.userId));
           }
         } catch {
-          // ignore
         }
       }
     }
@@ -88,12 +83,10 @@ const AccountPage = () => {
   const handleSave = async () => {
     if (!user) return;
 
-    // updateUser cần ít nhất userId
-    // Không cho phép cập nhật email từ đây
     const payload = {
       userId: user.userId,
       userName: editableUser.userName ?? user.userName,
-      email: user.email, // 🟢 giữ nguyên email cũ để không thiếu field
+      email: user.email, 
       phone: editableUser.phone ?? user.phone,
       address: editableUser.address ?? user.address,
     };
@@ -113,16 +106,13 @@ const AccountPage = () => {
 
   const handleChange =
     (field: keyof User) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (field === "email") return; // chặn sửa email
+      if (field === "email") return; 
       setEditableUser({ ...editableUser, [field]: e.target.value });
     };
 
-  // Callback khi đổi mật khẩu thành công
   const handlePasswordChanged = () => {
-    // ✅ Xóa tokens từ cookie và localStorage
     clearTokens();
 
-    // Điều hướng login sau 1.5s để toast hiển thị
     setTimeout(() => router.push("/login"), 1500);
   };
 
@@ -146,7 +136,6 @@ const AccountPage = () => {
 
   return (
     <div className={styles.accountContainer}>
-      {/* Mobile Menu Button */}
       {isMobile && (
         <IconButton
           onClick={() => setDrawerOpen(true)}
@@ -164,7 +153,6 @@ const AccountPage = () => {
         </IconButton>
       )}
 
-      {/* Mobile Drawer */}
       {isMobile && (
         <Drawer
           anchor="left"
@@ -204,7 +192,6 @@ const AccountPage = () => {
         </Drawer>
       )}
 
-      {/* Desktop Sidebar */}
       {!isMobile && (
         <div className={styles.sidebar}>
           <Tabs

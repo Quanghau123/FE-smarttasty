@@ -44,7 +44,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(fetchUsers());
-    // Load all restaurants (no pagination) for admin overview
     dispatch(fetchAllRestaurants());
   }, [dispatch]);
 
@@ -81,8 +80,6 @@ const Dashboard = () => {
     () => getChartData(businessUsers),
     [businessUsers, getChartData]
   );
-  // Prefer `allRestaurants` when present (fetchAllRestaurants populates it);
-  // fall back to paged `restaurants` if needed.
   const restaurantsListMemo = useMemo(() => {
     const a = allRestaurants ?? [];
     const p = restaurants ?? [];

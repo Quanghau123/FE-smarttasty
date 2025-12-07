@@ -84,13 +84,11 @@ const PromotionPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
 
-  // State cho dialog gán số tiền tối thiểu
   const [openMinOrderDialog, setOpenMinOrderDialog] = useState(false);
   const [selectedPromoForMinOrder, setSelectedPromoForMinOrder] =
     useState<Promotion | null>(null);
   const [minOrderValue, setMinOrderValue] = useState("");
 
-  // filter: all | dish | order
   const [filterTarget, setFilterTarget] = useState<"all" | TargetType>("all");
   const filteredPromotions = React.useMemo(() => {
     if (!promotions) return [] as Promotion[];
@@ -104,7 +102,6 @@ const PromotionPage = () => {
     startDate: "",
     endDate: "",
     discountType: "percent" as DiscountType,
-    // keep as string to control formatting (leading zeros) in the input
     discountValue: "0",
     targetType: "dish" as TargetType,
     voucherCode: "",
@@ -112,7 +109,6 @@ const PromotionPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // ===== INIT =====
   useEffect(() => {
     const { token } = getUserFromLocalStorage();
     if (token) {
@@ -122,24 +118,20 @@ const PromotionPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // show errors from promotion slice
     if (promotionError) {
       toast.error(promotionError);
     }
     if (restaurant?.id) {
       setRestaurantId(restaurant.id);
       dispatch(fetchPromotions(restaurant.id));
-      // Load order-promotions for this restaurant so we can show minOrderValue and allow cancel
       dispatch(getOrderPromotionsForUser({ restaurantId: restaurant.id }));
     } else if (restaurant) {
       toast.warning(t("errors.no_restaurant_account"));
     }
   }, [restaurant, dispatch, promotionError, t]);
 
-  // ===== HANDLERS =====
   const handleOpenModal = (promo: Promotion | null = null) => {
     if (promo) {
-      // Nếu đang chỉnh sửa cùng 1 khuyến mãi, không cần reset lại form
       if (!editingPromo || editingPromo.id !== promo.id) {
         setEditingPromo(promo);
         setFormData({
@@ -148,10 +140,8 @@ const PromotionPage = () => {
           startDate: fromISO(promo.startDate),
           endDate: fromISO(promo.endDate),
           discountType: promo.discountType as DiscountType,
-          // store as string so input preserves user formatting until submit
           discountValue: String(promo.discountValue ?? 0),
           targetType: promo.targetType as TargetType,
-          // promotion may expose a top-level voucherCode or a vouchers array
           voucherCode: (() => {
             const p = promo as unknown as Record<string, unknown>;
             if (
@@ -206,7 +196,6 @@ const PromotionPage = () => {
       setPreviewUrl(null);
     }
 
-    // Giữ editingPromo để modal mở lại vẫn giữ data
   };
 
   const handleSubmit = async () => {
@@ -277,7 +266,7 @@ const PromotionPage = () => {
     setMinOrderValue("");
   };
 
-  // Gán số tiền tối thiểu để áp dụng khuyến mãi (Order Promotion)
+  // Gán số tiền tối thiểu để áp dụng khuyến mãi
   const handleAssignMinOrderValue = async () => {
     if (!selectedPromoForMinOrder) return;
 
@@ -306,7 +295,7 @@ const PromotionPage = () => {
     }
   };
 
-  // Huỷ gán số tiền tối thiểu (call delete API)
+  // Huỷ gán số tiền tối thiểu
   const handleCancelOrderPromotion = async (orderPromotionId: number) => {
     try {
       await dispatch(deleteOrderPromotion(orderPromotionId)).unwrap();
@@ -321,7 +310,6 @@ const PromotionPage = () => {
     }
   };
 
-  // ===== RENDER =====
   return (
     <Box p={3} pt={0} className="container mx-auto">
       {/* Header */}
@@ -358,7 +346,6 @@ const PromotionPage = () => {
         </Stack>
       </Box>
 
-      {/* Filter bar */}
       <Box mb={3} display="flex" gap={2} alignItems="center" flexWrap="wrap">
         <TextField
           select
@@ -382,7 +369,6 @@ const PromotionPage = () => {
         </Typography>
       </Box>
 
-      {/* Content */}
       {loading ? (
         <Box display="flex" justifyContent="center" py={8} pt={0}>
           <CircularProgress size={40} />
@@ -446,7 +432,6 @@ const PromotionPage = () => {
                   },
                 }}
               >
-                {/* Image preview */}
                 {promo.imageUrl && (
                   <Box sx={{ width: "100%", height: 160, overflow: "hidden" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -461,7 +446,6 @@ const PromotionPage = () => {
                     />
                   </Box>
                 )}
-                {/* Status Badge */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -493,7 +477,6 @@ const PromotionPage = () => {
                     {promo.title}
                   </Typography>
 
-                  {/* Description */}
                   {promo.description && (
                     <Typography
                       variant="body2"
@@ -512,7 +495,6 @@ const PromotionPage = () => {
 
                   <Divider sx={{ my: 2 }} />
 
-                  {/* Meta Info */}
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <EventIcon
@@ -553,7 +535,6 @@ const PromotionPage = () => {
                   </Stack>
                 </CardContent>
 
-                {/* Actions */}
                 <Box
                   sx={{
                     display: "flex",
@@ -563,7 +544,7 @@ const PromotionPage = () => {
                     pt: 0,
                   }}
                 >
-                  {/* Gán số tiền tối thiểu áp dụng khuyến mãi (chỉ cho loại Đơn hàng) */}
+                  {/* Gán số tiền tối thiểu áp dụng khuyến mãi*/}
                   {promo.targetType === "order" && (
                     <IconButton
                       size="small"
@@ -699,8 +680,6 @@ const PromotionPage = () => {
                   }
                   variant="outlined"
                 />
-
-                {/* Voucher code (optional) - useful for order-level promotions */}
                 <TextField
                   fullWidth
                   label={t("form.voucher.label")}
@@ -717,7 +696,6 @@ const PromotionPage = () => {
                   }
                 />
 
-                {/* Upload ảnh khuyến mãi (tùy chọn) */}
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" mb={1}>
                     {t("form.image.label")}
@@ -765,7 +743,6 @@ const PromotionPage = () => {
 
             <Divider />
 
-            {/* Cấu hình giảm giá */}
             <Box>
               <Typography
                 variant="subtitle2"
@@ -827,9 +804,7 @@ const PromotionPage = () => {
                   }
                   value={formData.discountValue}
                   onChange={(e) => {
-                    // allow only digits, remove non-digit chars
                     let raw = e.target.value.replace(/\D/g, "");
-                    // remove leading zeros but keep single zero when value is 0
                     raw = raw.replace(/^0+(?=\d)/, "");
                     // enforce percent max
                     if (formData.discountType === "percent") {
@@ -837,7 +812,6 @@ const PromotionPage = () => {
                       const num = Number(raw);
                       if (!Number.isNaN(num) && num > 100) raw = "100";
                     }
-                    // keep at least "0" so the field never becomes empty string
                     if (raw === "") raw = "0";
                     setFormData((s) => ({ ...s, discountValue: raw }));
                   }}
@@ -902,19 +876,6 @@ const PromotionPage = () => {
                     <span>{t("target.order_whole")}</span>
                   </Stack>
                 </MenuItem>
-                {/* <MenuItem value="category">
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        bgcolor: "warning.main",
-                      }}
-                    />
-                    <span>{t("target.category")}</span>
-                  </Stack>
-                </MenuItem> */}
               </TextField>
             </Box>
 

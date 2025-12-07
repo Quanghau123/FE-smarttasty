@@ -577,8 +577,6 @@ const CartPage = () => {
                               <AddIcon fontSize="small" />
                             </IconButton>
                           </Box>
-
-                          {/* Item Total */}
                           <Typography
                             fontWeight="bold"
                             color="primary"
@@ -587,7 +585,6 @@ const CartPage = () => {
                             {total.toLocaleString()}đ
                           </Typography>
 
-                          {/* Delete Button */}
                           <IconButton
                             size="small"
                             color="error"
@@ -606,7 +603,6 @@ const CartPage = () => {
                     </Box>
                   )}
 
-                  {/* Order Footer */}
                   <Box
                     sx={(theme) => ({
                       p: 2,
@@ -653,7 +649,6 @@ const CartPage = () => {
             })}
           </Box>
 
-          {/* Right side - Summary */}
           <Box sx={{ flex: { xs: 1, md: "1 1 33%" } }}>
             <Paper
               sx={{
@@ -676,12 +671,6 @@ const CartPage = () => {
                     {calculateSelectedTotal().toLocaleString()}đ
                   </Typography>
                 </Box>
-                {/* <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    {t("summary.discount")}
-                  </Typography>
-                  <Typography variant="body2">0đ</Typography>
-                </Box> */}
               </Stack>
 
               <Divider sx={{ mb: 2 }} />
@@ -702,7 +691,6 @@ const CartPage = () => {
                 color="primary"
                 disabled={selectedItems.size === 0}
                 onClick={() => {
-                  // Tìm order đầu tiên có items được chọn
                   const orderWithSelectedItems = orders.find((order) =>
                     order.items?.some((item) => selectedItems.has(item.id))
                   );
@@ -739,7 +727,6 @@ const CartPage = () => {
         </Box>
       </Container>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -756,7 +743,6 @@ const CartPage = () => {
         </Alert>
       </Snackbar>
 
-      {/* Confirmation Dialog */}
       <Dialog
         open={confirmDialog.open}
         onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}

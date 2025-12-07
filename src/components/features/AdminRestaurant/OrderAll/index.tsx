@@ -232,12 +232,9 @@ export default function AdminRestaurantOrdersPage() {
   };
 
   const handleChangeDeliveryStatus = async (orderId: number, deliv: string) => {
-    // Map FE "Shipping" -> BE "Delivering"
     const mapped = deliv.toLowerCase() === "shipping" ? "Delivering" : deliv;
-    // Guard: prevent reverting to a previous delivery status
     const current = rows.find((p) => p.order?.id === orderId)?.order
       ?.deliveryStatus as string | undefined;
-    // Guard: BE requires payment.Status === Success before marking Delivered (for any method)
     const paymentStatus = String(
       rows.find((p) => p.order?.id === orderId)?.status || ""
     ).toLowerCase();
@@ -510,7 +507,6 @@ export default function AdminRestaurantOrdersPage() {
                     ))}
                   </Select>
                 </FormControl>
-                {/* Confirm COD button: shown for pending payments so admin can mark COD as collected */}
                 <Box>
                   {String(p.status).toLowerCase() === "pending" &&
                     p.codPayment && (

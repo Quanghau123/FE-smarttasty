@@ -99,7 +99,6 @@ const Register = () => {
   return (
     <div className={styles.loginContainer}>
       <Card className={styles.loginCard} sx={{ padding: 4 }}>
-        {/* Logo */}
         <Box display="flex" justifyContent="center" mb={3}>
           <Link href="/">
             <Image

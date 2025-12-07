@@ -12,7 +12,6 @@ import {
   Button,
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
-// Chevron icons not used in search results (kept in Body for carousels)
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { searchRestaurants } from "@/redux/slices/restaurantSlice";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -32,7 +31,6 @@ const SearchResults: React.FC = () => {
     error,
   } = useAppSelector((s) => s.restaurant);
 
-  // Suggested restaurants (4★+), shown in a horizontal carousel
   const visibleRestaurants = restaurants.filter((r) => {
     const avg = r.averageRating ?? r.rating ?? 0;
     return avg >= 4;

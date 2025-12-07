@@ -430,7 +430,6 @@ const PaymentPage = () => {
 
   if (!order) return null;
 
-  // (login check removed) rely on refresh-token / interceptor to handle unauthenticated flows
 
   const selectedDeliveryOption = deliveryOptions.find(
     (opt) => opt.id === selectedDelivery
@@ -438,7 +437,6 @@ const PaymentPage = () => {
   const deliveryFee = selectedDeliveryOption?.price || 0;
   const grandTotal = (finalTotal ?? total ?? 0) + deliveryFee;
 
-  /* ------------------------------- RENDER UI ------------------------------- */
   return (
     <Box
       sx={(theme) => ({
@@ -447,7 +445,6 @@ const PaymentPage = () => {
         pb: 4,
       })}
     >
-      {/* Header */}
       <Box
         sx={(theme) => ({
           bgcolor: theme.palette.background.paper,
@@ -480,7 +477,6 @@ const PaymentPage = () => {
         </Box>
       </Box>
 
-      {/* Main Content */}
       <Box
         sx={{
           maxWidth: "1200px",
@@ -488,7 +484,6 @@ const PaymentPage = () => {
           p: { xs: 2, md: 3 },
         }}
       >
-        {/* Delivery Address Section */}
         <Card
           sx={(theme) => ({
             mb: 2,
@@ -572,7 +567,6 @@ const PaymentPage = () => {
           </CardContent>
         </Card>
 
-        {/* Restaurant & Order Items Section */}
         <Card
           sx={(theme) => ({
             mb: 2,
@@ -594,7 +588,6 @@ const PaymentPage = () => {
 
             <Divider sx={{ mb: 2 }} />
 
-            {/* Order Items */}
             <Stack spacing={1.5}>
               {order.items?.map((item) => (
                 <Box
@@ -628,7 +621,6 @@ const PaymentPage = () => {
                           alt={item.dishName || t("item.no_image_alt")}
                           sx={{ width: 48, height: 48, objectFit: "cover" }}
                           onError={(e) => {
-                            // hide broken image so fallback icon shows
                             (
                               e.currentTarget as HTMLImageElement
                             ).style.display = "none";
@@ -654,7 +646,6 @@ const PaymentPage = () => {
           </CardContent>
         </Card>
 
-        {/* Delivery Options Section */}
         <Card
           sx={(theme) => ({
             mb: 2,
@@ -833,7 +824,6 @@ const PaymentPage = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Method Section */}
         <Card
           sx={(theme) => ({
             mb: 2,
@@ -947,7 +937,6 @@ const PaymentPage = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Summary Section */}
         <Card
           sx={(theme) => ({
             mb: 2,
@@ -1023,7 +1012,6 @@ const PaymentPage = () => {
           </CardContent>
         </Card>
 
-        {/* Confirm Button */}
         <Button
           fullWidth
           variant="contained"
@@ -1052,7 +1040,6 @@ const PaymentPage = () => {
         </Button>
       </Box>
 
-      {/* Address Edit Dialog */}
       <Dialog
         open={openAddressDialog}
         onClose={() => setOpenAddressDialog(false)}
@@ -1155,7 +1142,6 @@ const PaymentPage = () => {
                 return;
               }
 
-              // Validate phone number format (basic)
               const phoneRegex = /^[0-9]{10,11}$/;
               if (!phoneRegex.test(tempAddress.phone.replace(/\s/g, ""))) {
                 toast.warning(t("errors.invalid_phone"));
@@ -1172,7 +1158,6 @@ const PaymentPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Voucher Selection Dialog */}
       <Dialog
         open={openVoucherDialog}
         onClose={() => setOpenVoucherDialog(false)}
@@ -1198,7 +1183,6 @@ const PaymentPage = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            {/* No voucher option */}
             <Box
               sx={(theme) => ({
                 border: "2px solid",
@@ -1220,7 +1204,6 @@ const PaymentPage = () => {
                 if (!order) return;
                 setApplyingVoucher(true);
                 try {
-                  // Call backend to remove any applied promotion on this order
                   const res = await dispatch(
                     removePromotion(order.id)
                   ).unwrap();
@@ -1235,7 +1218,6 @@ const PaymentPage = () => {
                   setVoucherDiscount(Math.max(0, Number(orig) - Number(final)));
                   setOpenVoucherDialog(false);
                 } catch (err: unknown) {
-                  // remove promotion error (handled below)
                   let msg = t("errors.remove_voucher_failed_default");
                   try {
                     const e = err as Record<string, unknown> | string;
@@ -1274,7 +1256,6 @@ const PaymentPage = () => {
               <Typography fontWeight="600">{t("voucher.no_use")}</Typography>
             </Box>
 
-            {/* Voucher options */}
             {orderOptions.map((opt, i) => {
               const currentTotal = total ?? 0;
               const isEligible =
@@ -1282,8 +1263,6 @@ const PaymentPage = () => {
               const missingAmount = opt.minOrderValue
                 ? Math.max(0, opt.minOrderValue - currentTotal)
                 : 0;
-
-              // Voucher debug info (removed)
 
               return (
                 <Box
@@ -1315,7 +1294,6 @@ const PaymentPage = () => {
                       : {},
                   })}
                   onClick={async (e) => {
-                    // Block action if not eligible
                     if (!isEligible) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1332,9 +1310,6 @@ const PaymentPage = () => {
                     setApplyingVoucher(true);
                     try {
                       if (kind === "voucher") {
-                        // Backend requires voucherCode in query; it returns the final total.
-                        // Don't call applyPromotion without voucher (server throws 400).
-                        // Use local order total as baseline and call server only with voucherCode.
                         const orig = total ?? 0;
 
                         const resWith = await dispatch(
@@ -1356,7 +1331,6 @@ const PaymentPage = () => {
                           Math.max(0, Number(orig) - Number(finalW))
                         );
                       } else {
-                        // For promotion (no voucher code) - create an OrderPromotion entry tied to this user & restaurant
                         const promotionId = parseInt(payload, 10);
                         await dispatch(
                           createOrderPromotion({
@@ -1387,7 +1361,6 @@ const PaymentPage = () => {
 
                       setOpenVoucherDialog(false);
                     } catch (err: unknown) {
-                      // apply promotion error (handled below)
                       let msg = t("errors.apply_voucher_failed_default");
                       try {
                         const e = err as unknown as
@@ -1449,7 +1422,6 @@ const PaymentPage = () => {
                     )}
                   </Box>
 
-                  {/* Show minimum order requirement */}
                   {opt.minOrderValue && (
                     <Box mt={1}>
                       <Typography variant="body2" color="text.secondary">

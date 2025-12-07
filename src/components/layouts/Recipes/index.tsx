@@ -81,7 +81,6 @@ const RecipesLayout: React.FC = () => {
   const { reviews: allReviews } = useAppSelector((s) => s.recipeReviews);
   const userFromRedux = useAppSelector((s) => s.user.user);
 
-  // Compute stable effectiveUserId
   const effectiveUserId = useMemo<number | null>(() => {
     if (userFromRedux && typeof userFromRedux === "object") {
       const cast = userFromRedux as { userId?: number; id?: number };
@@ -96,13 +95,11 @@ const RecipesLayout: React.FC = () => {
         return typeof id === "number" ? id : null;
       }
     } catch {
-      // ignore
     }
     return null;
   }, [userFromRedux]);
 
-  // State
-  const [tabValue, setTabValue] = useState(0); // 0: All Recipes, 1: My Recipes
+  const [tabValue, setTabValue] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
@@ -110,7 +107,6 @@ const RecipesLayout: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<RecipeCategory | string>(
     RecipeCategory.ThucAn
@@ -121,13 +117,11 @@ const RecipesLayout: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  // Review state
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState("");
   const [deleteReviewDialogOpen, setDeleteReviewDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<number | null>(null);
 
-  // Delete recipe state
   const [deleteRecipeDialogOpen, setDeleteRecipeDialogOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<number | null>(null);
 
@@ -142,30 +136,24 @@ const RecipesLayout: React.FC = () => {
     }
   }, []);
 
-  // Local pagination state for the All Recipes tab
   const [page, setPage] = useState<number>(1);
   const pageSize = 12;
-  // Local pagination state for My Recipes tab (client-side)
   const [myRecipesPage, setMyRecipesPage] = useState<number>(1);
 
-  // Fetch reviews once on mount
   useEffect(() => {
     dispatch(fetchRecipeReviews());
   }, [dispatch]);
 
-  // Fetch all recipes when page changes
   useEffect(() => {
     dispatch(fetchAllRecipes({ pageNumber: page, pageSize }));
   }, [page, dispatch]);
 
-  // Fetch user's recipes when userId is available
   useEffect(() => {
     if (effectiveUserId && typeof effectiveUserId === "number") {
       dispatch(fetchRecipesByUser(effectiveUserId));
     }
   }, [effectiveUserId, dispatch]);
 
-  // Reset page when filters or tab change
   useEffect(() => {
     setPage(1);
     setMyRecipesPage(1);
@@ -177,7 +165,6 @@ const RecipesLayout: React.FC = () => {
     };
   }, [preview]);
 
-  // Filtered recipes with pagination
   const displayedRecipes = useMemo(() => {
     const source = tabValue === 0 ? allItems || [] : myRecipes;
     let filtered = source;
@@ -196,7 +183,6 @@ const RecipesLayout: React.FC = () => {
       filtered = filtered.filter((r) => r.category === categoryFilter);
     }
 
-    // For My Recipes tab (client-side pagination)
     if (tabValue === 1) {
       const startIndex = (myRecipesPage - 1) * pageSize;
       const endIndex = startIndex + pageSize;
@@ -213,7 +199,6 @@ const RecipesLayout: React.FC = () => {
     myRecipesPage,
   ]);
 
-  // Recipe reviews grouped by recipeId
   const reviewsByRecipe = useMemo(() => {
     const map = new Map<number, RecipeReview[]>();
     allReviews.forEach((rev) => {
@@ -409,7 +394,6 @@ const RecipesLayout: React.FC = () => {
 
   const isMyRecipe = (recipe: Recipe) => {
     if (!effectiveUserId) return false;
-    // Check both user.id and user.userId for compatibility
     const user = recipe.user as { id?: number; userId?: number } | undefined;
     const recipeUserId = user?.userId || user?.id;
     return recipeUserId === effectiveUserId;
@@ -417,7 +401,6 @@ const RecipesLayout: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      {/* Hero Section with shine sweep */}
       <Shine hoverOnly={false}>
         <Box
           className="recipes-hero shine"
@@ -468,7 +451,6 @@ const RecipesLayout: React.FC = () => {
       </Shine>
 
       <Container maxWidth="lg" sx={{ mt: -4, position: "relative", zIndex: 2 }}>
-        {/* Search & Filter Card */}
         <Card
           elevation={6}
           sx={{
@@ -500,15 +482,12 @@ const RecipesLayout: React.FC = () => {
                   borderRadius: 1.5,
                   color: "inherit",
                 },
-                // active tab label and icon
                 "& .MuiTab-root.Mui-selected": {
                   color: "var(--recipes-primary) !important",
                 },
-                // indicator color
                 "& .MuiTabs-indicator": {
                   backgroundColor: "var(--recipes-primary)",
                 },
-                // make sure icon inside tab inherits color
                 "& .MuiTab-iconWrapper": {
                   color: "inherit",
                 },
@@ -587,7 +566,6 @@ const RecipesLayout: React.FC = () => {
           </Stack>
         </Card>
 
-        {/* Recipes Grid */}
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
             <CircularProgress size={60} />
@@ -645,7 +623,6 @@ const RecipesLayout: React.FC = () => {
                       }}
                       onClick={() => openDetail(recipe)}
                     >
-                      {/* Image container with img tag for proper image display */}
                       <Box
                         sx={{
                           height: 200,
@@ -655,7 +632,6 @@ const RecipesLayout: React.FC = () => {
                           flexShrink: 0,
                         }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={recipe.imageUrl || "/placeholder-recipe.jpg"}
                           alt={recipe.title}
@@ -698,7 +674,6 @@ const RecipesLayout: React.FC = () => {
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
-                            // minHeight: 56,
                           }}
                         >
                           {recipe.title}
@@ -828,11 +803,9 @@ const RecipesLayout: React.FC = () => {
           </Box>
         )}
 
-        {/* Pagination */}
         {!loading && displayedRecipes.length > 0 && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3, pb: 4 }}>
             {tabValue === 0 ? (
-              // Server-side pagination for All Recipes
               <Pagination
                 page={page}
                 onPageChange={handlePageChange}
@@ -841,9 +814,7 @@ const RecipesLayout: React.FC = () => {
                 size="medium"
               />
             ) : (
-              // Client-side pagination for My Recipes
               (() => {
-                // Calculate total filtered my recipes before pagination
                 const source = myRecipes;
                 let filtered = source;
 
@@ -880,7 +851,6 @@ const RecipesLayout: React.FC = () => {
         )}
       </Container>
 
-      {/* Create/Edit Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -974,7 +944,6 @@ const RecipesLayout: React.FC = () => {
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={preview}
                       alt={t("form.image.preview_alt")}
@@ -1006,7 +975,6 @@ const RecipesLayout: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Recipe Detail Dialog */}
       <Dialog
         open={detailOpen}
         onClose={closeDetail}
@@ -1041,7 +1009,6 @@ const RecipesLayout: React.FC = () => {
                   height: { xs: "auto", sm: 300 },
                 }}
               >
-                {/* Image Section - 50% */}
                 <Box
                   sx={{
                     width: { xs: "100%", sm: "50%" },
@@ -1051,7 +1018,6 @@ const RecipesLayout: React.FC = () => {
                     flexShrink: 0,
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedRecipe.imageUrl || "/placeholder-recipe.jpg"}
                     alt={selectedRecipe.title}
@@ -1064,7 +1030,6 @@ const RecipesLayout: React.FC = () => {
                   />
                 </Box>
 
-                {/* Title & Info Section - 50% */}
                 <Box
                   sx={{
                     width: { xs: "100%", sm: "50%" },
@@ -1148,7 +1113,6 @@ const RecipesLayout: React.FC = () => {
 
             <DialogContent sx={{ p: 3 }}>
               <Stack spacing={3}>
-                {/* Rating Summary */}
                 <Card
                   sx={{
                     p: 2,
@@ -1221,7 +1185,6 @@ const RecipesLayout: React.FC = () => {
 
                 <Divider />
 
-                {/* Reviews Section */}
                 <Box>
                   <Typography
                     variant="h6"
@@ -1235,7 +1198,6 @@ const RecipesLayout: React.FC = () => {
                     })}
                   </Typography>
 
-                  {/* Add Review */}
                   {effectiveUserId && (
                     <Card
                       sx={{
@@ -1283,7 +1245,6 @@ const RecipesLayout: React.FC = () => {
                     </Card>
                   )}
 
-                  {/* Review List */}
                   <Stack spacing={2}>
                     {getRecipeReviews(selectedRecipe.id).length === 0 ? (
                       <Typography
@@ -1366,7 +1327,6 @@ const RecipesLayout: React.FC = () => {
         )}
       </Dialog>
 
-      {/* Delete Review Confirmation Dialog */}
       <Dialog
         open={deleteReviewDialogOpen}
         onClose={closeDeleteReviewDialog}
@@ -1391,7 +1351,6 @@ const RecipesLayout: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Recipe Confirmation Dialog */}
       <Dialog
         open={deleteRecipeDialogOpen}
         onClose={closeDeleteRecipeDialog}

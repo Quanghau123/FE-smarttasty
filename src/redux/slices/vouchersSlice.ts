@@ -1,4 +1,3 @@
-// src/redux/slices/vouchersSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";
@@ -41,7 +40,6 @@ export const markVoucherAsUsed = createAsyncThunk<number, number, { rejectValue:
   async (id, { rejectWithValue }) => {
     try {
       await axiosInstance.put(`/api/Vouchers/${id}/use`);
-      // backend typically returns envelope; return id on success
       return id;
     } catch (err: unknown) {
       return rejectWithValue(getErrorMessage(err, "Không thể sử dụng voucher"));

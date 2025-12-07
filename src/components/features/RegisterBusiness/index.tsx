@@ -190,7 +190,6 @@ const RegisterBusiness = () => {
           </Button>
         </Box>
 
-        {/* Bottom */}
         <Box className={styles.loginBottom} mt={2} textAlign="center">
           {t("have_account_text")}{" "}
           <MuiLink

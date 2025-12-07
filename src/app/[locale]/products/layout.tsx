@@ -25,32 +25,27 @@ export default function RestaurantLayout({
   const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
-    // ✅ Lấy token từ cookie
     const token = getAccessToken();
 
     if (!token) {
-      console.warn("❌ Không tìm thấy token");
       router.replace("/ErrorPages/notfound");
       return;
     }
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      //  console.log("✅ Token decode thành công:", decoded);
 
       if (decoded.role !== "business") {
-        console.warn("⛔ Sai role:", decoded.role);
         router.replace("/ErrorPages/notfound");
       } else {
         setAuthorized(true);
       }
     } catch (error) {
-      console.error("❌ Token không hợp lệ:", error);
+      console.error("Token không hợp lệ:", error);
       router.replace("/ErrorPages/notfound");
     }
   }, [router]);
 
-  // Tránh render sớm khi chưa xác thực xong
   if (!authorized) return null;
 
   return (

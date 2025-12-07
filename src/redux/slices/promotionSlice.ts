@@ -73,13 +73,12 @@ export const fetchAllPromotions = createAsyncThunk<
   }
 });
 
-// Payload types for create/update (align to BE [FromForm])
 type CreatePromotionInput = {
   restaurantId: number;
   title: string;
   description?: string;
-  startDate: string; // ISO string
-  endDate: string; // ISO string
+  startDate: string; 
+  endDate: string; 
   discountType: DiscountType;
   discountValue: number;
   targetType: TargetType;
@@ -114,7 +113,7 @@ export const addPromotion = createAsyncThunk<
   }
 });
 
-type UpdatePromotionInput = CreatePromotionInput; // same required fields on BE
+type UpdatePromotionInput = CreatePromotionInput;
 
 export const updatePromotion = createAsyncThunk<
   Promotion,
@@ -125,7 +124,6 @@ export const updatePromotion = createAsyncThunk<
   async ({ id, data, file }, { rejectWithValue }) => {
     try {
       const form = new FormData();
-      // BE expects [FromForm] Promotion, include RestaurantId as well
       form.append("RestaurantId", String(data.restaurantId));
       form.append("Title", data.title);
       form.append("Description", data.description ?? "");

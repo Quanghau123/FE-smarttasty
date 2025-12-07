@@ -75,12 +75,9 @@ export const applyPromotion = createAsyncThunk(
       const { orderId, voucherCode } = payload;
       const query = voucherCode ? `?voucherCode=${encodeURIComponent(voucherCode)}` : '';
   const res = await axios.post(`/api/ApplyPromotion/${orderId}${query}`);
-  // Normalize backend response which may use PascalCase (OrderId, FinalTotal, VoucherCode)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = res.data || {};
       const normalized = {
         orderId: data.orderId ?? data.OrderId ?? data.OrderID ?? null,
-        // originalTotal may not be provided by backend; keep as-is if present
         originalTotal: data.originalTotal ?? data.OriginalTotal ?? undefined,
         finalTotal: data.finalTotal ?? data.FinalTotal ?? undefined,
         voucherCode: data.voucherCode ?? data.VoucherCode ?? null,
@@ -103,7 +100,6 @@ export const removePromotion = createAsyncThunk(
   async (orderId: number, { rejectWithValue }) => {
     try {
   const res = await axios.post(`/api/ApplyPromotion/${orderId}/remove`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = res.data || {};
       const normalized = {
         orderId: data.orderId ?? data.OrderId ?? data.OrderID ?? null,

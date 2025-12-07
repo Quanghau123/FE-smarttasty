@@ -169,7 +169,6 @@ export const deleteRecipe = createAsyncThunk<
 	}
 });
 
-// ================== SLICE ==================
 
 const recipesSlice = createSlice({
 	name: "recipes",
@@ -184,7 +183,6 @@ const recipesSlice = createSlice({
 			})
 			.addCase(fetchRecipesByUser.fulfilled, (state, action) => {
 				state.items = action.payload.items;
-				// Chỉ cập nhật metadata nếu backend thực sự trả về giá trị
 				if (action.payload.meta) {
 					const { totalRecords, pageNumber, pageSize } = action.payload.meta;
 					if (totalRecords !== undefined) state.totalRecords = totalRecords;
