@@ -1,4 +1,4 @@
-// redux/slices/reservationSlice.ts
+
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import axios, { AxiosError } from "axios";
@@ -10,9 +10,6 @@ import {
   RestaurantReservationRow,
 } from "@/types/reservation";
 
-/* -------------------------------------------------------------------------- */
-/*                                   STATE                                    */
-/* -------------------------------------------------------------------------- */
 interface ReservationState {
   reservation: ReservationEntity | null;
   reservations: RestaurantReservationRow[];
@@ -27,9 +24,6 @@ const initialState: ReservationState = {
   error: null,
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                API RESPONSE                                */
-/* -------------------------------------------------------------------------- */
 interface ApiResponse<T> {
   errCode: string;
   errMessage: string;
@@ -38,9 +32,6 @@ interface ApiResponse<T> {
   status: string;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                            HELPER: ERROR HANDLER                           */
-/* -------------------------------------------------------------------------- */
 const handleAxiosError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ errMessage?: string }>;
@@ -49,9 +40,6 @@ const handleAxiosError = (error: unknown): string => {
   return "Unexpected error";
 };
 
-/* -------------------------------------------------------------------------- */
-/*                           CREATE RESERVATION API                           */
-/* -------------------------------------------------------------------------- */
 export const createReservation = createAsyncThunk<
   ReservationEntity,
   ReservationRequest,
@@ -68,9 +56,6 @@ export const createReservation = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                        UPDATE RESERVATION STATUS API                       */
-/* -------------------------------------------------------------------------- */
 export const updateReservationStatus = createAsyncThunk<
   UpdateReservationStatusResponse,
   { id: number; data: UpdateReservationStatusParams },
@@ -95,9 +80,6 @@ export const updateReservationStatus = createAsyncThunk<
   }
 );
 
-/* -------------------------------------------------------------------------- */
-/*                      GET RESERVATIONS BY RESTAURANT/API                    */
-/* -------------------------------------------------------------------------- */
 export const fetchReservationsByRestaurant = createAsyncThunk<
   RestaurantReservationRow[],
   number,
@@ -113,9 +95,6 @@ export const fetchReservationsByRestaurant = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                         GET RESERVATIONS BY USER/API                       */
-/* -------------------------------------------------------------------------- */
 export const fetchReservationsByUser = createAsyncThunk<
   ReservationEntity[],
   number,
@@ -131,9 +110,6 @@ export const fetchReservationsByUser = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                            DELETE RESERVATION API                          */
-/* -------------------------------------------------------------------------- */
 export const deleteReservation = createAsyncThunk<
   { id: number; status: ReservationEntity['status'] },
   { reservationId: number; userId: number },
@@ -150,9 +126,6 @@ export const deleteReservation = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                   DELETE RESERVATION FOR BUSINESS (ANY STATUS)            */
-/* -------------------------------------------------------------------------- */
 export const deleteReservationForBusiness = createAsyncThunk<
   { id: number; status: ReservationEntity['status'] },
   { reservationId: number; userId: number },
@@ -169,9 +142,6 @@ export const deleteReservationForBusiness = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                                 SLICE SETUP                                */
-/* -------------------------------------------------------------------------- */
 const reservationSlice = createSlice({
   name: "reservation",
   initialState,
@@ -183,7 +153,6 @@ const reservationSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      /* ------------------------------ CREATE ------------------------------ */
       .addCase(createReservation.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -200,7 +169,6 @@ const reservationSlice = createSlice({
         state.error = action.payload ?? "Failed to create reservation";
       })
 
-      /* ------------------------------- UPDATE ----------------------------- */
       .addCase(updateReservationStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -209,13 +177,10 @@ const reservationSlice = createSlice({
         updateReservationStatus.fulfilled,
         (state, action: PayloadAction<UpdateReservationStatusResponse>) => {
           state.loading = false;
-          // Update selected reservation entity if loaded
           if (state.reservation && state.reservation.id === action.payload.id) {
-            // state.reservation.status is a union including BE name variant
             (state.reservation.status as unknown as string) = action.payload.status;
             state.reservation.updatedAt = new Date().toISOString();
           }
-          // Update list item if exists
           state.reservations = state.reservations.map((r) =>
             r.id === action.payload.id ? { ...r, status: action.payload.status } : r
           );
@@ -225,7 +190,6 @@ const reservationSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to update reservation status";
       });
-    /* ----------------------- FETCH BY RESTAURANT ------------------------ */
     builder
       .addCase(fetchReservationsByRestaurant.pending, (state) => {
         state.loading = true;
@@ -243,7 +207,6 @@ const reservationSlice = createSlice({
         state.error = action.payload ?? "Failed to fetch reservations by restaurant";
       })
 
-      /* -------------------------- FETCH BY USER -------------------------- */
       .addCase(fetchReservationsByUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -259,8 +222,6 @@ const reservationSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to fetch reservations by user";
       })
-
-      /* --------------------------- DELETE ------------------------------- */
       .addCase(deleteReservation.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -269,11 +230,9 @@ const reservationSlice = createSlice({
         deleteReservation.fulfilled,
         (state, action: PayloadAction<{ id: number; status: ReservationEntity['status'] }>) => {
           state.loading = false;
-          // Update in-list item if exists
           state.reservations = state.reservations.map((r) =>
             r.id === action.payload.id ? { ...r, status: action.payload.status } : r
           );
-          // Update single reservation if currently loaded
           if (state.reservation && state.reservation.id === action.payload.id) {
             state.reservation.status = action.payload.status;
             state.reservation.updatedAt = new Date().toISOString();
@@ -284,7 +243,6 @@ const reservationSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to delete reservation";
       });
-    // business cancel (any status)
     builder
       .addCase(deleteReservationForBusiness.pending, (state) => {
         state.loading = true;

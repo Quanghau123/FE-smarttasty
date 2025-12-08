@@ -1,6 +1,5 @@
 let accessToken: string | null = null;
 
-// Simple pub-sub to notify when access token changes
 type AccessTokenListener = (token: string | null) => void;
 const accessTokenListeners: AccessTokenListener[] = [];
 
@@ -16,7 +15,6 @@ export const setAccessToken = (token: string) => {
     try {
       localStorage.setItem("access_token", token);
     } catch {
-      // ignore storage errors
     }
   }
   notifyAccessTokenChanged();
@@ -62,22 +60,18 @@ export const clearUser = () => {
   }
 };
 
-/**
- * Xóa tất cả tokens và user data (dùng cho logout)
- */
+
+
 export const clearTokens = () => {
   clearAccessToken();
   clearUser();
 };
 
-/**
- * Kiểm tra xem user có đăng nhập hay không
- */
+
 export const isAuthenticated = (): boolean => {
   return !!getAccessToken();
 };
 
-// Allow app to subscribe to access token changes (e.g., to sync Redux state)
 export const subscribeAccessTokenChange = (listener: AccessTokenListener) => {
   accessTokenListeners.push(listener);
   return () => {
@@ -86,9 +80,6 @@ export const subscribeAccessTokenChange = (listener: AccessTokenListener) => {
   };
 };
 
-/**
- * Decode JWT token và log thông tin expiration
- */
 export const logTokenExpiry = () => {
   const token = getAccessToken();
   if (!token) {
@@ -96,7 +87,6 @@ export const logTokenExpiry = () => {
   }
 
   try {
-    // Decode JWT (base64)
     const parts = token.split(".");
     if (parts.length !== 3) {
       return;
@@ -105,17 +95,8 @@ export const logTokenExpiry = () => {
     const payload = JSON.parse(atob(parts[1]));
     
     if (payload.exp) {
-  // const expiryDate = new Date(payload.exp * 1000);
-  // const now = new Date();
-  // const timeLeft = expiryDate.getTime() - now.getTime();
-  // compute time left if needed in future (removed logs)
-  // const minutesLeft = Math.floor(timeLeft / 1000 / 60);
-      
-      // logs removed
     } else {
-      // no-op
     }
   } catch {
-    // no-op
   }
 };

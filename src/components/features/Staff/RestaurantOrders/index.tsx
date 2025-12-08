@@ -48,7 +48,6 @@ export default function StaffRestaurantOrders() {
   >(null);
   const [noPermission, setNoPermission] = useState(false);
 
-  // confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     type?: "cod" | "delivered";
@@ -57,12 +56,11 @@ export default function StaffRestaurantOrders() {
     message?: string;
   }>({ open: false });
 
-  // expanded orders for details view
   const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>(
     {}
   );
 
-  // normalize restaurants: backend sometimes returns a JSON string in User.restaurants
+
   const restaurants = useMemo(() => {
     const raw = currentStaff?.restaurants ?? [];
     if (typeof raw === "string") {
@@ -81,7 +79,7 @@ export default function StaffRestaurantOrders() {
     if (!currentStaff) dispatch(fetchMyStaffInfo());
   }, [dispatch, currentStaff]);
 
-  // pick default restaurant when available
+
   useEffect(() => {
     if (!selectedRestaurantId && restaurants.length > 0)
       setSelectedRestaurantId(restaurants[0].id);
@@ -120,22 +118,19 @@ export default function StaffRestaurantOrders() {
         ? ("Delivering" as unknown as typeof value)
         : value;
 
-    // find associated payment/order to enforce sequential rules
     const paymentForOrder = (paymentState.restaurantPayments || []).find(
       (pp) => pp.order?.id === orderId
     );
     const currentOrder = paymentForOrder?.order;
 
-    // Check if order is paid before allowing any delivery status change
     if (String(currentOrder?.status || "").toLowerCase() !== "paid") {
       toast.error(t("errors.order_not_paid"));
       return;
     }
 
-    // Prevent setting Delivered unless order is in shipping/delivering and COD (if present) is collected
     if (
       mapped === DeliveryStatus.Delivered &&
-      currentOrder // ensure we have the order
+      currentOrder 
     ) {
       const isShippingState =
         String(currentOrder.deliveryStatus || "")
@@ -635,15 +630,10 @@ export default function StaffRestaurantOrders() {
                                           const codNotCollected =
                                             Boolean(p.codPayment) &&
                                             !p.codPayment?.isCollected;
-
-                                          // Disable selecting "Đã giao" unless order is in shipping/delivering
-                                          // and COD (if present) has already been collected.
                                           const disableDeliveredOption =
                                             attemptingDelivered &&
                                             (codNotCollected ||
-                                              !isShippingState);
-
-                                          // Get current status index - normalize to lowercase for comparison
+                                              !isShippingState);                                 
                                           const currentDeliveryStatusLower =
                                             String(
                                               o?.deliveryStatus || ""
@@ -653,7 +643,6 @@ export default function StaffRestaurantOrders() {
                                               const optValue = String(
                                                 opt.value
                                               ).toLowerCase();
-                                              // Handle "Delivering" mapping to "Shipping"
                                               if (
                                                 currentDeliveryStatusLower.includes(
                                                   "deliver"
@@ -675,8 +664,6 @@ export default function StaffRestaurantOrders() {
                                             statusOptions.findIndex(
                                               (opt) => opt.value === s.value
                                             );
-
-                                          // Disable previous statuses (don't allow going back)
                                           const isPreviousStatus =
                                             currentStatusIndex !== -1 &&
                                             thisStatusIndex <
@@ -809,8 +796,6 @@ export default function StaffRestaurantOrders() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Toast notifications handled globally via ToastContainer */}
     </Box>
   );
 }

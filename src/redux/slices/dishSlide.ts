@@ -29,7 +29,6 @@ const initialState: DishState = {
   pageSize: 10,
 };
 
-// Helper lấy message từ error
 const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): string => {
   if (axios.isAxiosError(err)) {
     const responseData = err.response?.data as { message?: string; errMessage?: string } | undefined;
@@ -38,7 +37,6 @@ const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): 
   return fallback;
 };
 
-// ================== ASYNC ACTIONS ==================
 
 interface FetchDishesParams {
   restaurantId: number;
@@ -66,7 +64,6 @@ export const fetchDishes = createAsyncThunk<
       pageSize
     };
     
-    // Chỉ gửi category filter lên server (exact match)
     if (category) {
       params['Filters[Category]'] = category;
     }
@@ -129,7 +126,6 @@ export const deleteDish = createAsyncThunk<
   }
 });
 
-// ================== SLICE ==================
 
 const dishSlice = createSlice({
   name: "dishes",

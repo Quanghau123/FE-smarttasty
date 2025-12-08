@@ -33,7 +33,6 @@ const AddressAutocomplete: React.FC<Props> = ({
   const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // fetch suggestions when value changes with debounce
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     if (!value || !value.trim()) {
       setSuggestions([]);
@@ -45,9 +44,7 @@ const AddressAutocomplete: React.FC<Props> = ({
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
       try {
-        // Restrict search to Ho Chi Minh City using a viewbox and bounded=1
-        // Assumption: use a bounding box that covers HCMC roughly.
-        // viewbox format: min_lon,min_lat,max_lon,max_lat
+        // lấy tại HCM
         const hcmcViewbox = `106.45,10.50,106.95,11.05`;
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -85,7 +82,6 @@ const AddressAutocomplete: React.FC<Props> = ({
       e.preventDefault();
       if (activeIndex >= 0 && suggestions[activeIndex]) {
         const s = suggestions[activeIndex];
-        // Build label similar to click handler
         const house = s.address?.house_number;
         const road =
           s.address?.road ||
@@ -98,8 +94,6 @@ const AddressAutocomplete: React.FC<Props> = ({
           house && road
             ? `${house} ${road}${city ? `, ${city}` : ""}`
             : s.display_name;
-
-        // Preserve leading house number typed by user
         if (preserveHouseNumber && value) {
           const m = value.match(/^\s*([0-9]+[A-Za-z0-9\-\/]*)\b/);
           if (m) {
@@ -140,7 +134,6 @@ const AddressAutocomplete: React.FC<Props> = ({
         >
           <List dense>
             {suggestions.map((s, idx) => {
-              // Try to build a nicer label that includes house number and road when available
               const house = s.address?.house_number;
               const road =
                 s.address?.road ||
@@ -158,7 +151,7 @@ const AddressAutocomplete: React.FC<Props> = ({
                 <ListItemButton
                   key={`${s.lat}-${s.lon}-${idx}`}
                   selected={idx === activeIndex}
-                  onMouseDown={(ev) => ev.preventDefault()} // prevent blur
+                  onMouseDown={(ev) => ev.preventDefault()} 
                   onClick={() => {
                     let finalLabel = label;
                     if (preserveHouseNumber && value) {

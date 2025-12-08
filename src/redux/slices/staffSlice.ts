@@ -35,7 +35,6 @@ export const createStaff = createAsyncThunk<User, { userName: string; email: str
   "staff/createStaff",
   async (payload, { rejectWithValue }) => {
     try {
-      // BE expects PascalCase field names
       const body = {
         UserName: payload.userName,
         Email: payload.email,

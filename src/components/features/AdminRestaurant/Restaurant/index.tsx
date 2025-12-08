@@ -29,7 +29,7 @@ import {
   updateRestaurant,
 } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
-import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; // ✅ lấy tất cả KM món
+import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; 
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 import StarIcon from "@mui/icons-material/Star";
 import { fetchFavoritesByRestaurant } from "@/redux/slices/favoritesSlice";
@@ -45,7 +45,6 @@ const MapPicker = dynamic(() => import("@/components/layouts/MapPicker"), {
   ssr: false,
 });
 
-// Simple reverse geocoding via Nominatim to build a friendly address
 async function reverseGeocode(
   lat: number,
   lon: number
@@ -59,7 +58,6 @@ async function reverseGeocode(
       address?: Record<string, string>;
     };
     if (!data) return null;
-    // Prefer a compact address when possible
     const house = data.address?.house_number || "";
     const road =
       data.address?.road ||
@@ -77,7 +75,6 @@ async function reverseGeocode(
     return null;
   }
 }
-// import { Description } from "@mui/icons-material");
 
 const RestaurantPage = () => {
   const dispatch = useAppDispatch();
@@ -95,33 +92,28 @@ const RestaurantPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  // calculate total pages from server-provided totalRecords; fallback to client length
   const totalPages =
     totalRecords && totalRecords > 0
       ? Math.ceil(totalRecords / itemsPerPage)
       : Math.ceil(dishes.length / itemsPerPage);
 
-  // Reset to page 1 when switching restaurant
   useEffect(() => {
     setCurrentPage(1);
   }, [restaurantInfo?.id]);
 
-  // ✅ danh sách DishPromotions toàn trang (id, dishId, promotionId, discountType, discountValue, ...)
   const { items: dishPromotions } = useAppSelector(
     (state) => state.dishpromotion
   );
 
-  // Favorites for this restaurant (followers)
+
   const { favorites: restaurantFavorites = [] } = useAppSelector(
     (state) => state.favorites
   );
 
-  // Total reviews from state
   const totalReviewsFromState = useAppSelector(
     (state) => state.restaurant.currentTotalReviews ?? 0
   );
 
-  // Reviews for this restaurant
   const { reviews = [], loading: reviewLoading } = useAppSelector(
     (state) => state.review
   );
@@ -170,11 +162,9 @@ const RestaurantPage = () => {
           pageSize: itemsPerPage,
         })
       );
-      // ✅ lấy toàn bộ khuyến mãi món để tính giá hiển thị
+      // lấy giá khuyến mãi món cho các món của nhà hàng này
       dispatch(fetchDishPromotions());
-      // Load favorites for this restaurant
       dispatch(fetchFavoritesByRestaurant(restaurantInfo.id));
-      // Load reviews for this restaurant
       dispatch(getReviewsByRestaurant(restaurantInfo.id));
 
       setFormState({
@@ -238,12 +228,6 @@ const RestaurantPage = () => {
     });
     setIsEditing(false);
   };
-
-  /**
-   * ✅ Lấy giá tốt nhất từ BE - KHÔNG tự tính toán!
-   * BE đã tính sẵn giá giảm trong discountedPrice
-   * FE chỉ cần lấy giá thấp nhất từ các promotion
-   */
   const bestDiscountByDishId = useMemo(() => {
     const map = new Map<number, number>();
 
@@ -268,7 +252,6 @@ const RestaurantPage = () => {
     return map;
   }, [dishes, dishPromotions]);
 
-  // Handle delete review
   const handleDeleteReview = async (reviewId: number) => {
     setReviewToDelete(reviewId);
     setDeleteDialogOpen(true);
@@ -280,7 +263,6 @@ const RestaurantPage = () => {
     try {
       await dispatch(deleteReview(reviewToDelete)).unwrap();
       toast.success(t("success.delete_review_success"));
-      // Refresh reviews after deletion
       if (restaurantInfo?.id) {
         dispatch(getReviewsByRestaurant(restaurantInfo.id));
       }
@@ -456,7 +438,6 @@ const RestaurantPage = () => {
               )}
             </Box>
 
-            {/* Restaurant Details */}
             <Box
               flex={1}
               sx={{
@@ -514,7 +495,6 @@ const RestaurantPage = () => {
                                 latitude: lat,
                                 longitude: lng,
                               });
-                              // reverse geocode to update address
                               reverseGeocode(lat, lng).then((addr) => {
                                 if (addr) {
                                   setFormState((prev) => ({
@@ -864,7 +844,6 @@ const RestaurantPage = () => {
                 )}
               </Box>
 
-              {/* Action Buttons */}
               {isEditing && (
                 <Box
                   sx={{
@@ -921,7 +900,6 @@ const RestaurantPage = () => {
           </Box>
         </Paper>
 
-        {/* Menu Section */}
         <Box sx={{ mb: 4 }}>
           <Typography
             variant="h5"
@@ -969,7 +947,6 @@ const RestaurantPage = () => {
                     <Box
                       key={dish.id}
                       sx={{
-                        // Responsive columns: 1 / 2 / 3 / 4 / 5 (xl)
                         flex: {
                           xs: "1 1 100%",
                           sm: "1 1 calc(50% - 10px)",
@@ -977,7 +954,6 @@ const RestaurantPage = () => {
                           lg: "1 1 calc(25% - 19px)",
                           xl: "1 1 calc(20% - 22px)",
                         },
-                        // Allow items to shrink enough for 5 columns on wide screens
                         minWidth: { xs: "100%", sm: "220px", md: "200px" },
                         maxWidth: {
                           xs: "100%",
@@ -1010,7 +986,6 @@ const RestaurantPage = () => {
           )}
         </Box>
 
-        {/* Reviews Section */}
         <Box>
           {reviewLoading ? (
             <Box display="flex" justifyContent="center" py={6}>
@@ -1040,7 +1015,6 @@ const RestaurantPage = () => {
           )}
         </Box>
 
-        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={cancelDeleteReview}

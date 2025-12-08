@@ -23,7 +23,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { loginUser, fetchUserById } from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
-import { useTranslations } from "next-intl"; // ✅ import i18n
+import { useTranslations } from "next-intl";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -34,7 +34,7 @@ const LoginPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const t = useTranslations("login"); // dùng namespace "login"
+  const t = useTranslations("login");
 
   const { loading, error, user } = useSelector(
     (state: RootState) => state.user
@@ -53,7 +53,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (user && !hasShownSuccessToast) {
       setHasShownSuccessToast(true);
-      toast.success(t("login_success")); // thêm key login_success trong file dịch
+      toast.success(t("login_success"));
       switch (user.role) {
         case "admin":
           router.push("/admin");
@@ -72,7 +72,6 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (error) {
-      // Chuẩn hoá các thông báo lỗi 400 / sai tài khoản mật khẩu
       const raw = typeof error === "string" ? error : String(error);
       const lower = raw.toLowerCase();
       const isCredentialError =
@@ -83,7 +82,6 @@ const LoginPage = () => {
           (lower.includes("password") || lower.includes("email"))) ||
         (lower.includes("password") && lower.includes("incorrect"));
 
-      // Nếu muốn đa ngôn ngữ: thêm key vào file messages: login.invalid_credentials
       const friendly = isCredentialError ? t("invalid_credentials") : raw;
       toast.error(friendly);
     }
@@ -93,7 +91,6 @@ const LoginPage = () => {
     e.preventDefault();
     const result = await dispatch(loginUser({ email, userPassword, remember }));
 
-    // Nếu login thành công, gọi fetchUserById để lấy đầy đủ thông tin user
     if (loginUser.fulfilled.match(result) && result.payload.user.userId) {
       await dispatch(fetchUserById(result.payload.user.userId));
     }
@@ -102,7 +99,6 @@ const LoginPage = () => {
   return (
     <div className={styles.loginContainer}>
       <Card className={styles.loginCard} sx={{ padding: 4 }}>
-        {/* Header logo */}
         <Box display="flex" justifyContent="center" mb={3}>
           <Link href="/">
             <Image

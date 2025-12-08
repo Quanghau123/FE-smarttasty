@@ -284,19 +284,6 @@ export default function StaffManagement() {
                 fullWidth
               />
             )}
-            {/* <FormControl>
-              <InputLabel>Vai trò</InputLabel>
-              <Select
-                value={form.role}
-                label="Vai trò"
-                onChange={(e) =>
-                  setForm({ ...form, role: e.target.value as string })
-                }
-              >
-                <MenuItem value="staff">Staff</MenuItem>
-                <MenuItem value="delivery">Giao hàng</MenuItem>
-              </Select>
-            </FormControl> */}
           </Stack>
         </DialogContent>
         <DialogActions>

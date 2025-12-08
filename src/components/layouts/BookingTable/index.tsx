@@ -36,7 +36,6 @@ type UserLocal = {
   phone?: string;
 };
 
-// Shape returned by GET /api/Reservation/user/{userId}
 type UserReservationRow = {
   id: number;
   restaurantId: number;
@@ -44,7 +43,7 @@ type UserReservationRow = {
   adultCount: number;
   childCount: number;
   arrivalDate: string;
-  reservationTime: string; // HH:mm:ss
+  reservationTime: string;
   note?: string | null;
   status: string | number;
   createdAt: string;
@@ -89,22 +88,20 @@ const BookingTablePage: React.FC = () => {
   const { user, token } = useMemo(getUserFromLocalStorage, []);
   const userId = user.userId ?? 0;
 
-  // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<{
     id: number;
     restaurantId: number;
     adultCount: number;
     childCount: number;
-    arrivalDate: string; // YYYY-MM-DD
-    reservationTime: string; // HH:mm
+    arrivalDate: string; 
+    reservationTime: string;
     note?: string;
     contactName: string;
     phone: string;
     email: string;
   } | null>(null);
 
-  // Init auth header and fetch list
   useEffect(() => {
     if (token) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -161,14 +158,12 @@ const BookingTablePage: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!editing) return;
-    // Strategy: cancel old (must be Pending), then create new with edited values
     try {
       await dispatch(
         deleteReservation({ reservationId: editing.id, userId })
       ).unwrap();
 
       const arrivalISO = dayjs(editing.arrivalDate).toDate().toISOString();
-      // reservationTime as HH:mm to HH:mm:00 for BE TimeSpan
       const timeStr = `${editing.reservationTime}:00`;
       await dispatch(
         createReservation({

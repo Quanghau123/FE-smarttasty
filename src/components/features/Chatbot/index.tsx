@@ -31,7 +31,6 @@ interface Message {
   image?: string;
 }
 
-// Function to get welcome message based on user role
 const getWelcomeMessage = (): string => {
   const user = getUser();
   const role = user?.role?.toLowerCase() || "user";
@@ -65,12 +64,10 @@ const Chatbot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto scroll to bottom khi có message mới
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle image selection
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -83,7 +80,6 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  // Remove selected image
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
@@ -92,7 +88,6 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  // Send message to chatbot
   const handleSendMessage = async () => {
     if (!inputText.trim() && !selectedImage) return;
 
@@ -102,7 +97,6 @@ const Chatbot: React.FC = () => {
       return;
     }
 
-    // Add user message to UI
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputText,
@@ -112,7 +106,6 @@ const Chatbot: React.FC = () => {
     };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Clear input
     const textToSend = inputText;
     const imageToSend = selectedImage;
     setInputText("");
@@ -125,7 +118,6 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Validate inputs
       if (!accessToken) {
         throw new Error("AccessToken is missing. Please login first.");
       }
@@ -134,7 +126,6 @@ const Chatbot: React.FC = () => {
         throw new Error("Message cannot be empty.");
       }
 
-      // Create FormData
       const formData = new FormData();
       formData.append("AccessToken", accessToken);
       formData.append("Text", textToSend);
@@ -169,7 +160,6 @@ const Chatbot: React.FC = () => {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
-
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
@@ -182,7 +172,6 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  // Handle Enter key
   const handleKeyPress = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -192,7 +181,6 @@ const Chatbot: React.FC = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
       <Fab
         color="primary"
         aria-label="chat"
@@ -210,7 +198,6 @@ const Chatbot: React.FC = () => {
         {isOpen ? <CloseIcon /> : <RobotIcon scale={1} isTalking={isLoading} />}
       </Fab>
 
-      {/* Chatbox */}
       <Fade in={isOpen}>
         <Paper
           elevation={8}
@@ -232,7 +219,6 @@ const Chatbot: React.FC = () => {
             boxShadow: 6,
           }}
         >
-          {/* Header */}
           <Box
             sx={{
               width: "100%",
@@ -263,7 +249,6 @@ const Chatbot: React.FC = () => {
             </IconButton>
           </Box>
 
-          {/* Messages Area */}
           <Box
             sx={{
               flexGrow: 1,
@@ -376,7 +361,6 @@ const Chatbot: React.FC = () => {
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* Image Preview */}
           {imagePreview && (
             <Box
               sx={{
@@ -409,7 +393,6 @@ const Chatbot: React.FC = () => {
             </Box>
           )}
 
-          {/* Input Area */}
           <Box
             sx={{
               p: { xs: 1, sm: 2 },

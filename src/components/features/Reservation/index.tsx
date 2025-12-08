@@ -26,7 +26,6 @@ const ReservationForm = ({ restaurantId }: Props) => {
   const reservationState = useAppSelector((state) => state.reservation);
   const t = useTranslations("reservation");
 
-  // ✅ Lấy user từ Redux (sau login đã có trong state)
   const user = useAppSelector((state) => state.user.user);
 
   const [adultCount, setAdultCount] = useState(2);
@@ -45,17 +44,14 @@ const ReservationForm = ({ restaurantId }: Props) => {
   };
 
   const handleReservation = () => {
-    // Only block when there is no access token (user not logged in)
     const token = getAccessToken();
     if (!token) {
       toast.error(t("login_required"));
       return;
     }
 
-    // Prefer Redux user, fall back to user stored in localStorage
     const localUser = user ?? getUser();
     if (!localUser?.userId) {
-      // If token exists but we can't determine userId, prompt to re-login
       toast.error(t("login_required"));
       return;
     }
@@ -76,7 +72,6 @@ const ReservationForm = ({ restaurantId }: Props) => {
     dispatch(createReservation(payload));
   };
 
-  // 🔔 Lắng nghe trạng thái để show toast
   useEffect(() => {
     if (reservationState.error) {
       toast.error(reservationState.error);
@@ -98,7 +93,6 @@ const ReservationForm = ({ restaurantId }: Props) => {
         {t("title")}
       </Typography>
 
-      {/* Người lớn & Trẻ em */}
       <Box className={styles.formRow}>
         <TextField
           select
@@ -129,7 +123,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
         </TextField>
       </Box>
 
-      {/* Ngày & Giờ */}
+
       <Box className={styles.formRow}>
         <TextField
           type="date"
@@ -148,8 +142,7 @@ const ReservationForm = ({ restaurantId }: Props) => {
           sx={{ flex: 1 }}
         />
       </Box>
-
-      {/* Thông tin liên hệ */}
+          
       <TextField
         label={t("contact_name")}
         value={contactName}

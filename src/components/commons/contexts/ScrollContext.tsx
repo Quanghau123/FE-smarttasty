@@ -26,7 +26,6 @@ export const ScrollProvider = ({ children }: { children: React.ReactNode }) => {
     null
   );
 
-  // Stable setter to avoid changing identity each render
   const setScrollToAllRestaurants = useCallback((fn: () => void) => {
     setScrollFn(() => fn);
   }, []);

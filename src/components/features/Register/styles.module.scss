@@ -5,11 +5,9 @@
   min-height: 100vh;
   padding: 16px;
 
-  // Background gradient kiểu nhà hàng (ấm, gỗ, sang trọng)
   background: linear-gradient(135deg, #fff8f0 0%, #f1e2d1 50%, #f9f3eb 100%);
 
-  // Nếu muốn thêm background hình mờ (vd: hình nhà hàng blur)
-  //background-image: url("/access/image/bg-restaurant.jpg");
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -38,7 +38,6 @@ const ReviewList = ({
   const t = useTranslations("review");
   const [selectedStar, setSelectedStar] = useState<number | null>(null);
 
-  // counts[1] .. counts[5]
   const counts = useMemo(() => {
     const arr = [0, 0, 0, 0, 0, 0];
     if (!reviews) return arr;
@@ -59,9 +58,8 @@ const ReviewList = ({
 
   const maskName = (name: string) => {
     if (!name) return name;
-    // mask each token (preserve spaces)
     return name
-      .split(/(\s+)/) // keep separators so we can join back with same spacing
+      .split(/(\s+)/) 
       .map((part) => (part.trim() === "" ? part : maskWord(part)))
       .join("");
   };
@@ -71,7 +69,6 @@ const ReviewList = ({
     return reviews.filter((r) => Math.round(r.rating) === selectedStar);
   }, [reviews, selectedStar]);
 
-  // pagination
   const [page, setPage] = useState(1);
   const itemsPerPage = 4;
   const totalPages = Math.max(
@@ -80,7 +77,6 @@ const ReviewList = ({
   );
 
   useEffect(() => {
-    // reset page when filter or reviews change
     setPage(1);
   }, [selectedStar, reviews]);
 
@@ -109,7 +105,6 @@ const ReviewList = ({
         {t("list_title")}
       </Typography>
 
-      {/* Filter and counts */}
       <Box sx={{ my: 2 }}>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
           {t("filter_by_rating") ?? "Lọc theo số sao"}
@@ -154,7 +149,6 @@ const ReviewList = ({
         </Typography>
       </Box>
 
-      {/* List of reviews (paginated) */}
       {paginated.map((r) => (
         <Box key={r.id} className={styles.reviewCard}>
           <Box className={styles.reviewHeader}>
@@ -180,11 +174,9 @@ const ReviewList = ({
             )}
           </Box>
 
-          {/* Rating component của MUI */}
           <Rating
             name={`review-${r.id}`}
             value={r.rating}
-            // precision={0.5} // cho phép nửa sao, có thể bỏ nếu muốn chỉ nguyên sao
             readOnly
             size="small"
             sx={{ color: "var(--star-color)" }}
@@ -194,7 +186,7 @@ const ReviewList = ({
         </Box>
       ))}
 
-      {/* Pagination controls */}
+
       {(filtered.length ?? 0) > itemsPerPage ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <Pagination

@@ -39,16 +39,12 @@ const initialState: UserState = {
   changePasswordSuccess: false,
 };
 
-// ================== THUNKS ==================
-
-// Login
 export const loginUser = createAsyncThunk<
   { user: User; access_token: string; refresh_token?: string },
   { email: string; userPassword: string; remember: boolean },
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
-    // Transform to PascalCase for C# backend
     const loginPayload = {
       Email: data.email,
       UserPassword: data.userPassword,
@@ -56,8 +52,6 @@ export const loginUser = createAsyncThunk<
     
     const response = await axiosInstance.post("/api/User/login", loginPayload);
     const payload = response.data ?? {};
-
-    // support both wrapper shapes
     const wrapper = payload.data ?? payload;
     const accessToken =
       wrapper?.accessToken ??
@@ -78,11 +72,9 @@ export const loginUser = createAsyncThunk<
       try {
         axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
       } catch {
-        // ignore
       }
       saveUserToStorage(userObj);
 
-      // Log token expiry info
       if (typeof window !== "undefined") {
         setTimeout(() => {
           logTokenExpiry();
@@ -114,7 +106,6 @@ export const loginUser = createAsyncThunk<
   }
 });
 
-// Forgot password
 export const forgotPassword = createAsyncThunk<
   { success: boolean; message?: string },
   string,
@@ -134,7 +125,6 @@ export const forgotPassword = createAsyncThunk<
   }
 });
 
-// Fetch users
 export const fetchUsers = createAsyncThunk<
   User[],
   void,
@@ -149,7 +139,6 @@ export const fetchUsers = createAsyncThunk<
   }
 });
 
-// Fetch user detail by id (server source of truth)
 export const fetchUserById = createAsyncThunk<
   User,
   number,
@@ -158,7 +147,6 @@ export const fetchUserById = createAsyncThunk<
   try {
     const res = await axiosInstance.get(`/api/User/${userId}`);
     const body = res.data ?? {};
-    // Support both wrapped and raw responses
     const data = (body.data ?? body) as User;
     if (!data || typeof data !== "object") {
       return rejectWithValue("Không nhận được thông tin người dùng");
@@ -170,7 +158,6 @@ export const fetchUserById = createAsyncThunk<
   }
 });
 
-// Create user
 export const createUser = createAsyncThunk<
   User,
   CreateUserDto,
@@ -188,7 +175,6 @@ export const createUser = createAsyncThunk<
   }
 });
 
-// Update user
 export const updateUser = createAsyncThunk<
   User,
   Partial<User> & { userId: number },
@@ -217,7 +203,6 @@ export const updateUser = createAsyncThunk<
   }
 });
 
-// Delete user
 export const deleteUser = createAsyncThunk<
   number,
   number,
@@ -232,7 +217,6 @@ export const deleteUser = createAsyncThunk<
   }
 });
 
-// Change password
 export const changePassword = createAsyncThunk<
   void,
   ChangePasswordPayload,
@@ -252,22 +236,18 @@ export const changePassword = createAsyncThunk<
   }
 });
 
-// Logout - Gọi API BE để revoke refresh tokens
 export const logoutUser = createAsyncThunk<
   void,
-  number, // userId
+  number,
   { rejectValue: string }
 >("user/logoutUser", async (userId, { rejectWithValue }) => {
   try {
-    // ✅ Gọi API BE để revoke tất cả refresh tokens
     await axiosInstance.post(`/api/User/logout/${userId}`);
     
-    // ✅ Xóa tokens và user data ở client
     clearTokens();
     
     return;
   } catch (err: unknown) {
-    // Dù lỗi vẫn xóa tokens ở client để đảm bảo logout
     clearTokens();
     
     if (err instanceof Error) return rejectWithValue(err.message);
@@ -275,7 +255,6 @@ export const logoutUser = createAsyncThunk<
   }
 });
 
-// ================== SLICE ==================
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -287,7 +266,6 @@ const userSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
-      // ✅ Xóa tokens từ cookie và localStorage
       clearTokens();
       state.loading = false;
       state.error = null;
@@ -297,7 +275,6 @@ const userSlice = createSlice({
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      // ✅ Cập nhật access token trong localStorage
       setAccessToken(action.payload);
     },
     resetChangePasswordState: (state) => {
@@ -307,7 +284,6 @@ const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Login
     builder
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -324,7 +300,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Lỗi đăng nhập";
       })
 
-      // Fetch users
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -338,7 +313,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Lỗi lấy danh sách người dùng";
       })
 
-      // Fetch user detail
       .addCase(fetchUserById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -352,7 +326,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Lỗi lấy thông tin người dùng";
       })
 
-      // Create user
       .addCase(createUser.fulfilled, (state, action: PayloadAction<User>) => {
         state.users.push(action.payload);
       })
@@ -360,7 +333,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Tạo người dùng thất bại";
       })
 
-      // Update user
       .addCase(updateUser.fulfilled, (state, action: PayloadAction<User>) => {
         const updatedUser = action.payload;
         const index = state.users.findIndex(
@@ -373,7 +345,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Cập nhật thất bại";
       })
 
-      // Delete user
       .addCase(deleteUser.fulfilled, (state, action: PayloadAction<number>) => {
         state.users = state.users.filter((u) => u.userId !== action.payload);
       })
@@ -381,7 +352,6 @@ const userSlice = createSlice({
         state.error = action.payload ?? "Xóa thất bại";
       })
 
-      // Change password
       .addCase(changePassword.pending, (state) => {
         state.changePasswordLoading = true;
         state.changePasswordError = null;
@@ -398,12 +368,10 @@ const userSlice = createSlice({
         state.changePasswordSuccess = false;
       })
 
-      // Logout
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        // ✅ Clear tất cả user data
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
@@ -411,7 +379,6 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(logoutUser.rejected, (state, action) => {
-        // ✅ Dù lỗi vẫn clear user data
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;

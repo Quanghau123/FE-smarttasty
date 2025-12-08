@@ -1,4 +1,4 @@
-// src/redux/slices/paymentSlice.ts
+
 import {
   createSlice,
   createAsyncThunk,
@@ -7,19 +7,14 @@ import {
 } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { Payment, CODPayment, InfoPayment } from "@/types/payment";
-import { ApiEnvelope } from "@/types/order"; // reused API envelope type
+import { ApiEnvelope } from "@/types/order"; 
 import type { AppDispatch } from "@/redux/store";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
-// VNPay IPN response type (backend returns { RspCode, Message })
 export interface VNPayIPNResponse {
   RspCode: string;  
   Message: string;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                 STATE TYPE                                 */
-/* -------------------------------------------------------------------------- */
 
 interface PaymentState {
   payments: Payment[];
@@ -39,9 +34,6 @@ const initialState: PaymentState = {
   error: null,
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                   UTILS                                    */
-/* -------------------------------------------------------------------------- */
 
 const getToken = getAccessToken;
 
@@ -50,13 +42,6 @@ const resolveApiData = <T>(body: unknown): ApiEnvelope<T> | null => {
   return body as ApiEnvelope<T>;
 };
 
-// helper is kept inline as resolveApiData return checks are sufficient
-
-/* -------------------------------------------------------------------------- */
-/*                                  THUNKS                                    */
-/* -------------------------------------------------------------------------- */
-
-// 1️⃣ POST /api/Payment/vnpay/create
 export const createVNPayPayment = createAsyncThunk<
   Payment,
   { orderId: number; amount: number },
@@ -83,7 +68,6 @@ export const createVNPayPayment = createAsyncThunk<
   }
 });
 
-// 2️⃣ POST /api/Payment/cod/create
 export const createCODPayment = createAsyncThunk<
   CODPayment,
   { orderId: number; amount: number; shippingAddress?: string; receiverPhone?: string },
@@ -101,7 +85,6 @@ export const createCODPayment = createAsyncThunk<
     });
     const envelope = resolveApiData<CODPayment>(res.data);
     if (envelope && envelope.data) {
-      // refresh pending payments list to get the created Payment object
       dispatch(fetchPendingPayments());
       return envelope.data as CODPayment;
     }
@@ -112,7 +95,6 @@ export const createCODPayment = createAsyncThunk<
   }
 });
 
-// 3️⃣ POST /api/Payment/cod/confirm
 export const confirmCODPayment = createAsyncThunk<
   CODPayment,
   { codPaymentId: number },
@@ -120,7 +102,6 @@ export const confirmCODPayment = createAsyncThunk<
 >("payment/confirmCODPayment", async ({ codPaymentId }, { rejectWithValue, dispatch }) => {
   try {
     const token = getToken();
-    // backend expects codPaymentId as query parameter
     const url = `/api/Payment/cod/confirm?codPaymentId=${codPaymentId}`;
     const res = await axiosInstance.post(url, null, {
       headers: token
@@ -140,9 +121,6 @@ export const confirmCODPayment = createAsyncThunk<
   }
 });
 
-// 3️⃣b POST /api/Payment/cod/confirm (by paymentId)
-// BE endpoint: POST /api/Payment/cod/confirm?codPaymentId={codPaymentId}
-// Need to lookup CODPayment from pending payments list
 export const confirmCODPaymentByPaymentId = createAsyncThunk<
   CODPayment,
   { paymentId: number; restaurantId: number },
@@ -153,7 +131,6 @@ export const confirmCODPaymentByPaymentId = createAsyncThunk<
     try {
       const token = getToken();
 
-      // Step 1: Fetch pending payments of this restaurant to find the CODPayment.Id
       const pendingRes = await axiosInstance.get(
         `/api/Payment/restaurant/pending/${restaurantId}`,
         {
@@ -171,7 +148,6 @@ export const confirmCODPaymentByPaymentId = createAsyncThunk<
         );
       }
 
-      // Step 2: Call BE endpoint with codPaymentId
       const url = `/api/Payment/cod/confirm?codPaymentId=${codPaymentId}`;
       const res = await axiosInstance.post(url, null, {
         headers: token
@@ -193,7 +169,6 @@ export const confirmCODPaymentByPaymentId = createAsyncThunk<
   }
 );
 
-// 4️⃣ GET /api/Payment/vnpay-return
 export const handleVNPayReturn = createAsyncThunk<
   Payment,
   { query: string },
@@ -211,7 +186,7 @@ export const handleVNPayReturn = createAsyncThunk<
   }
 });
 
-// 5️⃣ GET /api/Payment/vnpay-ipn
+
 export const handleVNPayIPN = createAsyncThunk<VNPayIPNResponse, { query: string }, { rejectValue: string }>(
   "payment/handleVNPayIPN",
   async ({ query }, { rejectWithValue }) => {
@@ -224,7 +199,6 @@ export const handleVNPayIPN = createAsyncThunk<VNPayIPNResponse, { query: string
   }
 );
 
-// 6️⃣ GET /api/Payment/pending
 export const fetchPendingPayments = createAsyncThunk<
   Payment[],
   void,
@@ -246,7 +220,6 @@ export const fetchPendingPayments = createAsyncThunk<
   }
 });
 
-// 7️⃣ GET /api/Order/user/paid/{userId} (BE changed: now only returns PAID orders for user history)
 export const fetchPaymentHistoryByUser = createAsyncThunk<
   InfoPayment[],
   { userId: number },
@@ -254,7 +227,6 @@ export const fetchPaymentHistoryByUser = createAsyncThunk<
 >("payment/fetchPaymentHistoryByUser", async ({ userId }, { rejectWithValue }) => {
   try {
     const token = getToken();
-    // BE endpoint updated to filter paid orders: /api/Order/user/paid/{userId}
     const res = await axiosInstance.get(`/api/Order/user/paid/${userId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
@@ -268,7 +240,6 @@ export const fetchPaymentHistoryByUser = createAsyncThunk<
   }
 });
 
-// 8️⃣ DELETE /api/Payment/cancel/{orderId}
 export const cancelOrder = createAsyncThunk<
   { success: boolean; orderId: number },
   { orderId: number; userId?: number },
@@ -279,10 +250,7 @@ export const cancelOrder = createAsyncThunk<
     const res = await axiosInstance.delete(`/api/Payment/cancel/${orderId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
-    
-    // If API returns 200/204, consider it success regardless of response body
     if (res.status === 200 || res.status === 204) {
-      // Prefer to refresh the user's history if we have the userId, otherwise refresh pending
       if (typeof userId === "number") {
         dispatch(fetchPaymentHistoryByUser({ userId }));
       } else {
@@ -291,7 +259,6 @@ export const cancelOrder = createAsyncThunk<
       return { success: true, orderId };
     }
     
-    // If status is not success, try to extract error message
     const envelope = resolveApiData<Record<string, unknown>>(res.data);
     const errObj = envelope as unknown as { errMessage?: string };
     return rejectWithValue(errObj?.errMessage ?? "Không thể hủy đơn");
@@ -300,7 +267,6 @@ export const cancelOrder = createAsyncThunk<
   }
 });
 
-// 8️⃣ GET /api/Payment/restaurant/{restaurantId}
 export const fetchPaymentsByRestaurant = createAsyncThunk<
   InfoPayment[],
   { restaurantId: number },
@@ -315,7 +281,6 @@ export const fetchPaymentsByRestaurant = createAsyncThunk<
     if (envelope && envelope.data && Array.isArray(envelope.data)) {
       return envelope.data as InfoPayment[];
     }
-    // Try to read error message in a type-safe way
     const errObj = (envelope as unknown) as { errMessage?: string };
     return rejectWithValue(errObj?.errMessage ?? "Không thể lấy danh sách thanh toán theo nhà hàng");
   } catch (e: unknown) {
@@ -323,9 +288,6 @@ export const fetchPaymentsByRestaurant = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                                   SLICE                                    */
-/* -------------------------------------------------------------------------- */
 
 const paymentSlice = createSlice({
   name: "payment",

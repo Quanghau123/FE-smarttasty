@@ -1,4 +1,3 @@
-// src/redux/slices/reviewSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { ReviewRequest, ReviewResponse, ReviewData } from "@/types/review";
@@ -8,8 +7,8 @@ interface ReviewState {
   loading: boolean;
   error: string | null;
   success: boolean;
-  review: ReviewData | null; // khi create
-  reviews: ReviewData[]; // khi fetch list
+  review: ReviewData | null; 
+  reviews: ReviewData[];
 }
 
 const initialState: ReviewState = {
@@ -20,7 +19,6 @@ const initialState: ReviewState = {
   reviews: [],
 };
 
-// ✅ Utility để lấy message lỗi từ Axios mà không dùng any
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
@@ -32,24 +30,17 @@ const getErrorMessage = (error: unknown): string => {
   );
 };
 
-// Utility: normalize backend response to an array of ReviewData
 const extractReviewItems = (payloadData: unknown): ReviewData[] => {
   if (!payloadData) return [];
-
-  // Case 1: payloadData is already an array of ReviewData
   if (Array.isArray(payloadData)) return payloadData as ReviewData[];
 
-  // Case 2: payloadData is a paginated wrapper with `.data` field (e.g. { data: [...], totalRecords, ... })
   if (typeof payloadData === "object" && payloadData !== null) {
     const wrapper = payloadData as { data?: unknown };
     if (Array.isArray(wrapper.data)) return wrapper.data as ReviewData[];
   }
-
-  // Case 3: payloadData is a single ReviewData object
   return [payloadData as ReviewData];
 };
 
-// ✅ Async thunk: tạo review
 export const createReview = createAsyncThunk<
   ReviewResponse,
   ReviewRequest,
@@ -66,7 +57,6 @@ export const createReview = createAsyncThunk<
   }
 });
 
-// ✅ Async thunk: lấy danh sách review
 export const getReviews = createAsyncThunk<
   ReviewResponse,
   void,
@@ -80,7 +70,6 @@ export const getReviews = createAsyncThunk<
   }
 });
 
-// ✅ Async thunk: lấy review theo nhà hàng
 export const getReviewsByRestaurant = createAsyncThunk<
   ReviewResponse,
   number,
@@ -99,7 +88,6 @@ export const getReviewsByRestaurant = createAsyncThunk<
   }
 );
 
-// ✅ Async thunk: xóa review
 export const deleteReview = createAsyncThunk<
   number,
   number,
@@ -186,9 +174,6 @@ const reviewSlice = createSlice({
       .addCase(getReviewsByRestaurant.rejected, (state, action) => {
         state.loading = false;
         const payloadMessage = action.payload ?? action.error?.message ?? "Không thể lấy review theo nhà hàng";
-
-        // Nếu backend trả 404 (không có review cho nhà hàng) => coi như không có review
-        // Một số môi trường axios trả message: 'Request failed with status code 404'
         if (typeof payloadMessage === "string" && payloadMessage.includes("404")) {
           state.reviews = [];
           state.error = null;

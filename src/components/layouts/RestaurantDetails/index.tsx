@@ -55,11 +55,10 @@ import {
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Favorite as FavoriteType } from "@/types/favorite";
-// Ensure axios has the latest Authorization and refresh-token behavior like other pages
+import { Dish } from "@/types/dish";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
-// Toast
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -89,7 +88,6 @@ const RestaurantDetailPage = () => {
     });
   };
 
-  // Suggested arrows visibility state (for the "Có thể bạn quan tâm" carousel)
   const [suggestedOverflow, setSuggestedOverflow] = useState(false);
   const [suggestedCanScrollLeft, setSuggestedCanScrollLeft] = useState(false);
   const [suggestedCanScrollRight, setSuggestedCanScrollRight] = useState(false);
@@ -113,8 +111,6 @@ const RestaurantDetailPage = () => {
   useEffect(() => {
     const el = suggestedRef.current;
     if (!el) return;
-    // NOTE: effect moved below after allRestaurants is declared
-    // placeholder to satisfy linter ordering; real effect is added later.
   }, []);
 
   const {
@@ -132,6 +128,7 @@ const RestaurantDetailPage = () => {
   } = useAppSelector((state) => state.dishes);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [allDishes, setAllDishes] = useState<Dish[]>([]); // Lấy tất cả các món (không phân trang) để hiển thị "các món đang giảm giá"
   const itemsPerPage = 9;
 
   const totalPages =
@@ -149,7 +146,6 @@ const RestaurantDetailPage = () => {
     error: reviewError,
   } = useAppSelector((state) => state.review);
 
-  // Move suggested carousel effect here so dependency `allRestaurants` is defined
   useEffect(() => {
     const el = suggestedRef.current;
     if (!el) return;
@@ -162,12 +158,10 @@ const RestaurantDetailPage = () => {
     };
   }, [allRestaurants]);
 
-  // Favorites for this restaurant (yêu thích)
   const { favorites: restaurantFavorites = [] } = useAppSelector(
     (state) => state.favorites
   );
 
-  // Lấy thông tin user từ Redux store thay vì localStorage
   const currentUser = useAppSelector((state) => state.user.user);
 
   const isFavorite = useMemo(() => {
@@ -178,18 +172,13 @@ const RestaurantDetailPage = () => {
     );
   }, [restaurantFavorites, restaurant, currentUser]);
 
-  // Tổng số review từ BE (lưu trong slice restaurant)
   const totalReviewsFromState = useAppSelector(
     (state: RootState) => state.restaurant.currentTotalReviews ?? 0
   );
 
-  // ================== REALTIME RATING WITH SIGNALR ==================
-  // Callback xử lý khi nhận rating update từ SignalR
-  // Đúng chuẩn BE: nhận event 'ReceiveRestaurantUpdate' với property PascalCase
   const handleRatingUpdate = (data: RatingUpdateData) => {
-    console.log("handleRatingUpdate invoked with:", data);
+  //  console.log("handleRatingUpdate invoked with:", data);
     if (data.type === "restaurant_rating_update" && data.data) {
-      // Chuẩn hóa property PascalCase từ BE
       const payload = data.data as Record<string, unknown>;
       const restaurantIdNum = Number(
         payload.RestaurantId ?? payload.restaurantId
@@ -197,7 +186,6 @@ const RestaurantDetailPage = () => {
       const avg = Number(payload.AverageRating ?? payload.averageRating) || 0;
       const tot = Number(payload.TotalReviews ?? payload.totalReviews) || 0;
       if (!Number.isFinite(restaurantIdNum)) return;
-      // Chỉ cập nhật nếu đúng restaurant hiện tại
       if (restaurantIdNum === Number(id)) {
         dispatch(
           applyRealtimeRating({
@@ -216,31 +204,25 @@ const RestaurantDetailPage = () => {
     }
   };
 
-  // Kết nối SignalR và join restaurant room
   useSignalR({
     restaurantId: id ? String(id) : undefined,
     onRatingUpdate: handleRatingUpdate,
     enabled: !!id,
   });
 
-  // ===== INIT - Set token and fetch user like Promotion page =====
   useEffect(() => {
     const token = getAccessToken();
     if (token) {
-      // Set Authorization header for axiosInstance
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
 
-      // Fetch current user if not in Redux yet (after reload/token refresh)
       if (!currentUser?.userId) {
         try {
-          // Try to decode token to get userId
           const parts = token.split(".");
           if (parts.length === 3) {
             const payload = JSON.parse(atob(parts[1]));
             const userId =
               payload?.userId ?? payload?.UserId ?? payload?.sub ?? payload?.id;
             if (userId) {
-              // Fetch full user info to populate Redux state
               dispatch(fetchUserById(Number(userId)));
             }
           }
@@ -251,7 +233,6 @@ const RestaurantDetailPage = () => {
     }
   }, [dispatch, currentUser?.userId]);
 
-  // Luôn lấy rating từ Redux state để đảm bảo realtime
   const displayAverageRating = restaurant?.averageRating ?? 0;
   const displayTotalReviews = totalReviewsFromState;
 
@@ -266,16 +247,33 @@ const RestaurantDetailPage = () => {
         pageSize: itemsPerPage,
       })
     );
+    // Fetch tất cả các món (không phân trang) cho phần "các món đang giảm giá"
+    const fetchAllDishesForPromo = async () => {
+      try {
+        const token = getAccessToken();
+        const res = await axiosInstance.get(`/api/Dishes/restaurant/${rid}`, {
+          params: {
+            pageNumber: 1,
+            pageSize: 9999, // Lấy tất cả
+          },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        const allDishesData = res.data?.data?.data || [];
+        setAllDishes(allDishesData);
+      } catch (error) {
+        console.warn("Lỗi khi lấy tất cả các món:", error);
+        setAllDishes([]);
+      }
+    };
+    
     dispatch(getReviewsByRestaurant(rid));
-    // ✅ Sử dụng API lấy dish promotions theo restaurant ID
     dispatch(fetchDishPromotionsByRestaurant(rid));
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
-    // Load favorites for this restaurant (refresh-token handled by axiosInstance)
     dispatch(fetchFavoritesByRestaurant(rid));
+    fetchAllDishesForPromo();
   }, [dispatch, id, currentPage]);
 
-  // Ensure we have restaurants list to show suggestions
   useEffect(() => {
     if (!allRestaurants || allRestaurants.length === 0) {
       dispatch(fetchRestaurants());
@@ -283,17 +281,10 @@ const RestaurantDetailPage = () => {
   }, [allRestaurants, dispatch]);
 
   const router = useRouter();
-
-  // ================== GIẢM GIÁ ==================
-  /**
-   * ✅ Map dishPromotion để lấy giá đã giảm từ BE
-   * BE đã tính sẵn discountedPrice, originalPrice, và discountValue
-   */
   const dishPromotionMap = useMemo(() => {
     const map = new Map<number, (typeof dishPromotions)[0]>();
 
     for (const dp of dishPromotions) {
-      // Nếu món đã có promotion, lấy cái có giá tốt nhất
       const existing = map.get(dp.dishId);
       if (!existing || dp.discountedPrice < existing.discountedPrice) {
         map.set(dp.dishId, dp);
@@ -302,8 +293,6 @@ const RestaurantDetailPage = () => {
 
     return map;
   }, [dishPromotions]);
-
-  // ================== SỐ LƯỢNG ==================
   const [qtyMap, setQtyMap] = useState<Record<number, number>>({});
   const inc = (id: number) =>
     setQtyMap((m) => ({ ...m, [id]: (m[id] || 0) + 1 }));
@@ -317,23 +306,19 @@ const RestaurantDetailPage = () => {
       return copy;
     });
 
-  // ================== Thêm vào giỏ ==================
   const handleAddToCart = async (dishId: number) => {
     const quantity = qtyMap[dishId] || 0;
     if (quantity <= 0) return;
 
-    // Lấy thông tin user từ Redux store (có thể là partial)
     let userId = currentUser?.userId;
     let address = currentUser?.address?.trim() || "";
     let name = currentUser?.userName?.trim() || "";
     let phone = currentUser?.phone?.trim() || "";
 
-    // Nếu có access token nhưng Redux user thiếu thông tin, thử fetch chi tiết từ server
     try {
       const { getAccessToken } = await import("@/lib/utils/tokenHelper");
       const token = getAccessToken();
       if (token && (!userId || !address || !name || !phone)) {
-        // Cố gắng lấy userId từ token nếu chưa có
         let resolvedId = userId;
         if (!resolvedId) {
           try {
@@ -347,7 +332,6 @@ const RestaurantDetailPage = () => {
                 payload?.id;
             }
           } catch {
-            // ignore
           }
         }
 
@@ -371,10 +355,8 @@ const RestaurantDetailPage = () => {
         }
       }
     } catch {
-      // dynamic import or getAccessToken might fail in SSR; ignore
     }
 
-    // Debug log để kiểm tra dữ liệu
     console.log("User data used for order:", {
       userId,
       address,
@@ -383,7 +365,6 @@ const RestaurantDetailPage = () => {
       currentUser,
     });
 
-    // Chỉ yêu cầu user đã đăng nhập để thêm vào giỏ; thông tin bổ sung sẽ được yêu cầu khi checkout
     const missingFields: string[] = [];
     if (!userId) missingFields.push("User ID");
 
@@ -402,15 +383,12 @@ const RestaurantDetailPage = () => {
         return;
       }
 
-      // Lấy danh sách đơn hàng hiện tại của user
       const userOrders = await dispatch(
         fetchOrdersByUser(Number(userId))
       ).unwrap();
 
-      // Tìm đơn hàng đang mở với nhà hàng này
       const activeOrder = userOrders.find((o) => {
-        // Normalize status to string and compare case-insensitively because
-        // backend may return different casings (eg. "pending" vs "Pending").
+
         const status = String(o.status ?? "").toLowerCase();
         return (
           o.restaurantId === Number(restaurant.id) &&
@@ -419,7 +397,6 @@ const RestaurantDetailPage = () => {
         );
       });
 
-      // ✅ Lấy giá từ promotion nếu có, không thì lấy giá gốc
       const promotion = dishPromotionMap.get(dishId);
       const unitPrice =
         promotion?.discountedPrice ??
@@ -431,7 +408,6 @@ const RestaurantDetailPage = () => {
       let ok = false;
 
       if (!activeOrder) {
-        // Nếu chưa có đơn hàng → tạo mới cùng với món đã chọn
         console.log("Creating new order with data:", {
           userId: Number(userId),
           restaurantId: Number(restaurant.id),
@@ -462,8 +438,6 @@ const RestaurantDetailPage = () => {
         ok = Boolean(createRes?.id);
       } else {
         orderId = activeOrder.id;
-
-        // Gọi API thêm món vào đơn hàng hiện có
         const res = await dispatch(
           addItemToOrder({
             orderId,
@@ -486,7 +460,6 @@ const RestaurantDetailPage = () => {
     } catch (error: unknown) {
       console.error("Error adding to cart:", error);
 
-      // Hiển thị thông báo lỗi chi tiết
       let errorMessage = t("error_occurred");
 
       if (error && typeof error === "object") {
@@ -504,14 +477,11 @@ const RestaurantDetailPage = () => {
     }
   };
 
-  // Favorite (theo dõi) - toggle handlers
   const handleToggleFavorite = async () => {
-    // Kiểm tra token trước - nếu có token thì try fetch user
     const token = getAccessToken();
     let userId = currentUser?.userId;
 
     if (!userId && token) {
-      // Token có nhưng Redux user chưa load -> thử decode token và fetch user
       try {
         const parts = token.split(".");
         if (parts.length === 3) {
@@ -519,7 +489,6 @@ const RestaurantDetailPage = () => {
           const uid =
             payload?.userId ?? payload?.UserId ?? payload?.sub ?? payload?.id;
           if (uid) {
-            // Fetch user để có đầy đủ thông tin
             const fetchedUser = await dispatch(
               fetchUserById(Number(uid))
             ).unwrap();
@@ -556,7 +525,6 @@ const RestaurantDetailPage = () => {
         ).unwrap();
         toast.success(t("added_favorite"));
       }
-      // refresh list
       dispatch(fetchFavoritesByRestaurant(Number(id)));
     } catch (err: unknown) {
       console.error("Favorite toggle error:", err);
@@ -568,7 +536,6 @@ const RestaurantDetailPage = () => {
     }
   };
 
-  // ================== LOADING & ERROR ==================
   if (restaurantLoading || dishesLoading) {
     return (
       <Box className={styles.centered}>
@@ -587,8 +554,6 @@ const RestaurantDetailPage = () => {
     );
   }
 
-  // ================== PHẦN CÒN LẠI ==================
-  // Sử dụng rating từ realtime nếu có, fallback về state
   const avgRating = displayAverageRating;
   const totalReviews = displayTotalReviews;
 
@@ -639,7 +604,6 @@ const RestaurantDetailPage = () => {
           </ToggleButtonGroup>
         </Box>
       )}
-      {/* Bên trái */}
       <Box className={styles.leftContent}>
         <Box ref={infoRef} sx={{ scrollMarginTop: { xs: 80, md: 0 } }}>
           <Box
@@ -698,7 +662,6 @@ const RestaurantDetailPage = () => {
               <Typography sx={{ mt: 1 }}>
                 <strong>{t("address")}:</strong> {restaurant.address}
               </Typography>
-              {/* Map is rendered in a dedicated full-width section at the bottom of the page */}
               <Typography sx={{ mt: 1 }}>
                 <strong>{t("status")}:</strong>{" "}
                 {(() => {
@@ -801,11 +764,8 @@ const RestaurantDetailPage = () => {
           </Box>
         </Box>
 
-        {/* Khuyến mãi của nhà hàng - chỉ hiển thị khi có khuyến mãi */}
         {(() => {
-          // Lọc các khuyến mãi: chỉ lấy TargetType = "order" và còn hạn
           const validPromotions = restaurantPromotions.slice().filter((p) => {
-            // Chỉ lấy promotion áp dụng cho order
             if (p.targetType !== "order") return false;
 
             try {
@@ -828,7 +788,6 @@ const RestaurantDetailPage = () => {
             }
           });
 
-          // Nếu không có khuyến mãi hợp lệ, không hiển thị gì
           if (!promoLoading && validPromotions.length === 0) {
             return null;
           }
@@ -910,10 +869,10 @@ const RestaurantDetailPage = () => {
           )}
         </Box>
 
-        {/* Các món đang giảm giá */}
         {(() => {
-          // Lọc các món đang có khuyến mãi
-          const dishesWithPromo = dishes.filter(
+          // Dùng allDishes (tất cả các món) thay vì dishes (phân trang)
+          // để đảm bảo "các món đang giảm giá" luôn hiển thị đầy đủ
+          const dishesWithPromo = allDishes.filter(
             (dish) => dishPromotionMap.has(dish.id) && dish.isActive
           );
 
@@ -930,11 +889,10 @@ const RestaurantDetailPage = () => {
               }}
             >
               <Typography variant="h5" sx={{ mb: 2, color: "error.main" }}>
-                🔥 {t("discounted_dishes_title")}
+                {t("discounted_dishes_title")}
               </Typography>
               <Box className={styles.dishGrid}>
                 {dishesWithPromo.map((dish) => {
-                  // ✅ Lấy thông tin promotion từ BE (đã có sẵn giá)
                   const promotion = dishPromotionMap.get(dish.id);
                   if (!promotion) return null;
 
@@ -943,7 +901,6 @@ const RestaurantDetailPage = () => {
                   const discountedPrice = promotion.discountedPrice;
                   const unitPrice = discountedPrice;
 
-                  // Lấy % giảm giá từ BE
                   const discountPercent =
                     promotion.discountType === "percent"
                       ? Math.round(promotion.discountValue)
@@ -967,7 +924,6 @@ const RestaurantDetailPage = () => {
                         position: "relative",
                       }}
                     >
-                      {/* Badge giảm giá */}
                       {discountPercent > 0 && (
                         <Chip
                           label={`-${discountPercent}%`}
@@ -984,10 +940,8 @@ const RestaurantDetailPage = () => {
                         />
                       )}
 
-                      {/* Flip card wrapper */}
                       <Box className={styles.dishImageWrapper}>
                         <Box className={styles.dishFlipInner}>
-                          {/* Mặt trước - Ảnh món ăn */}
                           <Box className={styles.dishImage}>
                             {dish.imageUrl ? (
                               <Image
@@ -1018,7 +972,6 @@ const RestaurantDetailPage = () => {
                             )}
                           </Box>
 
-                          {/* Mặt sau - Mô tả món ăn */}
                           <Box className={styles.dishDescription}>
                             <Typography component="p">
                               {dish.description || t("no_description")}
@@ -1121,7 +1074,6 @@ const RestaurantDetailPage = () => {
           ) : (
             <Box className={styles.dishGrid}>
               {dishes.map((dish) => {
-                // ✅ Lấy thông tin promotion từ BE nếu có
                 const promotion = dishPromotionMap.get(dish.id);
                 const hasDiscount = !!promotion;
                 const qty = qtyMap[dish.id] || 0;
@@ -1145,10 +1097,8 @@ const RestaurantDetailPage = () => {
                       gap: 1,
                     }}
                   >
-                    {/* Flip card wrapper */}
                     <Box className={styles.dishImageWrapper}>
                       <Box className={styles.dishFlipInner}>
-                        {/* Mặt trước - Ảnh món ăn */}
                         <Box className={styles.dishImage}>
                           {dish.imageUrl ? (
                             <Image
@@ -1179,7 +1129,7 @@ const RestaurantDetailPage = () => {
                           )}
                         </Box>
 
-                        {/* Mặt sau - Mô tả món ăn */}
+
                         <Box className={styles.dishDescription}>
                           <Typography component="p">
                             {dish.description || t("no_description")}
@@ -1233,7 +1183,6 @@ const RestaurantDetailPage = () => {
                       )}
                     </Box>
 
-                    {/* Chọn số lượng + Thêm vào giỏ */}
                     <Stack
                       direction="row"
                       alignItems="center"
@@ -1289,7 +1238,6 @@ const RestaurantDetailPage = () => {
           )}
         </Box>
 
-        {/* Bản đồ */}
         <Box
           ref={mapRef}
           sx={{ width: "100%", mt: 3, scrollMarginTop: { xs: 80, md: 0 } }}
@@ -1328,7 +1276,6 @@ const RestaurantDetailPage = () => {
           )}
         </Box>
 
-        {/* Khu vực đánh giá */}
         <Box
           ref={reviewsRef}
           sx={{
@@ -1350,7 +1297,6 @@ const RestaurantDetailPage = () => {
             <ReviewForm />
           </Box>
         </Box>
-        {/* --- Gợi ý: Có thể bạn quan tâm (nhà hàng > 4 sao, trừ nhà hàng hiện tại) --- */}
         {(() => {
           const suggested = (allRestaurants || []).filter((r) => {
             const avg = r.averageRating ?? r.rating ?? 0;

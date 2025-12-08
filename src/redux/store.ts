@@ -38,10 +38,6 @@ export const store = configureStore({
   },
 });
 
-// Keep Redux state in sync with tokenHelper/localStorage updates
-// This ensures that after a background refresh, components/selectors relying
-// on Redux see the latest token as well.
-
 try {
   subscribeAccessTokenChange((token) => {
     if (token) {
@@ -49,7 +45,6 @@ try {
     }
   });
 } catch {
-  // ignore subscription issues in non-browser contexts
 }
 
 export type RootState = ReturnType<typeof store.getState>;

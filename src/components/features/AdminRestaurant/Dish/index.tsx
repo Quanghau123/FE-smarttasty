@@ -19,7 +19,6 @@ export default function DishCard({ dish, discountedPrice }: Props) {
     <Card
       variant="outlined"
       sx={{
-        // fixed frame so all cards are uniform
         height: 300,
         width: 250,
         display: "flex",
@@ -28,7 +27,6 @@ export default function DishCard({ dish, discountedPrice }: Props) {
         // "&:hover": { boxShadow: 6 },
       }}
     >
-      {/* image area fixed */}
       <Box
         sx={{ position: "relative", width: "100%", height: 160, flexShrink: 0 }}
       >
@@ -39,11 +37,10 @@ export default function DishCard({ dish, discountedPrice }: Props) {
           style={{ objectFit: "cover" }}
         />
       </Box>
-      {/* content area fixed height so it cannot expand */}
+
       <CardContent
         sx={{
           p: 1.5,
-          // keep content stacked from the top so title and price sit close together
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",

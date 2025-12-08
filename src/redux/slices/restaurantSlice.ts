@@ -1,4 +1,3 @@
-// src/redux/slices/restaurantSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import axiosInstance from "@/lib/axios/axiosInstance";
@@ -8,7 +7,6 @@ import {
   RestaurantState,
 } from "@/types/restaurant";
 
-// INITIAL STATE
 const initialState: RestaurantState = {
   restaurants: [],
   allRestaurants: [],
@@ -22,7 +20,6 @@ const initialState: RestaurantState = {
   error: null,
 };
 
-// Helper: Lấy message từ error
 const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): string => {
   if (axios.isAxiosError(err)) {
     const responseData = err.response?.data as { message?: string; errMessage?: string } | undefined;
@@ -31,9 +28,6 @@ const getErrorMessage = (err: unknown, fallback = "Lỗi không xác định"): 
   return fallback;
 };
 
-// ================== ASYNC THUNKS ==================
-
-// Fetch by owner
 export const fetchRestaurantByOwner = createAsyncThunk<
   Restaurant | null,
   { token: string },
@@ -49,8 +43,7 @@ export const fetchRestaurantByOwner = createAsyncThunk<
     return rejectWithValue(getErrorMessage(err));
   }
 });
-
-// Fetch by category      
+  
 export const fetchRestaurantsByCategory = createAsyncThunk<
   Restaurant[],
   string,
@@ -126,14 +119,12 @@ export const fetchRestaurants = createAsyncThunk<
   }
 });
 
-// Fetch all restaurants without pagination (for featured section)
 export const fetchAllRestaurants = createAsyncThunk<
   Restaurant[],
   void,
   { rejectValue: string }
 >("restaurant/fetchAllRestaurants", async (_, { rejectWithValue }) => {
   try {
-    // Request with a very large page size to get all restaurants
     const res = await axiosInstance.get("/api/Restaurant", {
       params: { PageNumber: 1, PageSize: 1000 },
     });
@@ -162,7 +153,6 @@ export const fetchNearbyRestaurants = createAsyncThunk<
   }
 });
 
-// Search restaurants (full search)
 export const searchRestaurants = createAsyncThunk<
   Restaurant[],
   string,
@@ -170,14 +160,12 @@ export const searchRestaurants = createAsyncThunk<
 >("restaurant/search", async (q, { rejectWithValue }) => {
   try {
     const res = await axiosInstance.get(`/api/Restaurant/search?q=${encodeURIComponent(q)}`);
-    // BE may return data envelope or plain array
     return res.data?.data ?? res.data ?? [];
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err, "Tìm kiếm thất bại"));
   }
 });
 
-// Search suggestions (autocomplete)
 export const fetchRestaurantSearchSuggestions = createAsyncThunk<
   string[],
   string,
@@ -191,7 +179,6 @@ export const fetchRestaurantSearchSuggestions = createAsyncThunk<
   }
 });
 
-// Fetch by id
 export const fetchRestaurantById = createAsyncThunk<
   { restaurant: Restaurant | null; totalReviews?: number },
   number,
@@ -204,8 +191,6 @@ export const fetchRestaurantById = createAsyncThunk<
       | Restaurant
       | null
       | undefined;
-    // BE mới: data = { restaurant: {...}, totalReviews }
-    // Cũ: data = Restaurant
     if (data && typeof data === "object" && "restaurant" in data) {
       const obj = data as { restaurant?: Restaurant; totalReviews?: number };
       return { restaurant: obj.restaurant ?? null, totalReviews: obj.totalReviews };
@@ -262,7 +247,6 @@ export const deleteRestaurant = createAsyncThunk<
   }
 });
 
-// ================== SLICE ==================
 const restaurantSlice = createSlice({
   name: "restaurant",
   initialState,
@@ -277,24 +261,20 @@ const restaurantSlice = createSlice({
 ) {
   const { restaurantId, averageRating, totalReviews } = action.payload;
 
-  // Cập nhật restaurant đang xem
   if (state.current && state.current.id === restaurantId) {
     state.current.averageRating = averageRating;
     state.currentTotalReviews = totalReviews;
   }
 
-  // Cập nhật trong danh sách (nếu có)
   const found = state.restaurants.find(r => r.id === restaurantId);
   if (found) {
     found.averageRating = averageRating;
-    // BE có thể không trả totalReviews trong object => cập nhật nếu có
     found.totalReviews = totalReviews;
   }
 },
   },
   extraReducers: (builder) => {
     builder
-      // fetchByOwner
       .addCase(fetchRestaurantByOwner.pending, (state) => {
         state.loading = true;
         state.error = null;

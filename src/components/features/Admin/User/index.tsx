@@ -56,7 +56,6 @@ const UserPage = () => {
       toast.success(t("delete_success"));
       setOpenDialog(false);
     } catch (err: unknown) {
-      // Kiểm tra err là Error
       if (err instanceof Error) {
         toast.error(err.message || t("delete_failed"));
       } else {
@@ -65,13 +64,11 @@ const UserPage = () => {
     }
   };
 
-  // Lọc user thường
   const normalUsers = useMemo(
     () => users.filter((u) => u.role === "user"),
     [users]
   );
 
-  // Filter + search
   const filteredData = normalUsers.filter(
     (user) =>
       user.userName.toLowerCase().includes(search.toLowerCase()) ||

@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [openDialog, setOpenDialog] = useState(false);
 
   const handleLogin = async () => {
-    // 🚀 giả sử login thành công
     setIsLogin(true);
     // Mở popup hỏi quyền vị trí
     setOpenDialog(true);

@@ -479,7 +479,6 @@ const NearbyRestaurantsPage = () => {
                                           exit
                                         );
                                       } else {
-                                        // Fallback khi không có maneuver
                                         const hasStreet = !!streetName;
                                         instruction = t(
                                           `nearbyRestaurant.directions.instructions.fallback.${
@@ -735,8 +734,6 @@ const NearbyRestaurantsPage = () => {
           </Box>
         </>
       )}
-
-      {/* Snackbar báo lỗi */}
       <Snackbar
         open={!!error}
         autoHideDuration={4000}

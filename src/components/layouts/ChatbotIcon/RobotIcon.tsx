@@ -47,7 +47,6 @@ const RobotIcon: React.FC<Props> = ({
   const pupilRadius = 0.75;
   const mouthY = 17;
 
-  // compute transform so scaling occurs about the SVG center (12,12)
   const center = 12;
   const tx = center - center * scale;
   const ty = center - center * scale;
@@ -58,9 +57,7 @@ const RobotIcon: React.FC<Props> = ({
       className={className}
       style={style}
       viewBox="0 0 24 24"
-      // width/height intentionally omitted so parent CSS can control sizing
     >
-      {/* Added: gradient defs for orange -> red transition */}
       <defs>
         <linearGradient id="robotGradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#FF8C00" />
@@ -74,9 +71,7 @@ const RobotIcon: React.FC<Props> = ({
         </linearGradient>
       </defs>
 
-      {/* Wrap all visible shapes in a group so they scale around the center (12,12) */}
       <g transform={groupTransform}>
-        {/* Body (use gradient) - added stroke for outline */}
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -87,7 +82,6 @@ const RobotIcon: React.FC<Props> = ({
           strokeLinejoin="round"
         />
 
-        {/* Smaller facial blobs - add same subtle outline */}
         <path
           d="M14.0365 12.6464C14.2015 12.38 14.5274 12.0625 15.0163 12.0625C15.5051 12.0625 15.831 12.38 15.996 12.6464C16.1681 12.9243 16.2501 13.2612 16.2501 13.5938C16.2501 13.9263 16.1681 14.2632 15.996 14.5411C15.831 14.8075 15.5051 15.125 15.0163 15.125C14.5274 15.125 14.2015 14.8075 14.0365 14.5411C13.8644 14.2632 13.7824 13.9263 13.7824 13.5938C13.7824 13.2612 13.8644 12.9243 14.0365 12.6464Z"
           fill="url(#robotGradient)"
@@ -103,7 +97,6 @@ const RobotIcon: React.FC<Props> = ({
           strokeLinejoin="round"
         />
 
-        {/* Big outer shape - add subtle outline to define silhouette */}
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -114,7 +107,6 @@ const RobotIcon: React.FC<Props> = ({
           strokeLinejoin="round"
         />
 
-        {/* Eyes (whites remain white; pupils use accent gradient when talking) */}
         <circle
           cx={leftEye.cx}
           cy={leftEye.cy}

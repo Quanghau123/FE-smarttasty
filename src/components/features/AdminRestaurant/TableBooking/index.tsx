@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -53,7 +52,6 @@ const getUserFromLocalStorage = () => {
 
 const toDisplayStatus = (status: string | number) => {
   const raw = typeof status === "string" ? status : String(status);
-  // Backend enum names: Pending, Confirmed, CheckedIn, Completed, Cancelled
   const norm = raw.toLowerCase();
   if (norm.includes("pending")) return "Pending";
   if (norm.includes("confirmed")) return "Confirmed";
@@ -113,7 +111,6 @@ const TableBooking: React.FC = () => {
   const [note, setNote] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("All");
 
-  // init: set token header and load restaurant owned by user
   useEffect(() => {
     const { token } = getUserFromLocalStorage();
     if (token) {
@@ -122,7 +119,6 @@ const TableBooking: React.FC = () => {
     }
   }, [dispatch]);
 
-  // fetch reservations when restaurant is ready
   useEffect(() => {
     if (!restaurant?.id) return;
     dispatch(fetchReservationsByRestaurant(restaurant.id));
@@ -187,7 +183,7 @@ const TableBooking: React.FC = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // small delay so transitions run after mount
+
     const id = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(id);
   }, []);
@@ -209,7 +205,6 @@ const TableBooking: React.FC = () => {
         </Box>
       );
 
-    // Filter reservations based on selected status
     const filteredRows =
       filterStatus === "All"
         ? rows
@@ -333,7 +328,6 @@ const TableBooking: React.FC = () => {
                       />
                     </Box>
 
-                    {/* Customer Info */}
                     <Box sx={{ mb: 2 }}>
                       <Typography
                         variant="overline"
@@ -557,7 +551,6 @@ const TableBooking: React.FC = () => {
                       </Box>
                     </Box>
 
-                    {/* Created Date */}
                     <Box sx={{ mb: 2 }}>
                       <Chip
                         size="small"
@@ -645,7 +638,6 @@ const TableBooking: React.FC = () => {
     mounted,
   ]);
 
-  // Calculate statistics
   const stats = useMemo(() => {
     const pending = rows.filter(
       (r) => toDisplayStatus(r.status) === "Pending"
@@ -723,7 +715,6 @@ const TableBooking: React.FC = () => {
         bgcolor: "background.default",
       }}
     >
-      {/* Header */}
       <Fade in={mounted} timeout={400}>
         <Box
           sx={{
@@ -759,7 +750,6 @@ const TableBooking: React.FC = () => {
         </Box>
       </Fade>
 
-      {/* Statistics Cards - Using Flexbox */}
       <Box
         sx={{
           display: "flex",
@@ -832,7 +822,6 @@ const TableBooking: React.FC = () => {
         ))}
       </Box>
 
-      {/* Reservations List - Using Flexbox */}
       {content}
 
       <Dialog

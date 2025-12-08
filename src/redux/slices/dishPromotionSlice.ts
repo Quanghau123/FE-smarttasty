@@ -30,9 +30,6 @@ const parseResponse = <T>(res: unknown): T => {
   return res as T;
 };
 
-/* -------------------------------------------
-   🔹 1. GET /api/DishPromotions
-------------------------------------------- */
 export const fetchDishPromotions = createAsyncThunk<
   DishPromotion[],
   void,
@@ -50,11 +47,6 @@ export const fetchDishPromotions = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------
-   🔹 2. GET /api/DishPromotions/{id}
-/* -------------------------------------------
-   🔹 3. GET /api/DishPromotions/restaurant/{restaurantId}
-------------------------------------------- */
 export const fetchDishPromotionsByRestaurant = createAsyncThunk<
   DishPromotion[],
   number,
@@ -90,11 +82,6 @@ export const fetchDishPromotionById = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------
-   🔹 3. POST /api/DishPromotions
-   Request chỉ cần dishId và promotionId
-   BE sẽ tự tính toán originalPrice, discountedPrice, discountType, discountValue
-------------------------------------------- */
 export const createDishPromotion = createAsyncThunk<
   DishPromotion,
   { dishId: number; promotionId: number },
@@ -117,9 +104,6 @@ export const createDishPromotion = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------
-   🔹 4. PUT /api/DishPromotions/{id}
-------------------------------------------- */
 export const updateDishPromotion = createAsyncThunk<
   DishPromotion,
   DishPromotion,
@@ -146,9 +130,6 @@ export const updateDishPromotion = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------
-   🔹 5. DELETE /api/DishPromotions/{id}
-------------------------------------------- */
 export const deleteDishPromotion = createAsyncThunk<
   number,
   number,
@@ -166,9 +147,6 @@ export const deleteDishPromotion = createAsyncThunk<
   }
 });
 
-/* -------------------------------------------
-   🔹 Slice
-------------------------------------------- */
 const dishPromotionSlice = createSlice({
   name: "dishPromotion",
   initialState,

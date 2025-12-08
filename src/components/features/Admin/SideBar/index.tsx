@@ -56,7 +56,6 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
         {t("title")}
       </Box>
       <List>
-        {/* Dashboard */}
         <ListItemButton
           component={Link}
           href="/admin"
@@ -69,7 +68,6 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
           <ListItemText primary={t("dashboard")} />
         </ListItemButton>
 
-        {/* Management with Collapse */}
         <ListItemButton onClick={() => setOpen(!open)}>
           <ListItemIcon>
             <PersonIcon />

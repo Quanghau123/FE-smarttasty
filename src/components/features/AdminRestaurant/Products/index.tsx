@@ -103,7 +103,6 @@ const ProductPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDishId, setSelectedDishId] = useState<number | null>(null);
 
-  // voucher (dish-promotion) dialog state
   const [openVoucherDialog, setOpenVoucherDialog] = useState(false);
   const [voucherDish, setVoucherDish] = useState<Dish | null>(null);
   const [selectedPromotionId, setSelectedPromotionId] = useState<number | "">(
@@ -119,7 +118,6 @@ const ProductPage = () => {
   }, [dispatch]);
 
   const { promotions } = useAppSelector((state) => state.promotion);
-  // only promotions that target dishes should be available on this page
   const filteredPromotions = Array.isArray(promotions)
     ? promotions.filter((p) => p.targetType === "dish")
     : [];
@@ -131,7 +129,6 @@ const ProductPage = () => {
   useEffect(() => {
     if (restaurant?.id) {
       setRestaurantId(restaurant.id);
-      // Fetch từ server với category filter và pagination
       dispatch(
         fetchDishes({
           restaurantId: restaurant.id,
@@ -140,9 +137,8 @@ const ProductPage = () => {
           category: selectedCategory !== "All" ? selectedCategory : undefined,
         })
       );
-      // load promotions to attach in dialog
       dispatch(fetchPromotions(restaurant.id));
-      // ✅ load toàn bộ dish promotions để hiển thị giá giảm
+      //load toàn bộ dish promotions để hiển thị giá giảm
       dispatch(fetchDishPromotions());
     } else if (restaurant) {
       toast.warning(t("errors.missing_restaurant"));
@@ -209,7 +205,6 @@ const ProductPage = () => {
         toast.success(t("errors.add_success"));
       }
       handleCloseModal();
-      // Reload current page after change
       if (restaurantId)
         dispatch(
           fetchDishes({
@@ -234,7 +229,6 @@ const ProductPage = () => {
     setVoucherDish(dish);
     setSelectedPromotionId("");
     setOpenVoucherDialog(true);
-    //không cần gọi fetch theo dish id nữa
   };
 
   const handleCloseVoucherModal = () => {
@@ -243,7 +237,7 @@ const ProductPage = () => {
     setSelectedPromotionId("");
   };
 
-  // Hủy một voucher (mapping) đang áp cho món trong dialog
+  // Hủy một voucher đang áp cho món 
   const handleRemoveVoucherItem = async (dishPromotionId: number) => {
     try {
       await dispatch(deleteDishPromotion(dishPromotionId)).unwrap();
@@ -263,7 +257,6 @@ const ProductPage = () => {
     if (!selectedPromotionId)
       return toast.warning(t("errors.select_promotion"));
     try {
-      //Chỉ cần gửi dishId và promotionId, BE sẽ tự tính toán giá
       const payload = {
         dishId: voucherDish.id,
         promotionId: Number(selectedPromotionId),
@@ -312,7 +305,6 @@ const ProductPage = () => {
     }
   };
 
-  // Lọc keyword trên client từ dữ liệu đã được server phân trang
   const filteredDishes = dishes.filter((dish) => {
     const matchKeyword = dish.name
       .toLowerCase()
@@ -320,7 +312,6 @@ const ProductPage = () => {
     return matchKeyword;
   });
 
-  // Sử dụng dishes từ server (đã phân trang sẵn)
   const paginatedDishes = filteredDishes;
 
   // Lấy totalPages từ Redux state nếu có, fallback về tính từ items
@@ -331,12 +322,11 @@ const ProductPage = () => {
       : Math.ceil(dishes.length / itemsPerPage);
 
   /**
-   *Helper: Lấy giá tốt nhất (thấp nhất) từ danh sách khuyến mãi
+   *Helper: Lấy giá tốt nhất từ danh sách khuyến mãi
    *
-   * BE đã tính toán sẵn giá giảm qua API GET /api/DishPromotions
+   * BE đã tính toán giá giảm qua API GET /api/DishPromotions
    * FE chỉ cần lấy giá thấp nhất từ các discountedPrice mà BE đã tính
-   *
-   * @param dishId - ID của món ăn
+   * @param dishId 
    * @returns { originalPrice, bestPrice, hasDiscount }
    */
   const getBestPriceForDish = (dishId: number, fallbackPrice: number) => {
@@ -352,10 +342,10 @@ const ProductPage = () => {
       };
     }
 
-    // Lấy giá gốc từ promotion đầu tiên (tất cả promotion cùng món có giá gốc giống nhau)
+    // Lấy giá gốc từ promotion đầu tiên
     const originalPrice = relatedPromotions[0].originalPrice || fallbackPrice;
 
-    // Tìm giá tốt nhất (thấp nhất) từ các discountedPrice mà BE đã tính sẵn
+    // Tìm giá tốt nhất
     const bestPrice = Math.min(
       ...relatedPromotions.map((dp) => dp.discountedPrice || originalPrice)
     );
@@ -421,7 +411,7 @@ const ProductPage = () => {
             <>
               <Box sx={{ display: "grid", gap: 2 }}>
                 {paginatedDishes.map((dish) => {
-                  // ✅ Lấy giá tốt nhất từ BE (đã tính sẵn)
+                  //Lấy giá tốt nhất từ BE
                   const { originalPrice, bestPrice, hasDiscount } =
                     getBestPriceForDish(dish.id, dish.price);
 
@@ -565,7 +555,7 @@ const ProductPage = () => {
                   </TableHead>
                   <TableBody>
                     {paginatedDishes.map((dish) => {
-                      // ✅ Lấy giá tốt nhất từ BE (đã tính sẵn)
+                      // Lấy giá tốt nhất từ BE 
                       const { originalPrice, bestPrice, hasDiscount } =
                         getBestPriceForDish(dish.id, dish.price);
 
@@ -573,7 +563,7 @@ const ProductPage = () => {
                         <TableRow key={dish.id}>
                           <TableCell>{dish.name}</TableCell>
                           <TableCell>
-                            {/* ✅ Hiển thị giá từ BE - không cần tính toán */}
+                            {/*Hiển thị giá từ BE - không cần tính toán */}
                             {hasDiscount ? (
                               <>
                                 <div
@@ -774,7 +764,7 @@ const ProductPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog xác nhận xóa */}
+      {/* xác nhận xóa */}
       <Dialog
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
@@ -797,7 +787,7 @@ const ProductPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog gán voucher cho món */}
+      {/* gán voucher cho món */}
       <Dialog
         open={openVoucherDialog}
         onClose={handleCloseVoucherModal}

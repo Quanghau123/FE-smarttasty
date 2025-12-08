@@ -37,7 +37,6 @@ export function useSignalR(options: UseSignalROptions = {}) {
   const isInitializedRef = useRef(false);
   const restaurantIdRef = useRef<string | null>(null);
 
-  // Join restaurant room
   const joinRoom = useCallback(async (roomId: string | number) => {
     const roomIdStr = String(roomId);
     if (signalRService.isConnected()) {
@@ -46,7 +45,6 @@ export function useSignalR(options: UseSignalROptions = {}) {
     }
   }, []);
 
-  // Initialize SignalR connection
   useEffect(() => {
     if (!enabled || isInitializedRef.current) return;
 
@@ -60,23 +58,20 @@ export function useSignalR(options: UseSignalROptions = {}) {
         await signalRService.connect(accessToken || undefined);
         isInitializedRef.current = true;
 
-        // Register event handlers
         if (onRatingUpdate) {
           signalRService.onRestaurantRatingUpdate(onRatingUpdate);
         }
 
         if (onNotification) {
-          signalRService.onNotification(onNotification); // bind trước connect
+          signalRService.onNotification(onNotification);
         }
         await signalRService.connect(accessToken || undefined);
 
-        // Auto-join restaurant room if provided
         if (restaurantId) {
           const roomIdStr = String(restaurantId);
           await signalRService.joinRestaurantRoom(roomIdStr);
           restaurantIdRef.current = roomIdStr;
         } else {
-          // If no restaurantId, join user's personal room for notifications
           const user = getUser();
           if (user?.userId) {
             console.log(
@@ -95,14 +90,10 @@ export function useSignalR(options: UseSignalROptions = {}) {
 
     initConnection();
 
-    // Cleanup on unmount
     return () => {
-      // Intentionally do not clear service callbacks here; service preserves callbacks
-      // until a real disconnect. If you want to disconnect on unmount, call disconnect().
     };
   }, [enabled, restaurantId, onRatingUpdate, onNotification]);
 
-  // Update restaurant room when restaurantId changes
   useEffect(() => {
     if (!enabled || !restaurantId || !isInitializedRef.current) return;
 
@@ -112,11 +103,8 @@ export function useSignalR(options: UseSignalROptions = {}) {
     }
   }, [restaurantId, enabled, joinRoom]);
 
-  // If the provided onRatingUpdate callback changes after initialization,
-  // re-register it on the service so the latest closure is used.
   useEffect(() => {
     if (!enabled || !onRatingUpdate) return;
-    // Only register when connection is ready
     if (signalRService.isConnected()) {
       try {
         signalRService.onRestaurantRatingUpdate(onRatingUpdate);
