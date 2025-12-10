@@ -1,7 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*                                ENUMS (BE)                                 */
-/* -------------------------------------------------------------------------- */
-
 export enum OrderStatus {
   Pending = "Pending",
   Paid = "Paid",
@@ -33,10 +29,6 @@ export enum RestaurantStatus {
   Rejected = "rejected",
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               RESTAURANT DTO                               */
-/* -------------------------------------------------------------------------- */
-
 export interface Restaurant {
   id: number;
   ownerId: number;
@@ -59,10 +51,6 @@ export interface Restaurant {
   distanceKm?: number | null;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               ORDER ITEM DTO                               */
-/* -------------------------------------------------------------------------- */
-
 export interface OrderItem {
   id: number;
   dishId: number;
@@ -74,9 +62,6 @@ export interface OrderItem {
   image?: string; // URL hình ảnh món ăn
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  ORDER DTO                                 */
-/* -------------------------------------------------------------------------- */
 
 export interface OrderResponse {
   id: number;
@@ -96,9 +81,6 @@ export interface OrderResponse {
   deliveredAt?: string;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                ORDER REQUEST                               */
-/* -------------------------------------------------------------------------- */
 
 export interface OrderRequest {
   userId: number;
@@ -112,9 +94,6 @@ export interface OrderRequest {
   }[];
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              API ENVELOPE TYPE                             */
-/* -------------------------------------------------------------------------- */
 
 export interface ApiEnvelope<T> {
   errCode: "success" | "error";
@@ -125,9 +104,6 @@ export interface ApiEnvelope<T> {
   status?: string;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             REVENUE / DASHBOARD                             */
-/* -------------------------------------------------------------------------- */
 
 export interface RestaurantRevenue {
   restaurantId: number;
@@ -139,9 +115,6 @@ export interface RestaurantRevenue {
   breakdown?: Record<string, number> | null;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                       RAW ORDER RESPONSE (from BE)                         */
-/* -------------------------------------------------------------------------- */
 
 export interface RawOrderResponse {
   id: number;
@@ -170,10 +143,6 @@ export interface RawOrderResponse {
   deliveredAt?: string | null;
 }
 
-/**
- * Chuẩn hóa dữ liệu Order trả về từ BE.
- * Đảm bảo các field luôn tồn tại, tránh undefined/null gây crash UI.
- */
 export const normalizeOrderResponse = (
   raw: RawOrderResponse
 ): OrderResponse => {

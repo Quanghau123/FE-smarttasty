@@ -1,9 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*                                ENUMS (FE)                                 */
-/* -------------------------------------------------------------------------- */
-
-// NOTE: these enums mirror backend `backend.Domain.Enums.PaymentMethod` and `PaymentStatus`.
-// Keep the string values stable to match API responses which may return either names or numeric values.
 export enum PaymentMethod {
   VNPay = "VNPay",
   ZaloPay = "ZaloPay",
@@ -18,16 +12,10 @@ export enum PaymentStatus {
   Refunded = "Refunded",  // backend: Refunded = 4
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              RELATED ENTITIES                              */
-/* -------------------------------------------------------------------------- */
-
 export interface PaymentTransactionLog {
   id: number;
   paymentId: number;
-  // provider corresponds to backend PaymentTransactionLog.Provider (enum PaymentMethod)
   provider: PaymentMethod;
-  // status corresponds to backend PaymentTransactionLog.Status (enum PaymentStatus)
   status: PaymentStatus;
   rawData?: string | null;
   errorMessage?: string | null;
@@ -37,7 +25,6 @@ export interface PaymentTransactionLog {
 export interface VNPayPayment {
   id: number;
   paymentId: number;
-  // VnpTxnRef on backend
   vnpTxnRef: string;
   bankCode?: string | null;
   cardType?: string | null;
@@ -47,7 +34,6 @@ export interface VNPayPayment {
 export interface ZaloPayPayment {
   id: number;
   paymentId: number;
-  // AppTransId on backend
   appTransId: string;
   zpTransId?: string | null;
   responseMessage?: string | null;
@@ -56,7 +42,7 @@ export interface ZaloPayPayment {
 export interface CODPayment {
   id: number;
   paymentId: number;
-  isCollected: boolean; // backend: IsCollected
+  isCollected: boolean; 
   collectedAt?: string | null;
 }
 
@@ -64,24 +50,19 @@ export interface Refund {
   id: number;
   paymentId: number;
   amount: number;
-  // backend: Refund.Reason nullable
   reason?: string | null;
-  status: string; // RefundStatus on backend (as string here)
+  status: string; 
   transactionId?: string | null;
   createdAt: string;
   processedAt?: string | null;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                 MAIN MODEL                                 */
-/* -------------------------------------------------------------------------- */
 
 export interface Payment {
   id: number;
   orderId: number;
 
   method: PaymentMethod;
-  status: PaymentStatus | string; // backend PaymentDto.Status can be a string message
+  status: PaymentStatus | string; 
   amount: number;
 
   transactionId?: string | null;
@@ -99,18 +80,12 @@ export interface Payment {
   refunds: Refund[];
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         INFO PAYMENT (History Item)                        */
-/* -------------------------------------------------------------------------- */
-
 import type { OrderResponse } from "@/types/order";
 
-// Mirrors backend Application.DTOs.Payment.InfoPaymentDto
 export interface InfoPayment {
   id: number;
   amount: number;
-  status: string; // BE returns string status in InfoPaymentDto
+  status: string; 
   order: OrderResponse;
-  // Optional COD info when method is COD (present in BE InfoPaymentDto)
   codPayment?: CODPayment | null;
 }

@@ -57,7 +57,7 @@ export const fetchDishes = createAsyncThunk<
   PagedResponse,
   FetchDishesParams,
   { rejectValue: string }
->("dishes/fetch", async ({ restaurantId, pageNumber = 1, pageSize = 10, category }, { rejectWithValue }) => {
+>("dishes/fetch", async ({ restaurantId, pageNumber = 1, pageSize = 9, category }, { rejectWithValue }) => {
   try {
     const params: Record<string, unknown> = { 
       pageNumber, 
@@ -76,7 +76,7 @@ export const fetchDishes = createAsyncThunk<
       data: (pagedData?.data || []).map(normalizeDish),
       totalRecords: pagedData?.totalRecords || 0,
       pageNumber: pagedData?.pageNumber || 1,
-      pageSize: pagedData?.pageSize || 10,
+      pageSize: pagedData?.pageSize || 9,
     };
   } catch (err: unknown) {
     return rejectWithValue(getErrorMessage(err, "Lỗi khi tải danh sách món ăn"));

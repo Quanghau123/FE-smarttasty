@@ -634,8 +634,8 @@
     "dashboard": "Dashboard",
     "management": "Management",
     "user": "User",
-    "business": "Business"
-    ,
+    "business": "Business",
+    "commission_reports": "Commission Reports",
     "admin_restaurant_title": "Admin Restaurant",
     "restaurant_info": "Restaurant Info",
     "products_management": "Products",
@@ -643,6 +643,63 @@
     "tablebooking": "Table Bookings",
     "orders_all": "All Orders",
     "staff_accounts": "Staff accounts"
+  },
+  "commissionStatistics": {
+    "title": "Commission Statistics",
+    "month": "Month",
+    "year": "Year",
+    "month_label": "Month {month}",
+    "summary": {
+      "total_commission": "Total Commission",
+      "total_orders": "Total Orders",
+      "restaurants": "Restaurants",
+      "average_per_order": "Avg/Order",
+      "commission_orders": "Commissioned Orders",
+      "restaurants_with_orders": "Restaurants with Orders",
+      "average_commission": "Average Commission",
+      "month_year": "Month {month}/{year}"
+    },
+    "tabs": {
+      "daily_chart": "Daily Chart",
+      "top_restaurants": "Top Restaurants",
+      "payment_methods": "Payment Methods",
+      "order_details": "Order Details"
+    },
+    "daily": {
+      "title": "Daily Commission Trend",
+      "day": "Day {day}",
+      "commission": "Commission",
+      "no_data": "No daily commission data available"
+    },
+    "restaurants": {
+      "top_title": "Top 10 Restaurants by Commission",
+      "ranking_title": "Rankings",
+      "restaurant_name": "Restaurant",
+      "commission": "Commission",
+      "orders": "Orders",
+      "no_data": "No restaurant data available",
+      "restaurant_id": "Restaurant #{id}"
+    },
+    "payment": {
+      "distribution_title": "Distribution by Payment Method",
+      "details_title": "Payment Method Details",
+      "vnpay": "VNPay",
+      "cash": "Cash",
+      "orders_count": "{count} orders",
+      "no_data": "No payment method data available"
+    },
+    "orders": {
+      "list_title": "Detailed Commission Order List",
+      "order_code": "Order ID",
+      "restaurant": "Restaurant",
+      "order_value": "Order Value",
+      "rate": "Rate (%)",
+      "commission": "Commission",
+      "created_date": "Created Date",
+      "no_orders": "No orders this month",
+      "filter_by_restaurant": "Filter by Restaurant",
+      "all_restaurants": "All Restaurants"
+    }
   }
   ,
   "adminUser": {

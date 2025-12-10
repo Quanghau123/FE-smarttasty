@@ -42,7 +42,7 @@ export function useSignalR(options: UseSignalROptions = {}) {
     if (signalRService.isConnected()) {
       await signalRService.joinRestaurantRoom(roomIdStr);
       restaurantIdRef.current = roomIdStr;
-    }
+    } 
   }, []);
 
   useEffect(() => {

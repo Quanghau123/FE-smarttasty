@@ -633,6 +633,7 @@
     "management": "Quản lý",
     "user": "Người dùng",
     "business": "Doanh nghiệp",
+    "commission_reports": "Báo cáo hoa hồng",
     "admin_restaurant_title": "Quản trị Nhà hàng",
     "restaurant_info": "Thông tin nhà hàng",
     "products_management": "Quản lý món",
@@ -640,6 +641,63 @@
     "tablebooking": "Đặt bàn",
     "orders_all": "Tất cả đơn hàng",
     "staff_accounts": "Tài khoản nhân viên"
+  },
+  "commissionStatistics": {
+    "title": "Thống kê hoa hồng",
+    "month": "Tháng",
+    "year": "Năm",
+    "month_label": "Tháng {month}",
+    "summary": {
+      "total_commission": "Tổng hoa hồng",
+      "total_orders": "Tổng đơn hàng",
+      "restaurants": "Nhà hàng",
+      "average_per_order": "TB/Đơn hàng",
+      "commission_orders": "Đơn có hoa hồng",
+      "restaurants_with_orders": "Nhà hàng có đơn",
+      "average_commission": "Hoa hồng trung bình",
+      "month_year": "Tháng {month}/{year}"
+    },
+    "tabs": {
+      "daily_chart": "Biểu đồ theo ngày",
+      "top_restaurants": "Top nhà hàng",
+      "payment_methods": "Phương thức thanh toán",
+      "order_details": "Chi tiết đơn hàng"
+    },
+    "daily": {
+      "title": "Xu hướng hoa hồng theo ngày",
+      "day": "Ngày {day}",
+      "commission": "Hoa hồng",
+      "no_data": "Chưa có dữ liệu hoa hồng theo ngày"
+    },
+    "restaurants": {
+      "top_title": "Top 10 nhà hàng có hoa hồng cao nhất",
+      "ranking_title": "Bảng xếp hạng",
+      "restaurant_name": "Nhà hàng",
+      "commission": "Hoa hồng",
+      "orders": "Đơn",
+      "no_data": "Chưa có dữ liệu nhà hàng",
+      "restaurant_id": "Nhà hàng #{id}"
+    },
+    "payment": {
+      "distribution_title": "Phân bố theo phương thức thanh toán",
+      "details_title": "Chi tiết phương thức thanh toán",
+      "vnpay": "VNPay",
+      "cash": "Tiền mặt",
+      "orders_count": "{count} đơn hàng",
+      "no_data": "Chưa có dữ liệu phương thức thanh toán"
+    },
+    "orders": {
+      "list_title": "Danh sách chi tiết đơn hàng có hoa hồng",
+      "order_code": "Mã đơn",
+      "restaurant": "Nhà hàng",
+      "order_value": "Giá trị đơn",
+      "rate": "Tỷ lệ (%)",
+      "commission": "Hoa hồng",
+      "created_date": "Ngày tạo",
+      "no_orders": "Chưa có đơn hàng nào trong tháng này",
+      "filter_by_restaurant": "Lọc theo nhà hàng",
+      "all_restaurants": "Tất cả nhà hàng"
+    }
   }
   ,
   "adminUser": {
