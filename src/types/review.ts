@@ -1,6 +1,3 @@
-// types/review.ts
-
-// Request body khi gọi POST /api/Review
 export interface ReviewRequest {
   userId: number; // ID người dùng
   restaurantId: number; // ID nhà hàng
@@ -8,7 +5,6 @@ export interface ReviewRequest {
   comment: string; // Nội dung bình luận
 }
 
-// Review data mà BE trả về trong field "data"
 export interface ReviewData {
   id: number;
   userId: number;
@@ -17,10 +13,8 @@ export interface ReviewData {
   restaurantName: string;
   rating: number;
   comment: string;
-  createdAt: string; // ISO datetime
+  createdAt: string;
 }
-
-// Response chung của API
 export interface ReviewResponse {
   errCode: string; // ví dụ: "success"
   errMessage: string; // thông báo từ BE

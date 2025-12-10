@@ -9,7 +9,6 @@ export interface RelatedRestaurant {
   imageUrl?: string;
 }
 
-// Lightweight shapes for related collections to avoid importing other type files (prevents circular refs).
 export interface DishPromotionRef {
   dishId: number;
   promotionId: number;
@@ -27,16 +26,14 @@ export interface VoucherRef {
 }
 
 export interface Promotion {
-  id: number; // maps to backend Id
+  id: number;
   restaurantId: number;
 
-  // optional populated relation (may be null or absent depending on the API call)
   restaurant?: RelatedRestaurant | null;
 
   title: string;
   description?: string;
 
-  // dates are represented as ISO strings in the frontend
   startDate: string;
   endDate: string;
 
@@ -45,19 +42,15 @@ export interface Promotion {
 
   targetType: TargetType;
 
-  // related collections (may be empty or omitted in some API responses)
   dishPromotions?: DishPromotionRef[];
   orderPromotions?: OrderPromotionRef[];
   vouchers?: VoucherRef[];
 
-  // convenience fields used by the frontend (optional).
   isActive?: boolean;
 
-  // optional metadata
   createdAt?: string;
   updatedAt?: string;
 
-  // image fields from backend
-  image?: string | null; // public id/key stored in DB
-  imageUrl?: string | null; // full URL for display
+  image?: string | null; 
+  imageUrl?: string | null; 
 }

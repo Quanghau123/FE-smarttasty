@@ -177,7 +177,6 @@ const RestaurantDetailPage = () => {
   );
 
   const handleRatingUpdate = (data: RatingUpdateData) => {
-  //  console.log("handleRatingUpdate invoked with:", data);
     if (data.type === "restaurant_rating_update" && data.data) {
       const payload = data.data as Record<string, unknown>;
       const restaurantIdNum = Number(
@@ -265,7 +264,7 @@ const RestaurantDetailPage = () => {
         setAllDishes([]);
       }
     };
-    
+
     dispatch(getReviewsByRestaurant(rid));
     dispatch(fetchDishPromotionsByRestaurant(rid));
     dispatch(fetchDishPromotions());
@@ -331,8 +330,7 @@ const RestaurantDetailPage = () => {
                 payload?.sub ??
                 payload?.id;
             }
-          } catch {
-          }
+          } catch {}
         }
 
         if (resolvedId) {
@@ -354,8 +352,7 @@ const RestaurantDetailPage = () => {
           }
         }
       }
-    } catch {
-    }
+    } catch {}
 
     console.log("User data used for order:", {
       userId,
@@ -388,7 +385,6 @@ const RestaurantDetailPage = () => {
       ).unwrap();
 
       const activeOrder = userOrders.find((o) => {
-
         const status = String(o.status ?? "").toLowerCase();
         return (
           o.restaurantId === Number(restaurant.id) &&
@@ -1095,8 +1091,24 @@ const RestaurantDetailPage = () => {
                       display: "flex",
                       flexDirection: "column",
                       gap: 1,
+                      position: "relative",
                     }}
                   >
+                    {!dish.isActive && (
+                      <Chip
+                        label={t("out_of_stock")}
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          backgroundColor: theme.palette.error.main,
+                          color: theme.palette.error.contrastText,
+                          fontWeight: "bold",
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
                     <Box className={styles.dishImageWrapper}>
                       <Box className={styles.dishFlipInner}>
                         <Box className={styles.dishImage}>
@@ -1129,7 +1141,6 @@ const RestaurantDetailPage = () => {
                           )}
                         </Box>
 
-
                         <Box className={styles.dishDescription}>
                           <Typography component="p">
                             {dish.description || t("no_description")}
@@ -1138,20 +1149,7 @@ const RestaurantDetailPage = () => {
                       </Box>
                     </Box>
                     <Box className={styles.dishInfo}>
-                      <Typography variant="h6">
-                        {dish.name}
-                        {!dish.isActive && (
-                          <Chip
-                            label={t("out_of_stock")}
-                            size="small"
-                            sx={{
-                              ml: 1,
-                              backgroundColor: theme.palette.error.main,
-                              color: theme.palette.error.contrastText,
-                            }}
-                          />
-                        )}
-                      </Typography>
+                      <Typography variant="h6">{dish.name}</Typography>
                       {hasDiscount ? (
                         <Box
                           sx={{
@@ -1419,7 +1417,7 @@ const RestaurantDetailPage = () => {
                     <Grid
                       item
                       key={r.id}
-                      sx={{ flex: "0 0 280px", width: 280 }}
+                      sx={{ flex: "0 0 250px", width: 250 }}
                       component={"div" as React.ElementType}
                     >
                       {renderCard(r)}
