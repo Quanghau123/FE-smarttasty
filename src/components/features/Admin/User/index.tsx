@@ -111,7 +111,7 @@ const UserPage = () => {
   }
 
   return (
-    <Box sx={{ pt: 0 }}>
+    <Box sx={{ p: 3, pt: 0 }}>
       <Typography
         variant="h5"
         sx={{

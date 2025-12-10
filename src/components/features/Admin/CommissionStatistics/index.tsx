@@ -209,7 +209,7 @@ const CommissionStatistics = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, pt:0 }}>
       {/* Header with filters */}
       <Box
         sx={{
@@ -442,7 +442,7 @@ const CommissionStatistics = () => {
         <Box
           sx={{
             display: "flex",
-            gap: 3,
+            // gap: 3,
             flexDirection: { xs: "column", md: "row" },
             flexWrap: "wrap",
           }}
