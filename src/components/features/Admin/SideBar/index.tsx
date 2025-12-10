@@ -78,6 +78,15 @@ const Sidebar = ({ inDrawer = false, onNavigate }: SidebarProps) => {
 
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
+              <ListItemButton
+              component={Link}
+              href="/admin/commission"
+              sx={{ pl: 4 }}
+              selected={pathname === "/admin/commission"}
+              onClick={handleNavigate}
+            >
+              <ListItemText primary={t("commission_reports")} />
+            </ListItemButton>
             <ListItemButton
               component={Link}
               href="/admin/users"

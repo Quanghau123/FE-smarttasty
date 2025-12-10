@@ -15,6 +15,7 @@ import paymentRenducer from "./slices/paymentSlice";
 import orderPromtionRenducer from "./slices/orderPromotionsSlice";
 import recipeReducer from "./slices/recipesSlice";
 import recipeReviewsReducer from "./slices/recipeReviewsSlice";
+import commissionReducer from "./slices/comission";
 import { subscribeAccessTokenChange } from "@/lib/utils/tokenHelper";
 
 export const store = configureStore({
@@ -35,6 +36,7 @@ export const store = configureStore({
     order: orderRenducer,
     payment: paymentRenducer,
     orderPromotion: orderPromtionRenducer,
+    commission: commissionReducer,
   },
 });
 

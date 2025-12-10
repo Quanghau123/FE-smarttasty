@@ -1,4 +1,3 @@
-// Recipe Category Enum
 export enum RecipeCategory {
   ThucAn = "ThucAn",
   NuocUong = "NuocUong",
@@ -21,7 +20,6 @@ export enum RecipeCategory {
   MonQuocTe = "MonQuocTe",
 }
 
-// Category Display Names (Vietnamese)
 export const RecipeCategoryDisplayNames: Record<RecipeCategory, string> = {
   [RecipeCategory.ThucAn]: "Thức ăn",
   [RecipeCategory.NuocUong]: "Nước uống",
@@ -44,14 +42,12 @@ export const RecipeCategoryDisplayNames: Record<RecipeCategory, string> = {
   [RecipeCategory.MonQuocTe]: "Món quốc tế",
 };
 
-// User for Recipe DTO
 export interface UserForRecipe {
   id: number;
   userName: string;
   phone: string;
 }
 
-// Recipe DTO
 export interface Recipe {
   id: number;
   title: string;
@@ -65,7 +61,6 @@ export interface Recipe {
   user: UserForRecipe;
 }
 
-// Recipe Review DTO
 export interface RecipeReview {
   id: number;
   userId: number;
@@ -77,7 +72,6 @@ export interface RecipeReview {
   createdAt: string | Date;
 }
 
-// Recipe Create/Update Request
 export interface RecipeRequest {
   userId: number;
   title: string;
@@ -88,7 +82,6 @@ export interface RecipeRequest {
   image?: File | string;
 }
 
-// Recipe Review Request
 export interface RecipeReviewRequest {
   userId: number;
   recipeId: number;
@@ -96,14 +89,12 @@ export interface RecipeReviewRequest {
   comment?: string;
 }
 
-// Recipe Response with Reviews
 export interface RecipeWithReviews extends Recipe {
   recipeReviews: RecipeReview[];
   averageRating?: number;
   totalReviews?: number;
 }
 
-// Recipe Filter/Search Options
 export interface RecipeFilterOptions {
   userId?: number;
   category?: RecipeCategory | string;
@@ -114,7 +105,6 @@ export interface RecipeFilterOptions {
   pageSize?: number;
 }
 
-// Recipe API Response
 export interface RecipeApiResponse<T> {
   success: boolean;
   message?: string;
@@ -122,7 +112,6 @@ export interface RecipeApiResponse<T> {
   errors?: string[];
 }
 
-// Paginated Recipe Response
 export interface PaginatedRecipeResponse {
   recipes: Recipe[];
   total: number;

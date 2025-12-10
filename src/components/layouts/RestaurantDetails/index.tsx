@@ -55,6 +55,7 @@ import {
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Favorite as FavoriteType } from "@/types/favorite";
+import { Dish } from "@/types/dish";
 import axiosInstance from "@/lib/axios/axiosInstance";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 
@@ -127,6 +128,7 @@ const RestaurantDetailPage = () => {
   } = useAppSelector((state) => state.dishes);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [allDishes, setAllDishes] = useState<Dish[]>([]); // Lấy tất cả các món (không phân trang) để hiển thị "các món đang giảm giá"
   const itemsPerPage = 9;
 
   const totalPages =
@@ -175,7 +177,6 @@ const RestaurantDetailPage = () => {
   );
 
   const handleRatingUpdate = (data: RatingUpdateData) => {
-  //  console.log("handleRatingUpdate invoked with:", data);
     if (data.type === "restaurant_rating_update" && data.data) {
       const payload = data.data as Record<string, unknown>;
       const restaurantIdNum = Number(
@@ -245,11 +246,31 @@ const RestaurantDetailPage = () => {
         pageSize: itemsPerPage,
       })
     );
+    // Fetch tất cả các món (không phân trang) cho phần "các món đang giảm giá"
+    const fetchAllDishesForPromo = async () => {
+      try {
+        const token = getAccessToken();
+        const res = await axiosInstance.get(`/api/Dishes/restaurant/${rid}`, {
+          params: {
+            pageNumber: 1,
+            pageSize: 9999, // Lấy tất cả
+          },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        const allDishesData = res.data?.data?.data || [];
+        setAllDishes(allDishesData);
+      } catch (error) {
+        console.warn("Lỗi khi lấy tất cả các món:", error);
+        setAllDishes([]);
+      }
+    };
+
     dispatch(getReviewsByRestaurant(rid));
     dispatch(fetchDishPromotionsByRestaurant(rid));
     dispatch(fetchDishPromotions());
     dispatch(fetchPromotions(rid));
     dispatch(fetchFavoritesByRestaurant(rid));
+    fetchAllDishesForPromo();
   }, [dispatch, id, currentPage]);
 
   useEffect(() => {
@@ -309,8 +330,7 @@ const RestaurantDetailPage = () => {
                 payload?.sub ??
                 payload?.id;
             }
-          } catch {
-          }
+          } catch {}
         }
 
         if (resolvedId) {
@@ -332,8 +352,7 @@ const RestaurantDetailPage = () => {
           }
         }
       }
-    } catch {
-    }
+    } catch {}
 
     console.log("User data used for order:", {
       userId,
@@ -366,7 +385,6 @@ const RestaurantDetailPage = () => {
       ).unwrap();
 
       const activeOrder = userOrders.find((o) => {
-
         const status = String(o.status ?? "").toLowerCase();
         return (
           o.restaurantId === Number(restaurant.id) &&
@@ -848,7 +866,9 @@ const RestaurantDetailPage = () => {
         </Box>
 
         {(() => {
-          const dishesWithPromo = dishes.filter(
+          // Dùng allDishes (tất cả các món) thay vì dishes (phân trang)
+          // để đảm bảo "các món đang giảm giá" luôn hiển thị đầy đủ
+          const dishesWithPromo = allDishes.filter(
             (dish) => dishPromotionMap.has(dish.id) && dish.isActive
           );
 
@@ -865,7 +885,7 @@ const RestaurantDetailPage = () => {
               }}
             >
               <Typography variant="h5" sx={{ mb: 2, color: "error.main" }}>
-                🔥 {t("discounted_dishes_title")}
+                {t("discounted_dishes_title")}
               </Typography>
               <Box className={styles.dishGrid}>
                 {dishesWithPromo.map((dish) => {
@@ -1071,8 +1091,24 @@ const RestaurantDetailPage = () => {
                       display: "flex",
                       flexDirection: "column",
                       gap: 1,
+                      position: "relative",
                     }}
                   >
+                    {!dish.isActive && (
+                      <Chip
+                        label={t("out_of_stock")}
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          backgroundColor: theme.palette.error.main,
+                          color: theme.palette.error.contrastText,
+                          fontWeight: "bold",
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
                     <Box className={styles.dishImageWrapper}>
                       <Box className={styles.dishFlipInner}>
                         <Box className={styles.dishImage}>
@@ -1105,7 +1141,6 @@ const RestaurantDetailPage = () => {
                           )}
                         </Box>
 
-
                         <Box className={styles.dishDescription}>
                           <Typography component="p">
                             {dish.description || t("no_description")}
@@ -1114,20 +1149,7 @@ const RestaurantDetailPage = () => {
                       </Box>
                     </Box>
                     <Box className={styles.dishInfo}>
-                      <Typography variant="h6">
-                        {dish.name}
-                        {!dish.isActive && (
-                          <Chip
-                            label={t("out_of_stock")}
-                            size="small"
-                            sx={{
-                              ml: 1,
-                              backgroundColor: theme.palette.error.main,
-                              color: theme.palette.error.contrastText,
-                            }}
-                          />
-                        )}
-                      </Typography>
+                      <Typography variant="h6">{dish.name}</Typography>
                       {hasDiscount ? (
                         <Box
                           sx={{
@@ -1395,7 +1417,7 @@ const RestaurantDetailPage = () => {
                     <Grid
                       item
                       key={r.id}
-                      sx={{ flex: "0 0 280px", width: 280 }}
+                      sx={{ flex: "0 0 250px", width: 250 }}
                       component={"div" as React.ElementType}
                     >
                       {renderCard(r)}
