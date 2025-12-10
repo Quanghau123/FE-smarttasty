@@ -635,7 +635,7 @@
     "management": "Management",
     "user": "User",
     "business": "Business",
-    "commission_reports": "Commission Reports",
+    "commission_reports": "Revenue Reports",
     "admin_restaurant_title": "Admin Restaurant",
     "restaurant_info": "Restaurant Info",
     "products_management": "Products",
@@ -645,18 +645,18 @@
     "staff_accounts": "Staff accounts"
   },
   "commissionStatistics": {
-    "title": "Commission Statistics",
+    "title": "Revenue Statistics",
     "month": "Month",
     "year": "Year",
     "month_label": "Month {month}",
     "summary": {
-      "total_commission": "Total Commission",
+      "total_commission": "Total Revenue",
       "total_orders": "Total Orders",
       "restaurants": "Restaurants",
       "average_per_order": "Avg/Order",
-      "commission_orders": "Commissioned Orders",
+      "commission_orders": "Revenue Orders",
       "restaurants_with_orders": "Restaurants with Orders",
-      "average_commission": "Average Commission",
+      "average_commission": "Average Revenue",
       "month_year": "Month {month}/{year}"
     },
     "tabs": {
@@ -666,16 +666,16 @@
       "order_details": "Order Details"
     },
     "daily": {
-      "title": "Daily Commission Trend",
+      "title": "Daily Revenue Trend",
       "day": "Day {day}",
-      "commission": "Commission",
-      "no_data": "No daily commission data available"
+      "commission": "Revenue",
+      "no_data": "No daily revenue data available"
     },
     "restaurants": {
-      "top_title": "Top 10 Restaurants by Commission",
+      "top_title": "Top 10 Restaurants by Revenue",
       "ranking_title": "Rankings",
       "restaurant_name": "Restaurant",
-      "commission": "Commission",
+      "commission": "Revenue",
       "orders": "Orders",
       "no_data": "No restaurant data available",
       "restaurant_id": "Restaurant #{id}"
@@ -689,12 +689,12 @@
       "no_data": "No payment method data available"
     },
     "orders": {
-      "list_title": "Detailed Commission Order List",
+      "list_title": "Detailed Revenue Order List",
       "order_code": "Order ID",
       "restaurant": "Restaurant",
       "order_value": "Order Value",
       "rate": "Rate (%)",
-      "commission": "Commission",
+      "commission": "Revenue",
       "created_date": "Created Date",
       "no_orders": "No orders this month",
       "filter_by_restaurant": "Filter by Restaurant",

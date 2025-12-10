@@ -633,7 +633,7 @@
     "management": "Quản lý",
     "user": "Người dùng",
     "business": "Doanh nghiệp",
-    "commission_reports": "Báo cáo hoa hồng",
+    "commission_reports": "Báo cáo doanh thu",
     "admin_restaurant_title": "Quản trị Nhà hàng",
     "restaurant_info": "Thông tin nhà hàng",
     "products_management": "Quản lý món",
@@ -643,18 +643,18 @@
     "staff_accounts": "Tài khoản nhân viên"
   },
   "commissionStatistics": {
-    "title": "Thống kê hoa hồng",
+    "title": "Thống kê doanh thu",
     "month": "Tháng",
     "year": "Năm",
     "month_label": "Tháng {month}",
     "summary": {
-      "total_commission": "Tổng hoa hồng",
+      "total_commission": "Tổng doanh thu",
       "total_orders": "Tổng đơn hàng",
       "restaurants": "Nhà hàng",
       "average_per_order": "TB/Đơn hàng",
-      "commission_orders": "Đơn có hoa hồng",
+      "commission_orders": "Đơn có doanh thu",
       "restaurants_with_orders": "Nhà hàng có đơn",
-      "average_commission": "Hoa hồng trung bình",
+      "average_commission": "Doanh thu trung bình",
       "month_year": "Tháng {month}/{year}"
     },
     "tabs": {
@@ -664,16 +664,16 @@
       "order_details": "Chi tiết đơn hàng"
     },
     "daily": {
-      "title": "Xu hướng hoa hồng theo ngày",
+      "title": "Xu hướng doanh thu theo ngày",
       "day": "Ngày {day}",
-      "commission": "Hoa hồng",
-      "no_data": "Chưa có dữ liệu hoa hồng theo ngày"
+      "commission": "Doanh thu",
+      "no_data": "Chưa có dữ liệu doanh thu theo ngày"
     },
     "restaurants": {
-      "top_title": "Top 10 nhà hàng có hoa hồng cao nhất",
+      "top_title": "Top 10 nhà hàng có doanh thu cao nhất",
       "ranking_title": "Bảng xếp hạng",
       "restaurant_name": "Nhà hàng",
-      "commission": "Hoa hồng",
+      "commission": "Doanh thu",
       "orders": "Đơn",
       "no_data": "Chưa có dữ liệu nhà hàng",
       "restaurant_id": "Nhà hàng #{id}"
@@ -687,12 +687,12 @@
       "no_data": "Chưa có dữ liệu phương thức thanh toán"
     },
     "orders": {
-      "list_title": "Danh sách chi tiết đơn hàng có hoa hồng",
+      "list_title": "Danh sách doanh thu chi tiết đơn hàng",
       "order_code": "Mã đơn",
       "restaurant": "Nhà hàng",
       "order_value": "Giá trị đơn",
       "rate": "Tỷ lệ (%)",
-      "commission": "Hoa hồng",
+      "commission": "Doanh thu",
       "created_date": "Ngày tạo",
       "no_orders": "Chưa có đơn hàng nào trong tháng này",
       "filter_by_restaurant": "Lọc theo nhà hàng",
