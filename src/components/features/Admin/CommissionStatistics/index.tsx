@@ -450,7 +450,7 @@ const CommissionStatistics = () => {
             flexWrap: "wrap",
           }}
         >
-          <Card sx={{ flex: 7 }}>
+          <Card sx={{ flex: "55%" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom fontWeight="bold">
                 {t("restaurants.top_title")}
