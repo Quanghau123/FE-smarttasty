@@ -132,6 +132,8 @@ const Chatbot: React.FC = () => {
       if (imageToSend) {
         formData.append("Image", imageToSend);
       }
+
+      // Call chatbot API
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_CHATBOT_URL}/api/ChatControllerJson/send-form`,
         formData,
@@ -142,6 +144,7 @@ const Chatbot: React.FC = () => {
         }
       );
 
+      // Add bot response
       let botText =
         response.data.bot || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
       botText = botText.replace(/\\n/g, "\n");
@@ -157,7 +160,6 @@ const Chatbot: React.FC = () => {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Chatbot error:", error);
-
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
@@ -196,7 +198,6 @@ const Chatbot: React.FC = () => {
         {isOpen ? <CloseIcon /> : <RobotIcon scale={1} isTalking={isLoading} />}
       </Fab>
 
-      {/* Chatbox */}
       <Fade in={isOpen}>
         <Paper
           elevation={8}
@@ -218,7 +219,6 @@ const Chatbot: React.FC = () => {
             boxShadow: 6,
           }}
         >
-          {/* Header */}
           <Box
             sx={{
               width: "100%",
@@ -249,7 +249,6 @@ const Chatbot: React.FC = () => {
             </IconButton>
           </Box>
 
-          {/* Messages Area */}
           <Box
             sx={{
               flexGrow: 1,
@@ -394,7 +393,6 @@ const Chatbot: React.FC = () => {
             </Box>
           )}
 
-          {/* Input Area */}
           <Box
             sx={{
               p: { xs: 1, sm: 2 },

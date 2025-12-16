@@ -192,7 +192,9 @@ const CommissionStatistics = () => {
   // Calculate statistics
   const totalOrders = commissionList.length;
   const averageCommission =
-    totalOrders > 0 ? monthlyCommission?.totalCommission || 0 / totalOrders : 0;
+    totalOrders > 0
+      ? (monthlyCommission?.totalCommission || 0) / totalOrders
+      : 0;
   const totalRestaurants = restaurantCommissions.length;
 
   if (loading && !monthlyCommission) {
@@ -209,7 +211,7 @@ const CommissionStatistics = () => {
   }
 
   return (
-    <Box sx={{ p: 3, pt:0 }}>
+    <Box sx={{ p: 3, pt: 0 }}>
       {/* Header with filters */}
       <Box
         sx={{
@@ -442,12 +444,13 @@ const CommissionStatistics = () => {
         <Box
           sx={{
             display: "flex",
-            // gap: 3,
+            gap: 3,
+            p: 1,
             flexDirection: { xs: "column", md: "row" },
             flexWrap: "wrap",
           }}
         >
-          <Card sx={{ flex: { xs: "1 1 100%", lg: "1 1 58%" } }}>
+          <Card sx={{ flex: "55%" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom fontWeight="bold">
                 {t("restaurants.top_title")}

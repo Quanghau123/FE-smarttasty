@@ -328,7 +328,7 @@ class SignalRService {
         "Test Notification",
         `Test at ${new Date().toLocaleTimeString()}`
       );
-      console.log("✅ Test notification sent via SignalR");
+      console.log("Test notification sent via SignalR");
     } catch (error) {
       console.error("Error sending test notification:", error);
     }
