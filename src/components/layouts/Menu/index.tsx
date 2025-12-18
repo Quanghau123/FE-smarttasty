@@ -3,7 +3,6 @@
 import { Box, Button, Typography } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { spacing } from "@mui/system";
 
 const stripLocale = (path: string) => {
   const parts = path.split("/");
