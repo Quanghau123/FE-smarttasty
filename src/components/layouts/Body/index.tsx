@@ -263,7 +263,6 @@ const BodyPage = () => {
     );
   };
 
-
   const [recipesOverflow, setRecipesOverflow] = useState(false);
   const [recipesCanScrollLeft, setRecipesCanScrollLeft] = useState(false);
   const [recipesCanScrollRight, setRecipesCanScrollRight] = useState(false);
@@ -513,10 +512,7 @@ const BodyPage = () => {
     list: typeof restaurants,
     showSuggestedBadge: boolean = false
   ) => (
-    <Grid
-      container
-      rowSpacing={2}
-    >
+    <Grid container rowSpacing={2}>
       {list.map((restaurant, idx) => (
         <Grid
           item
@@ -561,7 +557,7 @@ const BodyPage = () => {
               flex: "0 0 auto",
               width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
               boxSizing: "border-box",
-              px: 1,
+              p: 1,
             }}
           >
             {renderRestaurantCard(restaurant, true, idx)}
@@ -578,7 +574,6 @@ const BodyPage = () => {
       />
     </Box>
   );
-
 
   const renderPromotionCard = (p: Promotion, index: number = 0) => (
     <motion.div {...getMotionProps(index)}>
@@ -693,7 +688,7 @@ const BodyPage = () => {
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              minHeight: "2.6em", 
+              minHeight: "2.6em",
             }}
             title={p.title}
           >
@@ -1046,7 +1041,7 @@ const BodyPage = () => {
               flex: "0 0 auto",
               width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
               boxSizing: "border-box",
-              px: 1,
+              p: 1,
             }}
           >
             {renderRecipeCard(r, idx)}
@@ -1092,7 +1087,7 @@ const BodyPage = () => {
               flex: "0 0 auto",
               width: { xs: "72%", sm: "50%", md: "33.3333%", lg: "20%" },
               boxSizing: "border-box",
-              px: 1,
+              p: 1,
             }}
           >
             {renderPromotionCard(p, idx)}
@@ -1215,7 +1210,7 @@ const BodyPage = () => {
                           lg: "20%",
                         },
                         boxSizing: "border-box",
-                        px: 1,
+                        p: 1,
                       }}
                     >
                       {renderDishCard(d, idx)}

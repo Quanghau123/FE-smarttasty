@@ -6,7 +6,9 @@ import {
   CircularProgress,
   Rating,
   Button,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import React, { useMemo, useState, useEffect } from "react";
 import styles from "./styles.module.scss";
 import { useTranslations } from "next-intl";
@@ -59,7 +61,7 @@ const ReviewList = ({
   const maskName = (name: string) => {
     if (!name) return name;
     return name
-      .split(/(\s+)/) 
+      .split(/(\s+)/)
       .map((part) => (part.trim() === "" ? part : maskWord(part)))
       .join("");
   };
@@ -163,14 +165,13 @@ const ReviewList = ({
               </Typography>
             </Box>
             {showDeleteButton && onDelete && (
-              <Button
-                variant="outlined"
-                color="error"
+              <IconButton
                 size="small"
+                color="error"
                 onClick={() => onDelete(r.id)}
               >
-                Xóa
-              </Button>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
             )}
           </Box>
 
@@ -185,7 +186,6 @@ const ReviewList = ({
           <Typography className={styles.comment}>{r.comment}</Typography>
         </Box>
       ))}
-
 
       {(filtered.length ?? 0) > itemsPerPage ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>

@@ -22,15 +22,28 @@ import {
   Typography,
   Pagination,
   CircularProgress,
+  Switch,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+/* FormControlLabel removed - not used in create dialog anymore */
 import { useEffect, useState, useMemo } from "react";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { fetchUsers, deleteUser } from "@/redux/slices/userSlice";
-import { User } from "@/types/user";
+import {
+  fetchUsers,
+  deleteUser,
+  updateUser,
+  createUser,
+} from "@/redux/slices/userSlice";
+import { User, CreateUserDto } from "@/types/user";
 import { useTranslations } from "next-intl";
 
 const UserPage = () => {
@@ -42,8 +55,22 @@ const UserPage = () => {
   const [search, setSearch] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState<CreateUserDto>({
+    role: "user",
+    userName: "",
+    userPassword: "",
+    email: "",
+    phone: "",
+    address: "",
+    isActive: true,
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -61,6 +88,38 @@ const UserPage = () => {
       } else {
         toast.error(t("delete_failed"));
       }
+    }
+  };
+
+  const handleCreateUser = async () => {
+    // role is fixed to 'user'
+    if (!newUser.userName || !newUser.email || !newUser.userPassword) {
+      toast.error("Vui lòng điền đầy đủ tên, email và mật khẩu");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await dispatch(createUser(newUser)).unwrap();
+      toast.success("Tạo người dùng thành công");
+      setOpenCreateDialog(false);
+      setNewUser({
+        role: "user",
+        userName: "",
+        userPassword: "",
+        email: "",
+        phone: "",
+        address: "",
+      });
+      await dispatch(fetchUsers());
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message || "Tạo người dùng thất bại");
+      } else {
+        toast.error("Tạo người dùng thất bại");
+      }
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -123,9 +182,16 @@ const UserPage = () => {
         {t("title")}
       </Typography>
 
-      <Box sx={{ mb: 3, maxWidth: 400 }}>
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+        }}
+      >
         <TextField
-          fullWidth
           label={t("search_label")}
           variant="outlined"
           value={search}
@@ -134,41 +200,43 @@ const UserPage = () => {
             setCurrentPage(1);
           }}
           InputProps={{
-            startAdornment: (
+            endAdornment: (
               <InputAdornment position="start">
                 <SearchIcon />
               </InputAdornment>
             ),
           }}
+          sx={{ width: "60%" }}
         />
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end", width: "40%" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenCreateDialog(true)}
+          >
+            Tạo
+          </Button>
+        </Box>
       </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell align="center">{t("col_delete")}</TableCell>
               <TableCell align="left">{t("col_username")}</TableCell>
               <TableCell align="center">{t("col_email")}</TableCell>
               <TableCell align="center">{t("col_phone")}</TableCell>
               <TableCell align="center">{t("col_role")}</TableCell>
+              <TableCell align="center">{t("col_status")}</TableCell>
               <TableCell align="center">{t("col_created_at")}</TableCell>
+              {/* <TableCell align="center">{t("col_delete")}</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedData.map((user: User) => (
               <TableRow key={user.userId}>
-                <TableCell align="center">
-                  <IconButton
-                    onClick={() => {
-                      setSelectedUserId(user.userId);
-                      setOpenDialog(true);
-                    }}
-                    sx={{ color: (theme) => theme.palette.error.main }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
                 <TableCell align="left">
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Avatar>{user.userName.charAt(0).toUpperCase()}</Avatar>
@@ -179,7 +247,48 @@ const UserPage = () => {
                 <TableCell align="center">{user.phone}</TableCell>
                 <TableCell align="center">{user.role}</TableCell>
                 <TableCell align="center">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Switch
+                      checked={user.isActive ?? true}
+                      color="primary"
+                      size="small"
+                      disabled
+                    />
+                  </Box>
+                </TableCell>
+                <TableCell align="center">
                   {moment(user.createdAt).format("DD/MM/YYYY")}
+                </TableCell>
+                <TableCell align="center">
+                  <Box
+                    sx={{ display: "flex", gap: 1, justifyContent: "center" }}
+                  >
+                    <IconButton
+                      onClick={() => {
+                        setEditingUser(user);
+                        setOpenEditDialog(true);
+                      }}
+                      sx={{ color: () => "#5E6C84" }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedUserId(user.userId);
+                        setOpenDialog(true);
+                      }}
+                      sx={{ color: () => "#5E6C84" }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
@@ -200,14 +309,236 @@ const UserPage = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>{t("confirm_title")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            {t("confirm_text")}
-          </DialogContentText>
+          <DialogContentText>{t("confirm_text")}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>{t("cancel")}</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             {t("delete_btn")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Tên"
+            margin="normal"
+            value={editingUser?.userName ?? ""}
+            onChange={(e) =>
+              setEditingUser((prev) =>
+                prev ? { ...prev, userName: e.target.value } : prev
+              )
+            }
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            margin="normal"
+            value={editingUser?.email ?? ""}
+            onChange={(e) =>
+              setEditingUser((prev) =>
+                prev ? { ...prev, email: e.target.value } : prev
+              )
+            }
+          />
+          <TextField
+            fullWidth
+            label="Số điện thoại"
+            margin="normal"
+            value={editingUser?.phone ?? ""}
+            onChange={(e) =>
+              setEditingUser((prev) =>
+                prev ? { ...prev, phone: e.target.value } : prev
+              )
+            }
+          />
+          <TextField
+            fullWidth
+            label="Địa chỉ"
+            margin="normal"
+            value={editingUser?.address ?? ""}
+            onChange={(e) =>
+              setEditingUser((prev) =>
+                prev ? { ...prev, address: e.target.value } : prev
+              )
+            }
+          />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel id="edit-role-label">Vai trò</InputLabel>
+              <Select
+                labelId="edit-role-label"
+                label="Vai trò"
+                value={editingUser?.role ?? "user"}
+                onChange={(e) =>
+                  setEditingUser((prev) =>
+                    prev ? { ...prev, role: String(e.target.value) } : prev
+                  )
+                }
+              >
+                <MenuItem value="user">user</MenuItem>
+                <MenuItem value="staff">staff</MenuItem>
+                <MenuItem value="admin">admin</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel id="edit-status-label">Trạng thái</InputLabel>
+              <Select
+                labelId="edit-status-label"
+                label="Trạng thái"
+                value={editingUser?.isActive ? "active" : "inactive"}
+                onChange={(e) =>
+                  setEditingUser((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          isActive: String(e.target.value) === "active",
+                        }
+                      : prev
+                  )
+                }
+              >
+                <MenuItem value="active">Kích hoạt</MenuItem>
+                <MenuItem value="inactive">Không kích hoạt</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditDialog(false)}>Hủy</Button>
+          <Button
+            onClick={async () => {
+              if (!editingUser) return;
+              try {
+                setEditing(true);
+                await dispatch(
+                  updateUser({
+                    userId: editingUser.userId,
+                    userName: editingUser.userName,
+                    email: editingUser.email,
+                    phone: editingUser.phone,
+                    address: editingUser.address,
+                    role: editingUser.role,
+                    isActive: editingUser.isActive,
+                  })
+                ).unwrap();
+                toast.success("Cập nhật người dùng thành công");
+                setOpenEditDialog(false);
+                setEditingUser(null);
+                await dispatch(fetchUsers());
+              } catch (err: unknown) {
+                if (err instanceof Error)
+                  toast.error(err.message || "Cập nhật thất bại");
+                else toast.error("Cập nhật thất bại");
+              } finally {
+                setEditing(false);
+              }
+            }}
+            variant="contained"
+            disabled={editing}
+          >
+            {editing ? "Đang lưu..." : "Lưu"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openCreateDialog}
+        onClose={() => setOpenCreateDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Tạo người dùng</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Tên"
+            margin="normal"
+            value={newUser.userName}
+            onChange={(e) =>
+              setNewUser({ ...newUser, userName: e.target.value })
+            }
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            margin="normal"
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Mật khẩu"
+            type="password"
+            margin="normal"
+            value={newUser.userPassword}
+            onChange={(e) =>
+              setNewUser({ ...newUser, userPassword: e.target.value })
+            }
+          />
+          <TextField
+            fullWidth
+            label="Số điện thoại"
+            margin="normal"
+            value={newUser.phone}
+            onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Địa chỉ"
+            margin="normal"
+            value={newUser.address}
+            onChange={(e) =>
+              setNewUser({ ...newUser, address: e.target.value })
+            }
+          />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              fullWidth
+              label="Vai trò"
+              margin="normal"
+              value={newUser.role}
+              disabled
+            />
+
+            <FormControl fullWidth>
+              <InputLabel id="status-label">Trạng thái</InputLabel>
+              <Select
+                labelId="status-label"
+                label="Trạng thái"
+                value={newUser.isActive ? "active" : "inactive"}
+                onChange={(e) =>
+                  setNewUser({
+                    ...newUser,
+                    isActive: String(e.target.value) === "active",
+                  })
+                }
+              >
+                <MenuItem value="active">Kích hoạt</MenuItem>
+                <MenuItem value="inactive">Không kích hoạt</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCreateDialog(false)}>Hủy</Button>
+          <Button
+            onClick={handleCreateUser}
+            variant="contained"
+            disabled={creating}
+          >
+            {creating ? "Đang tạo..." : "Tạo"}
           </Button>
         </DialogActions>
       </Dialog>

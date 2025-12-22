@@ -366,7 +366,8 @@
     "register_btn_title": "Đăng Ký",
     "welcome_text": "Xin chào",
     "login_success": "Đăng nhập thành công!",
-    "invalid_credentials": "Email hoặc mật khẩu không chính xác!"
+    "invalid_credentials": "Email hoặc mật khẩu không chính xác!",
+    "account_locked": "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để giải quyết!"
   },
   "forgotPassword": {
     "title": "Quên mật khẩu",
@@ -709,12 +710,15 @@
     "col_phone": "Số điện thoại",
     "col_role": "Vai trò",
     "col_created_at": "Ngày tạo",
+    "col_status": "Trạng thái",
     "confirm_title": "Xác nhận xóa",
     "confirm_text": "Bạn có chắc chắn muốn xóa người dùng này không?",
     "cancel": "Hủy",
     "delete_btn": "Xoá",
     "delete_success": "Xóa thành công!",
-    "delete_failed": "Xóa thất bại"
+    "delete_failed": "Xóa thất bại",
+    "update_status_success": "Cập nhật trạng thái thành công!",
+    "update_status_failed": "Cập nhật trạng thái thất bại"
   }
   ,
   "adminBusiness": {
@@ -725,6 +729,7 @@
     "col_email": "Email",
     "col_role": "Vai trò",
     "col_restaurants": "Nhà hàng",
+    "col_status": "Trạng thái",
     "col_created_at": "Ngày tạo",
     "tooltip_delete": "Xoá người dùng doanh nghiệp",
     "confirm_title": "Xác nhận xóa",
@@ -733,6 +738,8 @@
     "delete_btn": "Xoá",
     "delete_success": "Xóa thành công!",
     "delete_failed": "Xóa thất bại",
+    "update_status_success": "Cập nhật trạng thái thành công!",
+    "update_status_failed": "Cập nhật trạng thái thất bại",
     "no_restaurants": "Chưa có nhà hàng"
   },
   "restaurantDetails": {

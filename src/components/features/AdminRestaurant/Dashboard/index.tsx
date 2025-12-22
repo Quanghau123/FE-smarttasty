@@ -69,8 +69,7 @@ const DashboardChart = () => {
   const theme = useTheme();
   const chartTextColor =
     theme.palette.mode === "dark"
-      ? 
-        theme.palette.common.white
+      ? theme.palette.common.white
       : theme.palette.text.secondary;
   const tooltipTheme = theme.palette.mode === "dark" ? "dark" : "light";
   const prefersReducedMotion = useReducedMotion();
@@ -226,7 +225,6 @@ const DashboardChart = () => {
     return { dish: dishCount, order: orderCount };
   }, [promotions]);
 
-
   const promotionDonutSeries = useMemo(
     () => [promotionCounts.dish, promotionCounts.order],
     [promotionCounts]
@@ -287,7 +285,6 @@ const DashboardChart = () => {
     [t, chartTextColor]
   );
 
-
   const statusCounts = useMemo(() => {
     const counts: Record<(typeof BOOKING_STATUS_CATEGORIES)[number], number> = {
       Pending: 0,
@@ -309,7 +306,6 @@ const DashboardChart = () => {
     });
     return counts;
   }, [reservations]);
-
 
   const bookingStatusBarSeries = useMemo(
     () => [
@@ -500,16 +496,18 @@ const DashboardChart = () => {
             (() => {
               const rev = revenueByRestaurant?.[restaurant.id] as unknown;
 
-              type MonthBlock = {
+              type RevenueBlock = {
                 revenue?: number | string;
                 Revenue?: number | string;
                 prevRevenue?: number | string;
                 PrevRevenue?: number | string;
                 totalRevenue?: number | string;
                 prevTotal?: number | string;
+                PrevTotal?: number | string;
                 paidOrders?: number | string;
                 PaidOrders?: number | string;
                 ordersCount?: number | string;
+                TotalOrders?: number | string;
               };
 
               const toNumber = (v: unknown): number | undefined => {
@@ -521,38 +519,51 @@ const DashboardChart = () => {
                 return undefined;
               };
 
-              const normalize = (r: unknown): MonthBlock | null => {
+              const pickBlock = (
+                r: unknown,
+                key?: "Month" | "Year"
+              ): RevenueBlock | null => {
                 if (!r || typeof r !== "object") return null;
                 const o = r as Record<string, unknown>;
-                const month = (o["Month"] ?? o["month"]) as
-                  | Record<string, unknown>
-                  | undefined;
-                if (month && typeof month === "object")
-                  return month as MonthBlock;
-                return o as MonthBlock;
+                if (key) {
+                  const found =
+                    o[key] ?? o[key.toLowerCase()] ?? o[key.toUpperCase()];
+                  if (found && typeof found === "object")
+                    return found as RevenueBlock;
+                }
+                return o as RevenueBlock;
               };
 
-              const monthBlock = normalize(rev);
+              const monthBlock = pickBlock(rev, "Month");
+              const yearBlock = pickBlock(rev, "Year");
+              const isYearView = selectedMonth === "all";
+              const activeBlock =
+                (isYearView ? yearBlock : monthBlock) ??
+                monthBlock ??
+                yearBlock ??
+                pickBlock(rev);
 
-              const monthRevenue =
+              const currentRevenue =
                 toNumber(
-                  monthBlock?.revenue ??
-                    monthBlock?.Revenue ??
-                    monthBlock?.totalRevenue
+                  activeBlock?.revenue ??
+                    activeBlock?.Revenue ??
+                    activeBlock?.totalRevenue
                 ) ?? 0;
-              const prevMonthRevenue =
+              const prevRevenue =
                 toNumber(
-                  monthBlock?.prevRevenue ??
-                    monthBlock?.PrevRevenue ??
-                    monthBlock?.prevTotal
+                  activeBlock?.prevRevenue ??
+                    activeBlock?.PrevRevenue ??
+                    activeBlock?.prevTotal ??
+                    activeBlock?.PrevTotal
                 ) ?? 0;
               const paidOrders =
                 toNumber(
-                  monthBlock?.paidOrders ??
-                    monthBlock?.PaidOrders ??
-                    monthBlock?.ordersCount
+                  activeBlock?.paidOrders ??
+                    activeBlock?.PaidOrders ??
+                    activeBlock?.ordersCount ??
+                    activeBlock?.TotalOrders
                 ) ?? 0;
-              const avgOrder = paidOrders ? monthRevenue / paidOrders : 0;
+              const avgOrder = paidOrders ? currentRevenue / paidOrders : 0;
 
               const fmt = new Intl.NumberFormat("vi-VN", {
                 style: "currency",
@@ -560,15 +571,25 @@ const DashboardChart = () => {
                 maximumFractionDigits: 0,
               });
 
+              const prevLabel = isYearView
+                ? `${t("year_label")} ${selectedYear - 1}`
+                : t("previous_month");
+              const currentLabel = isYearView
+                ? `${t("year_label")} ${selectedYear}`
+                : t("current_month");
+              const compareLabel = isYearView
+                ? `${t("year_label")} ${selectedYear}`
+                : t("compare_label");
+
               const series = [
-                { name: t("previous_month"), data: [prevMonthRevenue] },
-                { name: t("current_month"), data: [monthRevenue] },
+                { name: prevLabel, data: [prevRevenue] },
+                { name: currentLabel, data: [currentRevenue] },
               ];
 
               const options = {
                 chart: { id: "revenue-compare", foreColor: chartTextColor },
                 xaxis: {
-                  categories: [t("compare_label")],
+                  categories: [compareLabel],
                   labels: { style: { colors: [chartTextColor] } },
                 },
                 colors: ["#9e9e9e", "#4caf50"],
@@ -657,39 +678,39 @@ const DashboardChart = () => {
                   >
                     <KPICard
                       title={t("kpi_revenue_month")}
-                      value={fmt.format(monthRevenue)}
+                      value={fmt.format(currentRevenue)}
                       delta={
-                        prevMonthRevenue
+                        prevRevenue
                           ? `${(
-                              ((monthRevenue - prevMonthRevenue) /
-                                Math.max(prevMonthRevenue, 1)) *
+                              ((currentRevenue - prevRevenue) /
+                                Math.max(prevRevenue, 1)) *
                               100
                             ).toFixed(1)}%`
                           : undefined
                       }
-                      positive={monthRevenue >= prevMonthRevenue}
+                      positive={currentRevenue >= prevRevenue}
                       icon={<MonetizationOnIcon />}
                     />
 
                     <KPICard
                       title={t("kpi_compare")}
                       value={
-                        prevMonthRevenue
-                          ? `${fmt.format(prevMonthRevenue)} → ${fmt.format(
-                              monthRevenue
+                        prevRevenue
+                          ? `${fmt.format(prevRevenue)} → ${fmt.format(
+                              currentRevenue
                             )}`
                           : "-"
                       }
                       delta={
-                        prevMonthRevenue
+                        prevRevenue
                           ? `${(
-                              ((monthRevenue - prevMonthRevenue) /
-                                Math.max(prevMonthRevenue, 1)) *
+                              ((currentRevenue - prevRevenue) /
+                                Math.max(prevRevenue, 1)) *
                               100
                             ).toFixed(1)}%`
                           : undefined
                       }
-                      positive={monthRevenue >= prevMonthRevenue}
+                      positive={currentRevenue >= prevRevenue}
                       icon={<PieChartIcon />}
                     />
 

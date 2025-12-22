@@ -68,6 +68,13 @@ export const loginUser = createAsyncThunk<
     const errMessage = payload.errMessage ?? payload.message ?? null;
 
     if (accessToken && userObj) {
+      // Kiểm tra trạng thái isActive
+      if (userObj.isActive === false) {
+        return rejectWithValue(
+          "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để giải quyết!"
+        );
+      }
+
       setAccessToken(accessToken);
       try {
         axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;

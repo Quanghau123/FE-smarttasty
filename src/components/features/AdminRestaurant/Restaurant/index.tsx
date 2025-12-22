@@ -19,7 +19,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import DishCard from "@/components/features/AdminRestaurant/Dish";
+import DishCard from "@/components/features/AdminRestaurant/Restaurant/dish";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -29,7 +29,7 @@ import {
   updateRestaurant,
 } from "@/redux/slices/restaurantSlice";
 import { fetchDishes } from "@/redux/slices/dishSlide";
-import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice"; 
+import { fetchDishPromotions } from "@/redux/slices/dishPromotionSlice";
 import { getAccessToken } from "@/lib/utils/tokenHelper";
 import StarIcon from "@mui/icons-material/Star";
 import { fetchFavoritesByRestaurant } from "@/redux/slices/favoritesSlice";
@@ -104,7 +104,6 @@ const RestaurantPage = () => {
   const { items: dishPromotions } = useAppSelector(
     (state) => state.dishpromotion
   );
-
 
   const { favorites: restaurantFavorites = [] } = useAppSelector(
     (state) => state.favorites

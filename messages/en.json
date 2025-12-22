@@ -367,7 +367,8 @@
     "register_btn_title": "Register",
     "welcome_text": "Welcome",
     "login_success": "Login successful!",
-    "invalid_credentials": "Incorrect email or password!"
+    "invalid_credentials": "Incorrect email or password!",
+    "account_locked": "Your account has been locked. Please contact Admin for assistance!"
   },
   "forgotPassword": {
     "title": "Forgot password",
@@ -711,12 +712,15 @@
     "col_phone": "Phone",
     "col_role": "Role",
     "col_created_at": "Created At",
+    "col_status": "Status",
     "confirm_title": "Confirm deletion",
     "confirm_text": "Are you sure you want to delete this user?",
     "cancel": "Cancel",
     "delete_btn": "Delete",
     "delete_success": "Deleted successfully!",
-    "delete_failed": "Delete failed"
+    "delete_failed": "Delete failed",
+    "update_status_success": "Status updated successfully!",
+    "update_status_failed": "Failed to update status"
   }
   ,
   "adminBusiness": {
@@ -727,6 +731,7 @@
     "col_email": "Email",
     "col_role": "Role",
     "col_restaurants": "Restaurants",
+    "col_status": "Status",
     "col_created_at": "Created At",
     "tooltip_delete": "Delete business user",
     "confirm_title": "Confirm deletion",
@@ -735,6 +740,8 @@
     "delete_btn": "Delete",
     "delete_success": "Deleted successfully!",
     "delete_failed": "Delete failed",
+    "update_status_success": "Status updated successfully!",
+    "update_status_failed": "Failed to update status",
     "no_restaurants": "No restaurants"
   },
   "restaurantDetails": {

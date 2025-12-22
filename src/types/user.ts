@@ -8,6 +8,7 @@ export interface User {
   restaurants?: string;
   createdAt: string;
   updatedAt: string;
+  isActive?: boolean;
 }
 // DTO cho API tạo user
 export interface CreateUserDto {
@@ -17,6 +18,7 @@ export interface CreateUserDto {
   email: string;
   phone: string;
   address: string;
+  isActive?: boolean;
 }
 
 

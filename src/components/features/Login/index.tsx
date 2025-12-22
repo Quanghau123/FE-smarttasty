@@ -74,6 +74,13 @@ const LoginPage = () => {
     if (error) {
       const raw = typeof error === "string" ? error : String(error);
       const lower = raw.toLowerCase();
+
+      // Kiểm tra lỗi tài khoản bị khóa
+      const isAccountLocked =
+        lower.includes("khóa") ||
+        lower.includes("locked") ||
+        lower.includes("isactive");
+
       const isCredentialError =
         lower.includes("status code 400") ||
         lower.includes("400") ||
@@ -82,7 +89,11 @@ const LoginPage = () => {
           (lower.includes("password") || lower.includes("email"))) ||
         (lower.includes("password") && lower.includes("incorrect"));
 
-      const friendly = isCredentialError ? t("invalid_credentials") : raw;
+      const friendly = isAccountLocked
+        ? t("account_locked")
+        : isCredentialError
+        ? t("invalid_credentials")
+        : raw;
       toast.error(friendly);
     }
   }, [error, t]);

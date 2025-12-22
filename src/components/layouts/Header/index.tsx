@@ -99,8 +99,7 @@ const Header = () => {
         try {
           const parsed = JSON.parse(storedUser);
           id = parsed?.userId ?? parsed?.id;
-        } catch {
-        }
+        } catch {}
       }
     }
 
@@ -127,7 +126,7 @@ const Header = () => {
         const userName = cu.userName || cu.fullName || cu.name || "User";
         setLocalUserName(userName);
         setCurrentRole(cu.role ?? null);
-        setIsLoggedIn(true); 
+        setIsLoggedIn(true);
       } else {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -139,7 +138,7 @@ const Header = () => {
             "User";
           setLocalUserName(userName);
           setCurrentRole(parsedUser?.role ?? null);
-          setIsLoggedIn(true); 
+          setIsLoggedIn(true);
         } else {
           setIsLoggedIn(false);
           setLocalUserName(null);
@@ -156,7 +155,7 @@ const Header = () => {
 
   useEffect(() => {
     const canShowSearch = !isLoggedIn || currentRole === "user";
-    if (!canShowSearch) return; 
+    if (!canShowSearch) return;
     if (selectedCategory === "All") {
       dispatch(fetchRestaurants());
     } else {
@@ -244,10 +243,8 @@ const Header = () => {
           createdAt: Date.now(),
           read: false,
         };
-        console.log("   Created notification object:", newNotif);
         setNotifications((prev) => {
           const updated = [newNotif, ...prev];
-          console.log("   Updated notifications array:", updated);
           return updated;
         });
       } catch (e) {
@@ -489,39 +486,43 @@ const Header = () => {
                     </Button>
                   </Link>
 
-                  <Link href="/purchase">
-                    <Button
-                      fullWidth
-                      size="small"
-                      variant="text"
-                      sx={{
-                        justifyContent: "flex-start",
-                        gap: 1,
-                        paddingBottom: 1,
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
-                      <ReceiptLongIcon fontSize="small" />
-                      {t("my_purchase_btn_title")}
-                    </Button>
-                  </Link>
+                  {currentRole === "user" && (
+                    <Link href="/purchase">
+                      <Button
+                        fullWidth
+                        size="small"
+                        variant="text"
+                        sx={{
+                          justifyContent: "flex-start",
+                          gap: 1,
+                          paddingBottom: 1,
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <ReceiptLongIcon fontSize="small" />
+                        {t("my_purchase_btn_title")}
+                      </Button>
+                    </Link>
+                  )}
 
-                  <Link href="/bookingtable">
-                    <Button
-                      fullWidth
-                      size="small"
-                      variant="text"
-                      sx={{
-                        justifyContent: "flex-start",
-                        gap: 1,
-                        paddingBottom: 1,
-                        borderBottom: "1px solid #eee",
-                      }}
-                    >
-                      <EventSeatIcon fontSize="small" />
-                      {t("my_booking_btn_title")}
-                    </Button>
-                  </Link>
+                  {currentRole === "user" && (
+                    <Link href="/bookingtable">
+                      <Button
+                        fullWidth
+                        size="small"
+                        variant="text"
+                        sx={{
+                          justifyContent: "flex-start",
+                          gap: 1,
+                          paddingBottom: 1,
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <EventSeatIcon fontSize="small" />
+                        {t("my_booking_btn_title")}
+                      </Button>
+                    </Link>
+                  )}
 
                   <Button
                     fullWidth
