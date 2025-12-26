@@ -1,0 +1,102 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eceef4 0%, #3127e3 100%);
+  padding: 20px;
+}
+
+.card {
+  max-width: 500px;
+  width: 100%;
+  padding: 40px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.iconContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.icon {
+  font-size: 80px !important;
+  color: #f44336;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.title {
+  margin-bottom: 16px !important;
+  color: #333;
+  font-weight: 600 !important;
+}
+
+.message {
+  margin-bottom: 12px !important;
+  color: #f44336;
+  font-weight: 500 !important;
+  font-size: 1.1rem !important;
+}
+
+.description {
+  margin-bottom: 32px !important;
+  color: #666;
+  line-height: 1.6 !important;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contactButton, .backButton {
+  text-transform: none !important;
+  padding: 10px 24px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+}
+
+.contactButton {
+  background-color: #667eea !important;
+  
+  &:hover {
+    background-color: #5568d3 !important;
+  }
+}
+
+.backButton {
+  border-color: #667eea !important;
+  color: #667eea !important;
+  
+  &:hover {
+    border-color: #5568d3 !important;
+    background-color: rgba(102, 126, 234, 0.04) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 30px 20px;
+  }
+  
+  .icon {
+    font-size: 60px !important;
+  }
+  
+  .title {
+    font-size: 1.5rem !important;
+  }
+}

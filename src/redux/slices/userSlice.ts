@@ -45,6 +45,17 @@ export const loginUser = createAsyncThunk<
   { rejectValue: string }
 >("user/loginUser", async (data, { rejectWithValue }) => {
   try {
+    const clearAuthState = () => {
+      clearTokens();
+      try {
+        delete axiosInstance.defaults.headers.common["Authorization"];
+      } catch {
+      }
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("rememberedLogin");
+      }
+    };
+
     const loginPayload = {
       Email: data.email,
       UserPassword: data.userPassword,
@@ -66,10 +77,15 @@ export const loginUser = createAsyncThunk<
     const userObj = wrapper?.user ?? payload?.user;
 
     const errMessage = payload.errMessage ?? payload.message ?? null;
+    const isOk =
+      payload?.errCode === "success" ||
+      payload?.errCode === 0 ||
+      payload?.status === "success";
 
-    if (accessToken && userObj) {
+    if (isOk && accessToken && userObj) {
       // Kiểm tra trạng thái isActive
       if (userObj.isActive === false) {
+        clearAuthState();
         return rejectWithValue(
           "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để giải quyết!"
         );
@@ -104,10 +120,17 @@ export const loginUser = createAsyncThunk<
       };
     }
 
+    clearAuthState();
+
     return rejectWithValue(
       errMessage || "Email hoặc mật khẩu không chính xác!"
     );
   } catch (err: unknown) {
+    try {
+      delete axiosInstance.defaults.headers.common["Authorization"];
+    } catch {
+    }
+    clearTokens();
     if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Lỗi đăng nhập");
   }
@@ -158,6 +181,15 @@ export const fetchUserById = createAsyncThunk<
     if (!data || typeof data !== "object") {
       return rejectWithValue("Không nhận được thông tin người dùng");
     }
+    
+    // Kiểm tra trạng thái isActive
+    if (data.isActive === false) {
+      clearTokens(); // Xóa token
+      return rejectWithValue(
+        "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để giải quyết!"
+      );
+    }
+    
     return data as User;
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
@@ -268,6 +300,10 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
+    },
+    clearAuthError: (state) => {
+      state.error = null;
+      state.loading = false;
     },
     clearUser: (state) => {
       state.user = null;
@@ -395,7 +431,12 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser, updateAccessToken, resetChangePasswordState } =
-  userSlice.actions;
+export const {
+  setUser,
+  clearUser,
+  updateAccessToken,
+  resetChangePasswordState,
+  clearAuthError,
+} = userSlice.actions;
 
 export default userSlice.reducer;

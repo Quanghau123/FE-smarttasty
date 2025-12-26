@@ -370,6 +370,13 @@
     "invalid_credentials": "Incorrect email or password!",
     "account_locked": "Your account has been locked. Please contact Admin for assistance!"
   },
+  "accountSuspended": {
+    "title": "Account Suspended",
+    "message": "Your account has been temporarily suspended",
+    "description": "Your account is currently suspended. Please contact the administrator for support and more details.",
+    "contact_admin": "Contact Admin",
+    "back_to_login": "Back to Login"
+  },
   "forgotPassword": {
     "title": "Forgot password",
     "form": {
@@ -720,7 +727,30 @@
     "delete_success": "Deleted successfully!",
     "delete_failed": "Delete failed",
     "update_status_success": "Status updated successfully!",
-    "update_status_failed": "Failed to update status"
+    "update_status_failed": "Failed to update status",
+    "btn_create": "Create",
+    "create_dialog_title": "Create user",
+    "create_submit": "Create",
+    "create_loading": "Creating...",
+    "edit_dialog_title": "Edit user",
+    "edit_submit": "Save",
+    "edit_loading": "Saving...",
+    "validation_required_fields": "Please enter name, email, and password",
+    "create_success": "User created successfully",
+    "create_failed": "Failed to create user",
+    "edit_success": "User updated successfully",
+    "edit_failed": "Update failed",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "phone": "Phone",
+      "address": "Address",
+      "role": "Role",
+      "status": "Status"
+    }
   }
   ,
   "adminBusiness": {
@@ -742,7 +772,30 @@
     "delete_failed": "Delete failed",
     "update_status_success": "Status updated successfully!",
     "update_status_failed": "Failed to update status",
-    "no_restaurants": "No restaurants"
+    "no_restaurants": "No restaurants",
+    "btn_create": "Create",
+    "create_dialog_title": "Create business user",
+    "create_submit": "Create",
+    "create_loading": "Creating...",
+    "edit_dialog_title": "Edit business user",
+    "edit_submit": "Save",
+    "edit_loading": "Saving...",
+    "validation_required_fields": "Please enter name, email, and password",
+    "create_success": "Business user created successfully",
+    "create_failed": "Creation failed",
+    "edit_success": "Updated successfully",
+    "edit_failed": "Update failed",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "phone": "Phone",
+      "address": "Address",
+      "role": "Role",
+      "status": "Status"
+    }
   },
   "restaurantDetails": {
     "info": "Info",

@@ -87,13 +87,13 @@ const BusinessUserPage = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.userName || !newUser.email || !newUser.userPassword) {
-      toast.error("Vui lòng điền tên, email và mật khẩu");
+      toast.error(t("validation_required_fields"));
       return;
     }
     try {
       setCreating(true);
       await dispatch(createUser(newUser)).unwrap();
-      toast.success("Tạo người dùng doanh nghiệp thành công");
+      toast.success(t("create_success"));
       setOpenCreateDialog(false);
       setNewUser({
         role: "business",
@@ -106,8 +106,8 @@ const BusinessUserPage = () => {
       });
       await dispatch(fetchUsers());
     } catch (err: unknown) {
-      if (err instanceof Error) toast.error(err.message || "Tạo thất bại");
-      else toast.error("Tạo thất bại");
+      if (err instanceof Error) toast.error(err.message || t("create_failed"));
+      else toast.error(t("create_failed"));
     } finally {
       setCreating(false);
     }
@@ -232,7 +232,7 @@ const BusinessUserPage = () => {
             startIcon={<AddIcon />}
             onClick={() => setOpenCreateDialog(true)}
           >
-            Tạo
+            {t("btn_create")}
           </Button>
         </Box>
       </Box>
@@ -290,7 +290,7 @@ const BusinessUserPage = () => {
                         setEditingUser(user);
                         setOpenEditDialog(true);
                       }}
-                      sx={{ color: '#5E6C84' }}
+                      sx={{ color: "#5E6C84" }}
                     >
                       <EditIcon />
                     </IconButton>
@@ -300,7 +300,7 @@ const BusinessUserPage = () => {
                           setSelectedUserId(user.userId);
                           setOpenDialog(true);
                         }}
-                        sx={{ color: '#5E6C84' }}
+                        sx={{ color: "#5E6C84" }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -342,11 +342,11 @@ const BusinessUserPage = () => {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Tạo người dùng doanh nghiệp</DialogTitle>
+        <DialogTitle>{t("create_dialog_title")}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Tên"
+            label={t("form.name")}
             margin="normal"
             value={newUser.userName}
             onChange={(e) =>
@@ -355,14 +355,14 @@ const BusinessUserPage = () => {
           />
           <TextField
             fullWidth
-            label="Email"
+            label={t("form.email")}
             margin="normal"
             value={newUser.email}
             onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
           />
           <TextField
             fullWidth
-            label="Mật khẩu"
+            label={t("form.password")}
             type="password"
             margin="normal"
             value={newUser.userPassword}
@@ -372,14 +372,14 @@ const BusinessUserPage = () => {
           />
           <TextField
             fullWidth
-            label="Số điện thoại"
+            label={t("form.phone")}
             margin="normal"
             value={newUser.phone}
             onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
           />
           <TextField
             fullWidth
-            label="Địa chỉ"
+            label={t("form.address")}
             margin="normal"
             value={newUser.address}
             onChange={(e) =>
@@ -390,16 +390,18 @@ const BusinessUserPage = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <TextField
               fullWidth
-              label="Vai trò"
+              label={t("form.role")}
               margin="normal"
               value={newUser.role}
               disabled
             />
             <FormControl fullWidth>
-              <InputLabel id="create-status-label">Trạng thái</InputLabel>
+              <InputLabel id="create-status-label">
+                {t("form.status")}
+              </InputLabel>
               <Select
                 labelId="create-status-label"
-                label="Trạng thái"
+                label={t("form.status")}
                 value={newUser.isActive ? "active" : "inactive"}
                 onChange={(e) =>
                   setNewUser({
@@ -408,20 +410,22 @@ const BusinessUserPage = () => {
                   })
                 }
               >
-                <MenuItem value="active">Kích hoạt</MenuItem>
-                <MenuItem value="inactive">Không kích hoạt</MenuItem>
+                <MenuItem value="active">{t("status_active")}</MenuItem>
+                <MenuItem value="inactive">{t("status_inactive")}</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCreateDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenCreateDialog(false)}>
+            {t("cancel")}
+          </Button>
           <Button
             onClick={handleCreateUser}
             variant="contained"
             disabled={creating}
           >
-            {creating ? "Đang tạo..." : "Tạo"}
+            {creating ? t("create_loading") : t("create_submit")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -432,11 +436,11 @@ const BusinessUserPage = () => {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Chỉnh sửa người dùng doanh nghiệp</DialogTitle>
+        <DialogTitle>{t("edit_dialog_title")}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
-            label="Tên"
+            label={t("form.name")}
             margin="normal"
             value={editingUser?.userName ?? ""}
             onChange={(e) =>
@@ -447,7 +451,7 @@ const BusinessUserPage = () => {
           />
           <TextField
             fullWidth
-            label="Email"
+            label={t("form.email")}
             margin="normal"
             value={editingUser?.email ?? ""}
             onChange={(e) =>
@@ -458,7 +462,7 @@ const BusinessUserPage = () => {
           />
           <TextField
             fullWidth
-            label="Số điện thoại"
+            label={t("form.phone")}
             margin="normal"
             value={editingUser?.phone ?? ""}
             onChange={(e) =>
@@ -469,7 +473,7 @@ const BusinessUserPage = () => {
           />
           <TextField
             fullWidth
-            label="Địa chỉ"
+            label={t("form.address")}
             margin="normal"
             value={editingUser?.address ?? ""}
             onChange={(e) =>
@@ -482,16 +486,16 @@ const BusinessUserPage = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <TextField
               fullWidth
-              label="Vai trò"
+              label={t("form.role")}
               margin="normal"
               value={editingUser?.role ?? "business"}
               disabled
             />
             <FormControl fullWidth>
-              <InputLabel id="edit-status-label">Trạng thái</InputLabel>
+              <InputLabel id="edit-status-label">{t("form.status")}</InputLabel>
               <Select
                 labelId="edit-status-label"
-                label="Trạng thái"
+                label={t("form.status")}
                 value={editingUser?.isActive ? "active" : "inactive"}
                 onChange={(e) =>
                   setEditingUser((prev) =>
@@ -504,14 +508,16 @@ const BusinessUserPage = () => {
                   )
                 }
               >
-                <MenuItem value="active">Kích hoạt</MenuItem>
-                <MenuItem value="inactive">Không kích hoạt</MenuItem>
+                <MenuItem value="active">{t("status_active")}</MenuItem>
+                <MenuItem value="inactive">{t("status_inactive")}</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)}>Hủy</Button>
+          <Button onClick={() => setOpenEditDialog(false)}>
+            {t("cancel")}
+          </Button>
           <Button
             onClick={async () => {
               if (!editingUser) return;
@@ -528,14 +534,14 @@ const BusinessUserPage = () => {
                     isActive: editingUser.isActive,
                   })
                 ).unwrap();
-                toast.success("Cập nhật thành công");
+                toast.success(t("edit_success"));
                 setOpenEditDialog(false);
                 setEditingUser(null);
                 await dispatch(fetchUsers());
               } catch (err: unknown) {
                 if (err instanceof Error)
-                  toast.error(err.message || "Cập nhật thất bại");
-                else toast.error("Cập nhật thất bại");
+                  toast.error(err.message || t("edit_failed"));
+                else toast.error(t("edit_failed"));
               } finally {
                 setEditing(false);
               }
@@ -543,7 +549,7 @@ const BusinessUserPage = () => {
             variant="contained"
             disabled={editing}
           >
-            {editing ? "Đang lưu..." : "Lưu"}
+            {editing ? t("edit_loading") : t("edit_submit")}
           </Button>
         </DialogActions>
       </Dialog>

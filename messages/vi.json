@@ -369,6 +369,13 @@
     "invalid_credentials": "Email hoặc mật khẩu không chính xác!",
     "account_locked": "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để giải quyết!"
   },
+  "accountSuspended": {
+    "title": "Tài khoản đã bị tạm ngưng",
+    "message": "Tài khoản của bạn đã tạm ngưng hoạt động",
+    "description": "Tài khoản của bạn hiện đang bị tạm ngưng. Vui lòng liên hệ với quản trị viên để được hỗ trợ và biết thêm chi tiết.",
+    "contact_admin": "Liên hệ Admin",
+    "back_to_login": "Quay lại đăng nhập"
+  },
   "forgotPassword": {
     "title": "Quên mật khẩu",
     "form": {
@@ -718,7 +725,30 @@
     "delete_success": "Xóa thành công!",
     "delete_failed": "Xóa thất bại",
     "update_status_success": "Cập nhật trạng thái thành công!",
-    "update_status_failed": "Cập nhật trạng thái thất bại"
+    "update_status_failed": "Cập nhật trạng thái thất bại",
+    "btn_create": "Tạo",
+    "create_dialog_title": "Tạo người dùng",
+    "create_submit": "Tạo",
+    "create_loading": "Đang tạo...",
+    "edit_dialog_title": "Chỉnh sửa người dùng",
+    "edit_submit": "Lưu",
+    "edit_loading": "Đang lưu...",
+    "validation_required_fields": "Vui lòng điền đầy đủ tên, email và mật khẩu",
+    "create_success": "Tạo người dùng thành công",
+    "create_failed": "Tạo người dùng thất bại",
+    "edit_success": "Cập nhật người dùng thành công",
+    "edit_failed": "Cập nhật thất bại",
+    "status_active": "Kích hoạt",
+    "status_inactive": "Không kích hoạt",
+    "form": {
+      "name": "Tên",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "role": "Vai trò",
+      "status": "Trạng thái"
+    }
   }
   ,
   "adminBusiness": {
@@ -740,7 +770,30 @@
     "delete_failed": "Xóa thất bại",
     "update_status_success": "Cập nhật trạng thái thành công!",
     "update_status_failed": "Cập nhật trạng thái thất bại",
-    "no_restaurants": "Chưa có nhà hàng"
+    "no_restaurants": "Chưa có nhà hàng",
+    "btn_create": "Tạo",
+    "create_dialog_title": "Tạo người dùng doanh nghiệp",
+    "create_submit": "Tạo",
+    "create_loading": "Đang tạo...",
+    "edit_dialog_title": "Chỉnh sửa người dùng doanh nghiệp",
+    "edit_submit": "Lưu",
+    "edit_loading": "Đang lưu...",
+    "validation_required_fields": "Vui lòng điền tên, email và mật khẩu",
+    "create_success": "Tạo người dùng doanh nghiệp thành công",
+    "create_failed": "Tạo thất bại",
+    "edit_success": "Cập nhật thành công",
+    "edit_failed": "Cập nhật thất bại",
+    "status_active": "Kích hoạt",
+    "status_inactive": "Không kích hoạt",
+    "form": {
+      "name": "Tên",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "role": "Vai trò",
+      "status": "Trạng thái"
+    }
   },
   "restaurantDetails": {
     "info": "Thông tin",

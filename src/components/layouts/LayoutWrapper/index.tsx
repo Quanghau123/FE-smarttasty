@@ -18,12 +18,15 @@ export default function LocaleLayout({
     "/register",
     "/register-business",
     "/ErrorPages/notfound",
+    "/account-suspended",
   ];
   const hideHeaderFooter = authRoutes.some((route) => pathname.includes(route));
 
   return (
     <ScrollProvider>
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div
+        style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
         {!hideHeaderFooter && <Header />}
         <main style={{ flex: "1 0 auto" }}>{children}</main>
         {!hideHeaderFooter && <ScrollToTop />}

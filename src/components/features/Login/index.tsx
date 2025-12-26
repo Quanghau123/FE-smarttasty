@@ -21,7 +21,11 @@ import styles from "./styles.module.scss";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { loginUser, fetchUserById } from "@/redux/slices/userSlice";
+import {
+  loginUser,
+  fetchUserById,
+  clearAuthError,
+} from "@/redux/slices/userSlice";
 import { getImageUrl } from "@/constants/config/imageBaseUrl";
 import { useTranslations } from "next-intl";
 
@@ -41,6 +45,9 @@ const LoginPage = () => {
   );
 
   useEffect(() => {
+    // Khi vào trang login, xóa lỗi cũ để tránh redirect lặp
+    dispatch(clearAuthError());
+
     const savedLogin = localStorage.getItem("rememberedLogin");
     if (savedLogin) {
       const { email, userPassword } = JSON.parse(savedLogin);
@@ -81,6 +88,12 @@ const LoginPage = () => {
         lower.includes("locked") ||
         lower.includes("isactive");
 
+      if (isAccountLocked) {
+        // Chuyển hướng đến trang thông báo tài khoản bị khóa
+        router.push("/account-suspended");
+        return;
+      }
+
       const isCredentialError =
         lower.includes("status code 400") ||
         lower.includes("400") ||
@@ -89,14 +102,10 @@ const LoginPage = () => {
           (lower.includes("password") || lower.includes("email"))) ||
         (lower.includes("password") && lower.includes("incorrect"));
 
-      const friendly = isAccountLocked
-        ? t("account_locked")
-        : isCredentialError
-        ? t("invalid_credentials")
-        : raw;
+      const friendly = isCredentialError ? t("invalid_credentials") : raw;
       toast.error(friendly);
     }
-  }, [error, t]);
+  }, [error, t, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
